@@ -1,0 +1,85 @@
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+indent_style = space
+indent_size = 4
+trim_trailing_whitespace = true
+
+[*.{csproj,props,targets,config,xml}]
+indent_size = 2
+
+[*.{json,yml,yaml}]
+indent_size = 2
+
+[*.md]
+trim_trailing_whitespace = false
+
+[*.cs]
+indent_size = 4
+
+# Naming
+dotnet_naming_rule.types_should_be_pascal_case.severity = warning
+dotnet_naming_rule.types_should_be_pascal_case.symbols = types
+dotnet_naming_rule.types_should_be_pascal_case.style = pascal_case
+dotnet_naming_symbols.types.applicable_kinds = class,struct,interface,enum,delegate
+dotnet_naming_symbols.types.applicable_accessibilities = *
+
+dotnet_naming_style.pascal_case.capitalization = pascal_case
+
+# Nullable
+dotnet_diagnostic.CS8600.severity = error
+dotnet_diagnostic.CS8601.severity = error
+dotnet_diagnostic.CS8602.severity = error
+dotnet_diagnostic.CS8603.severity = error
+dotnet_diagnostic.CS8604.severity = error
+dotnet_diagnostic.CS8618.severity = error
+dotnet_diagnostic.CS8625.severity = error
+
+# XML doc comments are required in src/ (CS1591); tests override
+dotnet_diagnostic.CS1591.severity = error
+
+# Async naming
+dotnet_diagnostic.VSTHRD200.severity = none
+
+# Stylecop noise tuning
+dotnet_diagnostic.SA1633.severity = none  # file header
+dotnet_diagnostic.SA1101.severity = none  # prefix local calls with this
+dotnet_diagnostic.SA1200.severity = none  # using directives must be inside namespace
+dotnet_diagnostic.SA1309.severity = none  # field names must not begin with underscore
+dotnet_diagnostic.SA1413.severity = none  # use trailing comma in initializers
+dotnet_diagnostic.SA1503.severity = none  # braces must not be omitted
+dotnet_diagnostic.SA1623.severity = none  # property summary text
+dotnet_diagnostic.SA1633.severity = none  # file must have header
+dotnet_diagnostic.SA1648.severity = none  # inheritdoc
+dotnet_diagnostic.SA1652.severity = none  # enable XML doc
+dotnet_diagnostic.SA1402.severity = none  # one type per file
+dotnet_diagnostic.SA1649.severity = none  # filename matches type
+dotnet_diagnostic.SA1600.severity = none  # documentation is enforced via CS1591
+dotnet_diagnostic.SA1601.severity = none
+dotnet_diagnostic.SA1602.severity = none
+
+# Roslyn analyzers — relax some that don't add value here
+dotnet_diagnostic.CA1014.severity = none  # mark assemblies as CLS-compliant
+dotnet_diagnostic.CA1303.severity = none  # do not pass literals as localized parameters
+dotnet_diagnostic.CA2007.severity = none  # consider calling ConfigureAwait
+dotnet_diagnostic.CA1062.severity = none  # validate arguments of public methods (we use `required`)
+dotnet_diagnostic.CA1848.severity = none  # use LoggerMessage delegates (overkill for v0.1)
+dotnet_diagnostic.CA1716.severity = none  # identifiers should not match keywords (Stop, Wait)
+dotnet_diagnostic.CA1305.severity = none  # specify IFormatProvider
+dotnet_diagnostic.CA1310.severity = none  # specify StringComparison
+dotnet_diagnostic.CA1311.severity = none  # specify culture for ToUpperInvariant
+dotnet_diagnostic.CA1715.severity = none  # T prefix on type parameters
+dotnet_diagnostic.CA1819.severity = none  # properties should not return arrays
+dotnet_diagnostic.CA1056.severity = none  # uri parameters should not be strings
+dotnet_diagnostic.CA1054.severity = none  # uri parameters should not be strings
+dotnet_diagnostic.CA1055.severity = none
+
+# Code style
+csharp_style_namespace_declarations = file_scoped:warning
+csharp_indent_braces = false
+csharp_new_line_before_open_brace = all
+dotnet_sort_system_directives_first = true
+csharp_using_directive_placement = outside_namespace:warning

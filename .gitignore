@@ -1,0 +1,25 @@
+# .NET
+bin/
+obj/
+*.user
+*.userosscache
+*.sln.docstates
+[Tt]est[Rr]esult*/
+artifacts/
+
+# Coverage
+coverage/
+*.cobertura.xml
+*.opencover.xml
+*.lcov
+
+# Tooling
+.idea/
+.vs/
+.vscode/
+*.swp
+*.DS_Store
+
+# Build outputs
+out/
+publish/
