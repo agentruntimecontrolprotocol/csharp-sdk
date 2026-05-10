@@ -18,7 +18,7 @@ public class EnvelopeTests
             Id = MessageId.FromString("msg_test"),
             Type = "ping",
             Timestamp = new DateTimeOffset(2026, 5, 9, 12, 0, 0, TimeSpan.Zero),
-            Payload = new Diagnostic.PingPayload(),
+            Payload = new Messages.Control.Ping(),
             SessionId = session,
             Priority = Priority.Normal,
         };
@@ -36,7 +36,7 @@ public class EnvelopeTests
         back.Type.Should().Be("ping");
         back.Id.Should().Be(env.Id);
         back.SessionId.Should().Be(env.SessionId);
-        back.Payload.Should().BeOfType<Diagnostic.PingPayload>();
+        back.Payload.Should().BeOfType<Messages.Control.Ping>();
         back.Priority.Should().Be(Priority.Normal);
     }
 
@@ -80,7 +80,7 @@ public class EnvelopeTests
             Id = MessageId.FromString("msg_x"),
             Type = "ping",
             Timestamp = new DateTimeOffset(2026, 5, 9, 12, 30, 45, 123, TimeSpan.FromHours(-7)),
-            Payload = new Diagnostic.PingPayload(),
+            Payload = new Messages.Control.Ping(),
         };
         string json = JsonSerializer.Serialize(env, EnvelopeJson.Options);
         using JsonDocument doc = JsonDocument.Parse(json);
@@ -97,7 +97,7 @@ public class EnvelopeTests
             Id = MessageId.FromString("msg_x"),
             Type = "ping",
             Timestamp = new DateTimeOffset(2026, 5, 9, 12, 0, 0, TimeSpan.Zero),
-            Payload = new Diagnostic.PingPayload(),
+            Payload = new Messages.Control.Ping(),
         };
         string json = JsonSerializer.Serialize(env, EnvelopeJson.Options);
         using JsonDocument doc = JsonDocument.Parse(json);
@@ -110,7 +110,7 @@ public class EnvelopeTests
     [Fact]
     public void BuilderProducesValidEnvelopeWithDefaults()
     {
-        Envelope.Envelope env = Envelope.Envelope.Builder.Build(new Diagnostic.PingPayload());
+        Envelope.Envelope env = Envelope.Envelope.Builder.Build(new Messages.Control.Ping());
         env.Arcp.Should().Be(ProtocolVersion.Wire);
         env.Type.Should().Be("ping");
         env.Id.Value.Should().StartWith("msg_");
@@ -131,7 +131,7 @@ public class EnvelopeTests
             Id = MessageId.FromString("msg_e"),
             Type = "ping",
             Timestamp = DateTimeOffset.UtcNow,
-            Payload = new Diagnostic.PingPayload(),
+            Payload = new Messages.Control.Ping(),
             Extensions = extensions,
         };
         string json = JsonSerializer.Serialize(env, EnvelopeJson.Options);

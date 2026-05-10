@@ -17,7 +17,7 @@ public class EventLogTests
             Id = id ?? MessageId.New(),
             Type = "ping",
             Timestamp = DateTimeOffset.UtcNow,
-            Payload = new Diagnostic.PingPayload(),
+            Payload = new Messages.Control.Ping(),
         };
     }
 
