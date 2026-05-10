@@ -65,6 +65,7 @@ dotnet_diagnostic.SA1313.severity = none  # parameter names must begin with lowe
 dotnet_diagnostic.SA1402.severity = none  # one type per file
 dotnet_diagnostic.SA1413.severity = none  # use trailing comma in initializers
 dotnet_diagnostic.SA1500.severity = none  # braces for multi-line statements
+dotnet_diagnostic.SA1501.severity = none  # statement should not be on a single line
 dotnet_diagnostic.SA1502.severity = none  # element must not be on a single line
 dotnet_diagnostic.SA1503.severity = none  # braces must not be omitted
 dotnet_diagnostic.SA1512.severity = none  # single-line comment not followed by blank line

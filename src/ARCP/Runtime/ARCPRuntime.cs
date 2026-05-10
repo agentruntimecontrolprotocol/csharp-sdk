@@ -238,6 +238,34 @@ public sealed class ARCPRuntime : IAsyncDisposable
                     cancellationToken).ConfigureAwait(false);
                 return state;
 
+            case Messages.Execution.ToolInvoke invoke:
+                if (_options.JobManager is { } jm)
+                {
+                    try
+                    {
+                        await jm.SubmitAsync(state.SessionId, envelope.Id, invoke, cancellationToken).ConfigureAwait(false);
+                    }
+                    catch (NotFoundException ex)
+                    {
+                        await SendNackAsync(transport, ErrorCode.NotFound, ex.Message, envelope.Id, cancellationToken).ConfigureAwait(false);
+                    }
+                }
+                return state;
+
+            case Messages.Control.Cancel cancel:
+                if (_options.JobManager is { } jmCancel)
+                {
+                    await jmCancel.CancelAsync(envelope.Id, state.SessionId, cancel, cancellationToken).ConfigureAwait(false);
+                }
+                return state;
+
+            case Messages.Control.Interrupt interrupt:
+                if (_options.JobManager is { } jmInterrupt)
+                {
+                    await jmInterrupt.InterruptAsync(state.SessionId, interrupt, cancellationToken).ConfigureAwait(false);
+                }
+                return state;
+
             case SessionClose close:
                 _logger.LogInformation("Session {SessionId} closed by client: {Reason}", state.SessionId, close.Reason);
                 return new SessionState.Closed(close.Reason ?? "client-closed");
@@ -346,11 +374,25 @@ public sealed class ARCPRuntimeOptions
 
     /// <summary>
     /// Optional handler invoked for any post-handshake envelope that is not
-    /// natively answered by the runtime (i.e. anything other than
-    /// <c>ping</c>/<c>session.close</c>). Phase 3+ fills this with
-    /// JobManager / StreamManager dispatch.
+    /// natively answered by the runtime. Phase 3 wires <c>tool.invoke</c>,
+    /// <c>cancel</c>, and <c>interrupt</c> through <see cref="JobManager" />
+    /// directly; this handler is the catch-all for envelopes not yet covered.
     /// </summary>
     public AuthenticatedHandler? Handler { get; init; }
+
+    /// <summary>
+    /// Optional <see cref="Runtime.JobManager" />; when set, the runtime
+    /// dispatches <c>tool.invoke</c>, <c>cancel</c>, and <c>interrupt</c>
+    /// through it.
+    /// </summary>
+    public JobManager? JobManager { get; init; }
+
+    /// <summary>
+    /// Optional <see cref="Runtime.StreamManager" />; tool handlers acquire
+    /// it from <see cref="ARCPRuntime" /> via the <see cref="Handler" />
+    /// callback to open streams.
+    /// </summary>
+    public StreamManager? StreamManager { get; init; }
 }
 
 /// <summary>
