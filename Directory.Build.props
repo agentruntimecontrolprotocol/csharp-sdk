@@ -22,9 +22,9 @@
   <PropertyGroup Label="Packaging defaults">
     <Authors>ARCP Authors</Authors>
     <Company>ARCP</Company>
-    <Copyright>(c) ARCP Authors. Licensed under MIT.</Copyright>
-    <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <RepositoryUrl>https://github.com/example/arcp</RepositoryUrl>
+    <Copyright>(c) ARCP Authors. Licensed under Apache-2.0.</Copyright>
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+    <RepositoryUrl>https://github.com/nficano/arpc</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
   </PropertyGroup>

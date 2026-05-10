@@ -5,9 +5,9 @@
     <PackageId>ARCP.Cli</PackageId>
     <Description>Command-line tools for the ARCP C# SDK (serve, tail, send, replay).</Description>
     <PackageTags>arcp;agent;protocol;cli</PackageTags>
-    <IsPackable>true</IsPackable>
-    <PackAsTool>true</PackAsTool>
-    <ToolCommandName>arcp</ToolCommandName>
+    <!-- CLI is not published until commands are implemented; library ships separately. -->
+    <IsPackable>false</IsPackable>
+    <PackAsTool>false</PackAsTool>
     <RootNamespace>ARCP.Cli</RootNamespace>
   </PropertyGroup>
 
