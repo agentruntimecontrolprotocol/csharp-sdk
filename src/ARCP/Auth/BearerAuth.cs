@@ -17,7 +17,8 @@ public sealed class BearerAuth : IAuthVerifier
     /// <param name="store">Delegate that maps a token to a principal name (or <see langword="null" />).</param>
     public BearerAuth(BearerTokenStore store)
     {
-        _store = store ?? throw new ArgumentNullException(nameof(store));
+        ArgumentNullException.ThrowIfNull(store);
+        _store = store;
     }
 
     /// <inheritdoc />

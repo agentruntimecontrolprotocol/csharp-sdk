@@ -41,7 +41,8 @@ public sealed class SubscriptionManager
     /// <param name="time">Optional time provider.</param>
     public SubscriptionManager(EventLog log, TimeProvider? time = null)
     {
-        _log = log ?? throw new ArgumentNullException(nameof(log));
+        ArgumentNullException.ThrowIfNull(log);
+        _log = log;
         _time = time ?? TimeProvider.System;
     }
 

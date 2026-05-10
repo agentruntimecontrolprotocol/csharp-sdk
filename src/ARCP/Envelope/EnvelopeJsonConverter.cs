@@ -45,7 +45,8 @@ public sealed class EnvelopeJsonConverter : JsonConverter<Envelope>
     /// <param name="extensions">Optional extension registry for namespaced types.</param>
     public EnvelopeJsonConverter(MessageTypeRegistry registry, ExtensionRegistry? extensions)
     {
-        _registry = registry ?? throw new ArgumentNullException(nameof(registry));
+        ArgumentNullException.ThrowIfNull(registry);
+        _registry = registry;
         _extensions = extensions;
     }
 

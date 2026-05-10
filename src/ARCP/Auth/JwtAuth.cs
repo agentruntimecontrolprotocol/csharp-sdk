@@ -37,7 +37,8 @@ public sealed class JwtAuth : IAuthVerifier
     /// <param name="options">The configured options.</param>
     public JwtAuth(JwtAuthOptions options)
     {
-        _options = options ?? throw new ArgumentNullException(nameof(options));
+        ArgumentNullException.ThrowIfNull(options);
+        _options = options;
     }
 
     /// <inheritdoc />
