@@ -107,8 +107,8 @@ public class EventLogTests
         var firstId = MessageId.New();
         var secondId = MessageId.New();
 
-        var first = await log.RecordIdempotentAsync("nick@x", key, session, firstId);
-        var second = await log.RecordIdempotentAsync("nick@x", key, session, secondId);
+        var first = await log.RecordIdempotentAsync("alice@example.com", key, session, firstId);
+        var second = await log.RecordIdempotentAsync("alice@example.com", key, session, secondId);
 
         first.Outcome.Should().Be(EventLogAppendResult.Appended);
         first.MessageId.Should().Be(firstId);

@@ -73,7 +73,7 @@ public sealed record ArtifactRetentionPolicy(
     int MaxSeconds);
 
 /// <summary>§8.2 client identity block.</summary>
-/// <param name="Kind">Logical client kind (e.g. <c>"claude-code"</c>).</param>
+/// <param name="Kind">Logical client kind (e.g. <c>"example-client"</c>).</param>
 /// <param name="Version">Client version.</param>
 /// <param name="Fingerprint">Optional cryptographic fingerprint (mTLS-required).</param>
 /// <param name="Principal">Optional logical principal name (e.g. user email).</param>
