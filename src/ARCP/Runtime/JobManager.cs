@@ -5,6 +5,8 @@ using ARCP.Errors;
 using ARCP.Ids;
 using ARCP.Messages.Control;
 using ARCP.Messages.Execution;
+using ARCP.Messages.Human;
+using ARCP.Messages.Permissions;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 
@@ -50,6 +52,43 @@ public sealed class JobContext
     /// <returns>A task that completes when the envelope is queued.</returns>
     public ValueTask HeartbeatAsync(int? deadlineMs = null) =>
         _manager.HeartbeatAsync(JobId, deadlineMs, CancellationToken);
+
+    /// <summary>
+    /// Emit a <c>human.input.request</c> envelope and await the corresponding
+    /// <c>human.input.response</c> per RFC-0001-v2 §12.1. Transitions the job
+    /// to <see cref="JobState.Blocked" /> while waiting.
+    /// </summary>
+    /// <param name="prompt">The prompt shown to the human.</param>
+    /// <param name="responseSchema">JSON-Schema-shaped object describing the response shape.</param>
+    /// <param name="expiresAt">Deadline.</param>
+    /// <param name="default">Optional default returned if the deadline elapses.</param>
+    /// <param name="destination">Optional destination hint.</param>
+    /// <returns>The validated response value.</returns>
+    public Task<JsonElement> RequestInputAsync(
+        string prompt,
+        JsonElement responseSchema,
+        DateTimeOffset expiresAt,
+        JsonElement? @default = null,
+        string? destination = null)
+        => _manager.RequestInputAsync(JobId, prompt, responseSchema, expiresAt, @default, destination, CancellationToken);
+
+    /// <summary>
+    /// Emit a <c>permission.request</c> envelope and await the corresponding
+    /// <c>permission.grant</c> or <c>permission.deny</c> per §15.4.
+    /// </summary>
+    /// <param name="permission">The permission name.</param>
+    /// <param name="resource">The resource scope.</param>
+    /// <param name="operation">The operation scope.</param>
+    /// <param name="reason">Optional human-readable reason.</param>
+    /// <param name="requestedLeaseSeconds">Optional requested lease duration.</param>
+    /// <returns>The granted lease, or throws <see cref="PermissionDeniedException" /> on deny.</returns>
+    public Task<LeaseGranted> RequestPermissionAsync(
+        string permission,
+        string resource,
+        string operation,
+        string? reason = null,
+        int? requestedLeaseSeconds = null)
+        => _manager.RequestPermissionAsync(JobId, permission, resource, operation, reason, requestedLeaseSeconds, CancellationToken);
 }
 
 /// <summary>
@@ -63,6 +102,15 @@ public delegate Task<ToolResult> ToolHandler(
     ToolInvoke invoke,
     JobContext ctx,
     CancellationToken cancellationToken);
+
+/// <summary>Outcome of a permission challenge round-trip.</summary>
+/// <param name="Granted">Whether the permission was granted.</param>
+/// <param name="Grant">The original <see cref="PermissionGrant" /> when granted.</param>
+/// <param name="Deny">The original <see cref="PermissionDeny" /> when denied.</param>
+public sealed record PermissionOutcome(
+    bool Granted,
+    PermissionGrant? Grant = null,
+    PermissionDeny? Deny = null);
 
 /// <summary>State machine record for a single in-flight job.</summary>
 internal sealed class JobRecord
@@ -106,7 +154,14 @@ public sealed class JobManager : IAsyncDisposable
     private readonly bool _recoveryIsBlock;
     private readonly CancellationTokenSource _shutdown = new();
     private readonly Task _watchdog;
+    private readonly LeaseManager _leases;
+    private readonly PendingRegistry<JsonElement> _pendingInput = new();
+    private readonly PendingRegistry<HumanChoiceResponse> _pendingChoice = new();
+    private readonly PendingRegistry<PermissionOutcome> _pendingPermission = new();
     private bool _disposed;
+
+    /// <summary>The lease manager used to mint leases on <c>permission.grant</c>.</summary>
+    public LeaseManager Leases => _leases;
 
     /// <summary>Initializes a new <see cref="JobManager" />.</summary>
     /// <param name="tools">Map of tool name to handler.</param>
@@ -115,13 +170,15 @@ public sealed class JobManager : IAsyncDisposable
     /// <param name="heartbeatRecovery">Negotiated recovery policy (<c>fail</c> or <c>block</c>).</param>
     /// <param name="time">Time provider (defaults to <see cref="TimeProvider.System" />).</param>
     /// <param name="logger">Optional logger.</param>
+    /// <param name="leases">Optional lease manager (defaults to a fresh instance backed by <paramref name="time" />).</param>
     public JobManager(
         IReadOnlyDictionary<string, ToolHandler> tools,
         Func<Envelope.Envelope, CancellationToken, ValueTask> emit,
         int heartbeatIntervalSeconds = 30,
         string heartbeatRecovery = "fail",
         TimeProvider? time = null,
-        ILogger<JobManager>? logger = null)
+        ILogger<JobManager>? logger = null,
+        LeaseManager? leases = null)
     {
         ArgumentNullException.ThrowIfNull(tools);
         ArgumentNullException.ThrowIfNull(emit);
@@ -131,6 +188,7 @@ public sealed class JobManager : IAsyncDisposable
         _recoveryIsBlock = string.Equals(heartbeatRecovery, "block", StringComparison.Ordinal);
         _time = time ?? TimeProvider.System;
         _logger = logger ?? NullLogger<JobManager>.Instance;
+        _leases = leases ?? new LeaseManager(_time);
         _watchdog = Task.Run(WatchdogLoopAsync);
     }
 
@@ -311,6 +369,126 @@ public sealed class JobManager : IAsyncDisposable
         return true;
     }
 
+    /// <summary>
+    /// Dispatch an inbound <c>human.input.response</c> /
+    /// <c>human.input.cancelled</c> / <c>human.choice.response</c> /
+    /// <c>permission.grant</c> / <c>permission.deny</c> / <c>lease.refresh</c>
+    /// to the registered waiter, if any.
+    /// </summary>
+    /// <param name="env">The envelope.</param>
+    /// <returns><see langword="true" /> if a waiter accepted the response.</returns>
+    public bool DispatchResponse(Envelope.Envelope env)
+    {
+        ArgumentNullException.ThrowIfNull(env);
+        if (env.CorrelationId is not { } correlationId)
+        {
+            return false;
+        }
+        switch (env.Payload)
+        {
+            case HumanInputResponse resp:
+                return _pendingInput.Resolve(correlationId, resp.Value);
+            case HumanInputCancelled cancelled:
+                return _pendingInput.Reject(correlationId,
+                    new DeadlineExceededException($"Human input cancelled: {cancelled.Code}"));
+            case HumanChoiceResponse cresp:
+                return _pendingChoice.Resolve(correlationId, cresp);
+            case PermissionGrant grant:
+                return _pendingPermission.Resolve(correlationId, new PermissionOutcome(true, Grant: grant));
+            case PermissionDeny deny:
+                return _pendingPermission.Resolve(correlationId, new PermissionOutcome(false, Deny: deny));
+            default:
+                return false;
+        }
+    }
+
+    internal async Task<JsonElement> RequestInputAsync(
+        JobId jobId,
+        string prompt,
+        JsonElement responseSchema,
+        DateTimeOffset expiresAt,
+        JsonElement? @default,
+        string? destination,
+        CancellationToken cancellationToken)
+    {
+        if (!_jobs.TryGetValue(jobId, out JobRecord? record))
+        {
+            throw new NotFoundException($"Job {jobId} not found.");
+        }
+
+        MessageId requestId = MessageId.New();
+        await SetStateAsync(record, JobState.Blocked).ConfigureAwait(false);
+
+        Task<JsonElement> waiter = _pendingInput.RegisterAsync(requestId, expiresAt, _time, cancellationToken);
+
+        await EmitAsync(record.SessionId, jobId, "human.input.request",
+            new HumanInputRequest
+            {
+                Prompt = prompt,
+                ResponseSchema = responseSchema,
+                ExpiresAt = expiresAt,
+                Default = @default,
+                Destination = destination,
+            },
+            correlationId: null,
+            cancellationToken,
+            messageId: requestId).ConfigureAwait(false);
+
+        try
+        {
+            JsonElement result = await waiter.ConfigureAwait(false);
+            await SetStateAsync(record, JobState.Running).ConfigureAwait(false);
+            return result;
+        }
+        catch (DeadlineExceededException) when (@default is { } d)
+        {
+            await SetStateAsync(record, JobState.Running).ConfigureAwait(false);
+            return d;
+        }
+    }
+
+    internal async Task<LeaseGranted> RequestPermissionAsync(
+        JobId jobId,
+        string permission,
+        string resource,
+        string operation,
+        string? reason,
+        int? requestedLeaseSeconds,
+        CancellationToken cancellationToken)
+    {
+        if (!_jobs.TryGetValue(jobId, out JobRecord? record))
+        {
+            throw new NotFoundException($"Job {jobId} not found.");
+        }
+
+        MessageId requestId = MessageId.New();
+        await SetStateAsync(record, JobState.Blocked).ConfigureAwait(false);
+        DateTimeOffset deadline = _time.GetUtcNow() + TimeSpan.FromSeconds(requestedLeaseSeconds ?? 300);
+
+        Task<PermissionOutcome> waiter = _pendingPermission.RegisterAsync(requestId, deadline, _time, cancellationToken);
+
+        await EmitAsync(record.SessionId, jobId, "permission.request",
+            new PermissionRequest(permission, resource, operation, reason, requestedLeaseSeconds),
+            correlationId: null,
+            cancellationToken,
+            messageId: requestId).ConfigureAwait(false);
+
+        PermissionOutcome outcome = await waiter.ConfigureAwait(false);
+        await SetStateAsync(record, JobState.Running).ConfigureAwait(false);
+
+        if (!outcome.Granted)
+        {
+            throw new PermissionDeniedException(
+                outcome.Deny?.Reason ?? "permission denied");
+        }
+
+        // Mint the lease on grant.
+        TimeSpan duration = TimeSpan.FromSeconds(requestedLeaseSeconds ?? 300);
+        LeaseGranted lease = _leases.Issue(permission, resource, operation, duration);
+        await EmitAsync(record.SessionId, jobId, "lease.granted", lease, correlationId: null, cancellationToken).ConfigureAwait(false);
+        return lease;
+    }
+
     internal ValueTask EmitProgressAsync(JobId jobId, JobProgress progress, CancellationToken cancellationToken)
     {
         if (!_jobs.TryGetValue(jobId, out JobRecord? record))
@@ -414,13 +592,14 @@ public sealed class JobManager : IAsyncDisposable
         string wireType,
         TPayload payload,
         MessageId? correlationId,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        MessageId? messageId = null)
         where TPayload : MessageType
     {
         var env = new Envelope.Envelope
         {
             Arcp = ProtocolVersion.Wire,
-            Id = MessageId.New(),
+            Id = messageId ?? MessageId.New(),
             Type = wireType,
             Timestamp = _time.GetUtcNow(),
             Payload = payload,

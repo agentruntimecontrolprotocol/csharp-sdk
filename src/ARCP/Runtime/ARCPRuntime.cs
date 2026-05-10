@@ -266,6 +266,14 @@ public sealed class ARCPRuntime : IAsyncDisposable
                 }
                 return state;
 
+            case Messages.Human.HumanInputResponse:
+            case Messages.Human.HumanInputCancelled:
+            case Messages.Human.HumanChoiceResponse:
+            case Messages.Permissions.PermissionGrant:
+            case Messages.Permissions.PermissionDeny:
+                _options.JobManager?.DispatchResponse(envelope);
+                return state;
+
             case SessionClose close:
                 _logger.LogInformation("Session {SessionId} closed by client: {Reason}", state.SessionId, close.Reason);
                 return new SessionState.Closed(close.Reason ?? "client-closed");
