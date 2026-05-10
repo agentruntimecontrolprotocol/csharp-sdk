@@ -44,22 +44,51 @@ dotnet_diagnostic.CS1591.severity = error
 # Async naming
 dotnet_diagnostic.VSTHRD200.severity = none
 
-# Stylecop noise tuning
-dotnet_diagnostic.SA1633.severity = none  # file header
+# StyleCop noise tuning
+# Keep StyleCop rules that catch real bugs / unsafe patterns; disable the
+# ones that are purely stylistic where our .editorconfig + dotnet format
+# already enforce a consistent style.
 dotnet_diagnostic.SA1101.severity = none  # prefix local calls with this
+dotnet_diagnostic.SA1116.severity = none  # parameters on next line after declaration
+dotnet_diagnostic.SA1118.severity = none  # parameter must not span multiple lines
+dotnet_diagnostic.SA1124.severity = none  # do not use regions
 dotnet_diagnostic.SA1200.severity = none  # using directives must be inside namespace
+dotnet_diagnostic.SA1201.severity = none  # member ordering
+dotnet_diagnostic.SA1202.severity = none  # public-before-private ordering
+dotnet_diagnostic.SA1203.severity = none  # constants before fields
+dotnet_diagnostic.SA1204.severity = none  # static-before-instance ordering
+dotnet_diagnostic.SA1214.severity = none  # readonly fields ordering
+dotnet_diagnostic.SA1300.severity = none  # element should begin with uppercase letter
 dotnet_diagnostic.SA1309.severity = none  # field names must not begin with underscore
-dotnet_diagnostic.SA1413.severity = none  # use trailing comma in initializers
-dotnet_diagnostic.SA1503.severity = none  # braces must not be omitted
-dotnet_diagnostic.SA1623.severity = none  # property summary text
-dotnet_diagnostic.SA1633.severity = none  # file must have header
-dotnet_diagnostic.SA1648.severity = none  # inheritdoc
-dotnet_diagnostic.SA1652.severity = none  # enable XML doc
+dotnet_diagnostic.SA1311.severity = none  # static readonly Pascal naming
+dotnet_diagnostic.SA1313.severity = none  # parameter names must begin with lowercase
 dotnet_diagnostic.SA1402.severity = none  # one type per file
-dotnet_diagnostic.SA1649.severity = none  # filename matches type
-dotnet_diagnostic.SA1600.severity = none  # documentation is enforced via CS1591
+dotnet_diagnostic.SA1413.severity = none  # use trailing comma in initializers
+dotnet_diagnostic.SA1500.severity = none  # braces for multi-line statements
+dotnet_diagnostic.SA1502.severity = none  # element must not be on a single line
+dotnet_diagnostic.SA1503.severity = none  # braces must not be omitted
+dotnet_diagnostic.SA1512.severity = none  # single-line comment not followed by blank line
+dotnet_diagnostic.SA1513.severity = none  # closing brace followed by blank line
+dotnet_diagnostic.SA1514.severity = none  # element documentation header
+dotnet_diagnostic.SA1515.severity = none  # single-line comment preceded by blank line
+dotnet_diagnostic.SA1516.severity = none  # elements separated by blank line
+dotnet_diagnostic.SA1600.severity = none  # CS1591 covers documentation
 dotnet_diagnostic.SA1601.severity = none
 dotnet_diagnostic.SA1602.severity = none
+dotnet_diagnostic.SA1611.severity = none  # all documented parameters
+dotnet_diagnostic.SA1614.severity = none  # parameter doc must have text
+dotnet_diagnostic.SA1615.severity = none  # return value must be documented
+dotnet_diagnostic.SA1618.severity = none  # generic type parameters
+dotnet_diagnostic.SA1622.severity = none  # generic type parameter doc must have text
+dotnet_diagnostic.SA1623.severity = none  # property summary text
+dotnet_diagnostic.SA1629.severity = none  # documentation must end with period
+dotnet_diagnostic.SA1633.severity = none  # file must have header
+dotnet_diagnostic.SA1642.severity = none  # constructor summary boilerplate
+dotnet_diagnostic.SA1643.severity = none  # destructor summary boilerplate
+dotnet_diagnostic.SA1648.severity = none  # inheritdoc
+dotnet_diagnostic.SA1649.severity = none  # filename matches type
+dotnet_diagnostic.SA1652.severity = none  # enable XML doc
+dotnet_diagnostic.SA1124.severity = none
 
 # Roslyn analyzers — relax some that don't add value here
 dotnet_diagnostic.CA1014.severity = none  # mark assemblies as CLS-compliant
