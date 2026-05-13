@@ -5,7 +5,10 @@ obj/
 *.userosscache
 *.sln.docstates
 [Tt]est[Rr]esult*/
-artifacts/
+# Leading slash scopes the rule to the repo-root build output dir so it
+# doesn't also match source folders like src/ARCP/Messages/Artifacts/
+# under macOS's case-insensitive filesystem.
+/artifacts/
 
 # Coverage
 coverage/
