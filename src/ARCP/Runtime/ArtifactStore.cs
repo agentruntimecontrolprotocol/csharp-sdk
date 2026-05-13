@@ -269,7 +269,7 @@ public sealed class ArtifactStore : IAsyncDisposable
                 {
                     await SweepExpiredAsync(_shutdown.Token).ConfigureAwait(false);
                 }
-                catch (Exception ex) when (ex is not OperationCanceledException)
+                catch (Exception)
                 {
                     // best effort
                 }
