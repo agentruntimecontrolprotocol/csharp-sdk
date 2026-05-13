@@ -19,6 +19,7 @@ trim_trailing_whitespace = false
 
 [*.cs]
 indent_size = 4
+max_line_length = 120
 
 # Naming
 dotnet_naming_rule.types_should_be_pascal_case.severity = warning

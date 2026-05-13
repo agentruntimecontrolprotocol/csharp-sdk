@@ -44,7 +44,7 @@ public sealed class ARCPRuntime : IAsyncDisposable
         _messageRegistry = options.MessageRegistry ?? MessageTypeRegistry.CoreCatalog();
         _jsonOptions = EnvelopeJson.CreateOptions(_messageRegistry, options.ExtensionRegistry);
         _verifiers = new ConcurrentDictionary<AuthScheme, IAuthVerifier>();
-        foreach (IAuthVerifier verifier in options.AuthVerifiers ?? Array.Empty<IAuthVerifier>())
+        foreach (IAuthVerifier verifier in options.AuthVerifiers ?? [])
         {
             _verifiers[verifier.Scheme] = verifier;
         }

@@ -80,7 +80,7 @@ public sealed class SubscriptionManager
         }
         else
         {
-            filter = filter with { SessionId = new[] { subscriberSessionId.Value } };
+            filter = filter with { SessionId = [subscriberSessionId.Value] };
         }
 
         SubscriptionId id = SubscriptionId.New();
