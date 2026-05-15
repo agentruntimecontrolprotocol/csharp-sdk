@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
 using System;
 using System.Text.Json;
-using Arcp.Core.Wire;
 using Arcp.Core.Messages;
+using Arcp.Core.Wire;
 
 namespace Arcp.Client;
 

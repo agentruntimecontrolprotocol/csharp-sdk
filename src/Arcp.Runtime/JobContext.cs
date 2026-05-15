@@ -7,11 +7,11 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Arcp.Core.Agents;
-using Arcp.Core.Wire;
 using Arcp.Core.Errors;
 using Arcp.Core.Ids;
 using Arcp.Core.Leases;
 using Arcp.Core.Messages;
+using Arcp.Core.Wire;
 using Microsoft.Extensions.Logging;
 
 namespace Arcp.Runtime;
@@ -79,7 +79,10 @@ public sealed class JobContext
     public ValueTask ArtifactRefAsync(string uri, string? contentType = null, long? byteSize = null, string? sha256 = null, CancellationToken cancellationToken = default) =>
         _job.EmitEventAsync(EventKinds.ArtifactRef, new ArtifactRefBody
         {
-            Uri = uri, ContentType = contentType, ByteSize = byteSize, Sha256 = sha256,
+            Uri = uri,
+            ContentType = contentType,
+            ByteSize = byteSize,
+            Sha256 = sha256,
         }, cancellationToken);
 
     public ValueTask DelegateAsync(string childJobId, string agent, object? input, CancellationToken cancellationToken = default) =>

@@ -10,12 +10,12 @@ using System.Threading.Channels;
 using System.Threading.Tasks;
 using Arcp.Core.Auth;
 using Arcp.Core.Caps;
-using Arcp.Core.Wire;
 using Arcp.Core.Errors;
 using Arcp.Core.Ids;
 using Arcp.Core.Leases;
 using Arcp.Core.Messages;
 using Arcp.Core.Transport;
+using Arcp.Core.Wire;
 
 namespace Arcp.Client;
 
