@@ -21,7 +21,7 @@ namespace Arcp.Runtime;
 
 /// <summary>Runtime-wide registry of running jobs. Coordinates submit → accept → terminal, idempotency
 /// dedup, cancellation, lease watchdog, and subscription fan-out.</summary>
-public sealed class JobManager
+public sealed partial class JobManager
 {
     private readonly ConcurrentDictionary<JobId, Job> _jobs = new();
     private readonly ConcurrentDictionary<string, JobId> _idempotency = new(StringComparer.Ordinal);
@@ -102,120 +102,106 @@ public sealed class JobManager
     {
         job.MarkRunning();
         var ctx = new JobContext(job, _loggers.CreateLogger($"Arcp.Job.{job.JobId.Value}"));
-
-        // Start lease watchdog if constrained (spec §9.5).
-        Task? watchdog = null;
-        if (job.LeaseConstraints?.ExpiresAt is { } expiresAt)
-        {
-            watchdog = RunLeaseWatchdog(job, expiresAt, emit, cancellationToken);
-        }
+        var watchdog = StartLeaseWatchdog(job, emit, cancellationToken);
 
         try
         {
             var result = await agent.RunAsync(ctx, job.CancellationToken).ConfigureAwait(false);
-
-            if (job.StreamedResultId is { } rid)
-            {
-                var payload = new JobResultPayload
-                {
-                    FinalStatus = "success",
-                    ResultId = rid.Value,
-                    ResultSize = job.StreamedResultSize,
-                    Summary = result as string,
-                };
-                await emit(new Envelope
-                {
-                    Type = MessageTypeNames.JobResult,
-                    SessionId = job.SessionId.Value,
-                    JobId = job.JobId.Value,
-                    TraceId = job.TraceId?.Value,
-                    Payload = payload,
-                }, cancellationToken).ConfigureAwait(false);
-            }
-            else
-            {
-                job.MarkInlineResult();
-                var payload = new JobResultPayload
-                {
-                    FinalStatus = "success",
-                    Result = result is null ? null : ArcpJson.ToJsonElement(result),
-                };
-                await emit(new Envelope
-                {
-                    Type = MessageTypeNames.JobResult,
-                    SessionId = job.SessionId.Value,
-                    JobId = job.JobId.Value,
-                    TraceId = job.TraceId?.Value,
-                    Payload = payload,
-                }, cancellationToken).ConfigureAwait(false);
-            }
+            await EmitSuccessResultAsync(job, result, emit, cancellationToken).ConfigureAwait(false);
             job.MarkTerminal(JobStatus.Success);
         }
         catch (OperationCanceledException) when (job.CancellationToken.IsCancellationRequested)
         {
-            var payload = new JobErrorPayload
+            await EmitJobErrorAsync(job, emit, new JobErrorPayload
             {
                 FinalStatus = "cancelled",
                 Code = ErrorCode.Cancelled,
                 Message = "Job cancelled",
-            };
-            await emit(new Envelope
-            {
-                Type = MessageTypeNames.JobError,
-                SessionId = job.SessionId.Value,
-                JobId = job.JobId.Value,
-                TraceId = job.TraceId?.Value,
-                Payload = payload,
             }, cancellationToken).ConfigureAwait(false);
             job.MarkTerminal(JobStatus.Cancelled);
         }
         catch (ArcpException ex)
         {
-            var payload = new JobErrorPayload
+            await EmitJobErrorAsync(job, emit, new JobErrorPayload
             {
                 FinalStatus = "error",
                 Code = ex.Code,
                 Message = ex.Message,
                 Retryable = ex.Retryable,
                 Detail = ex.Detail,
-            };
-            await emit(new Envelope
-            {
-                Type = MessageTypeNames.JobError,
-                SessionId = job.SessionId.Value,
-                JobId = job.JobId.Value,
-                TraceId = job.TraceId?.Value,
-                Payload = payload,
             }, cancellationToken).ConfigureAwait(false);
             job.MarkTerminal(JobStatus.Error);
         }
         catch (Exception ex)
         {
-            var payload = new JobErrorPayload
+            await EmitJobErrorAsync(job, emit, new JobErrorPayload
             {
                 FinalStatus = "error",
                 Code = ErrorCode.InternalError,
                 Message = ex.Message,
                 Retryable = true,
-            };
-            await emit(new Envelope
-            {
-                Type = MessageTypeNames.JobError,
-                SessionId = job.SessionId.Value,
-                JobId = job.JobId.Value,
-                TraceId = job.TraceId?.Value,
-                Payload = payload,
             }, cancellationToken).ConfigureAwait(false);
             job.MarkTerminal(JobStatus.Error);
         }
         finally
         {
-            if (watchdog is not null)
-            {
-                try { await watchdog.ConfigureAwait(false); } catch { /* watchdog may itself observe cancellation */ }
-            }
+            await AwaitWatchdogAsync(watchdog).ConfigureAwait(false);
         }
     }
+
+    private Task? StartLeaseWatchdog(Job job, Func<Envelope, CancellationToken, ValueTask> emit, CancellationToken cancellationToken)
+    {
+        // Spec §9.5.
+        if (job.LeaseConstraints?.ExpiresAt is not { } expiresAt) return null;
+        return RunLeaseWatchdog(job, expiresAt, emit, cancellationToken);
+    }
+
+    private static async Task AwaitWatchdogAsync(Task? watchdog)
+    {
+        if (watchdog is null) return;
+        try { await watchdog.ConfigureAwait(false); }
+        catch (OperationCanceledException)
+        {
+            // Watchdog may itself observe cancellation.
+        }
+    }
+
+    private static async Task EmitSuccessResultAsync(Job job, object? result, Func<Envelope, CancellationToken, ValueTask> emit, CancellationToken cancellationToken)
+    {
+        var payload = job.StreamedResultId is { } rid
+            ? new JobResultPayload
+            {
+                FinalStatus = "success",
+                ResultId = rid.Value,
+                ResultSize = job.StreamedResultSize,
+                Summary = result as string,
+            }
+            : BuildInlineResultPayload(job, result);
+
+        await emit(BuildEnvelope(job, MessageTypeNames.JobResult, payload), cancellationToken).ConfigureAwait(false);
+    }
+
+    private static JobResultPayload BuildInlineResultPayload(Job job, object? result)
+    {
+        job.MarkInlineResult();
+        return new JobResultPayload
+        {
+            FinalStatus = "success",
+            Result = result is null ? null : ArcpJson.ToJsonElement(result),
+        };
+    }
+
+    private static ValueTask EmitJobErrorAsync(Job job, Func<Envelope, CancellationToken, ValueTask> emit, JobErrorPayload payload, CancellationToken cancellationToken) =>
+        emit(BuildEnvelope(job, MessageTypeNames.JobError, payload), cancellationToken);
+
+    private static Envelope BuildEnvelope(Job job, string type, object payload) => new()
+    {
+        Type = type,
+        SessionId = job.SessionId.Value,
+        JobId = job.JobId.Value,
+        TraceId = job.TraceId?.Value,
+        Payload = payload,
+    };
 
     private async Task RunLeaseWatchdog(Job job, DateTimeOffset expiresAt, Func<Envelope, CancellationToken, ValueTask> emit, CancellationToken cancellationToken)
     {
@@ -262,64 +248,4 @@ public sealed class JobManager
         return true;
     }
 
-    public IReadOnlyList<JobListEntry> List(string? requesterPrincipal, IJobAuthorizationPolicy policy,
-                                            JobListFilter? filter, int? limit, string? cursor, out string? nextCursor)
-    {
-        var jobs = _jobs.Values
-            .Where(j => string.IsNullOrEmpty(requesterPrincipal) ||
-                        string.Equals(j.SubmitterPrincipal, requesterPrincipal, StringComparison.Ordinal) ||
-                        policy.CanObserve(j.SubmitterPrincipal, new Core.Auth.AuthPrincipal(requesterPrincipal)))
-            .ToList();
-
-        if (filter is not null)
-        {
-            if (filter.Status is { Count: > 0 } statuses)
-                jobs = jobs.Where(j => statuses.Contains(MapStatus(j.Status), StringComparer.Ordinal)).ToList();
-            if (!string.IsNullOrEmpty(filter.Agent))
-            {
-                var a = filter.Agent;
-                jobs = jobs.Where(j => j.Agent.Name == a || j.Agent.ToString() == a).ToList();
-            }
-            if (filter.CreatedAfter is { } after)
-                jobs = jobs.Where(j => j.CreatedAt > after).ToList();
-        }
-
-        jobs = jobs.OrderBy(j => j.CreatedAt).ToList();
-        var skip = ParseCursor(cursor);
-        var take = limit ?? 100;
-        var page = jobs.Skip(skip).Take(take).ToList();
-        nextCursor = skip + page.Count < jobs.Count ? EncodeCursor(skip + page.Count) : null;
-
-        return page.Select(j => new JobListEntry
-        {
-            JobId = j.JobId.Value,
-            Agent = j.Agent.ToString(),
-            Status = MapStatus(j.Status),
-            Lease = j.Lease,
-            ParentJobId = j.ParentJobId,
-            CreatedAt = j.CreatedAt,
-            TraceId = j.TraceId?.Value,
-        }).ToArray();
-    }
-
-    private static string MapStatus(JobStatus s) => s switch
-    {
-        JobStatus.Pending => "pending",
-        JobStatus.Running => "running",
-        JobStatus.Success => "success",
-        JobStatus.Error => "error",
-        JobStatus.Cancelled => "cancelled",
-        JobStatus.TimedOut => "timed_out",
-        _ => "unknown",
-    };
-
-    private static int ParseCursor(string? cursor)
-    {
-        if (string.IsNullOrEmpty(cursor)) return 0;
-        try { return int.Parse(System.Text.Encoding.UTF8.GetString(Convert.FromBase64String(cursor)), System.Globalization.CultureInfo.InvariantCulture); }
-        catch { return 0; }
-    }
-
-    private static string EncodeCursor(int offset) =>
-        Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(offset.ToString(System.Globalization.CultureInfo.InvariantCulture)));
 }

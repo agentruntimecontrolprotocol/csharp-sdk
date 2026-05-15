@@ -20,92 +20,109 @@ public sealed class EnvelopeJsonConverter : JsonConverter<Envelope>
         _registry = registry;
     }
 
+    private sealed class EnvelopeFields
+    {
+        public string? Type;
+        public string? Arcp = "1";
+        public string? Id;
+        public string? SessionId;
+        public string? TraceId;
+        public string? SpanId;
+        public string? ParentSpanId;
+        public string? JobId;
+        public long? EventSeq;
+        public DateTimeOffset Timestamp = DateTimeOffset.UtcNow;
+        public JsonElement? PayloadElement;
+        public Dictionary<string, JsonElement>? Extensions;
+    }
+
     public override Envelope Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
         if (reader.TokenType != JsonTokenType.StartObject)
             throw new JsonException("Expected start of object for ARCP envelope.");
 
         using var doc = JsonDocument.ParseValue(ref reader);
-        var root = doc.RootElement;
+        var fields = ParseFields(doc.RootElement);
+        ValidateHeader(fields);
+        var payload = DeserializePayload(fields, options);
 
-        string? type = null;
-        string? arcp = "1";
-        string? id = null;
-        string? sessionId = null;
-        string? traceId = null;
-        string? spanId = null;
-        string? parentSpanId = null;
-        string? jobId = null;
-        long? eventSeq = null;
-        DateTimeOffset timestamp = DateTimeOffset.UtcNow;
-        JsonElement? payloadElement = null;
-        Dictionary<string, JsonElement>? extensions = null;
+        return new Envelope
+        {
+            Arcp = fields.Arcp ?? "1",
+            Id = fields.Id ?? "msg_" + Ulid.NewUlid(),
+            Type = fields.Type!,
+            SessionId = fields.SessionId,
+            TraceId = fields.TraceId,
+            SpanId = fields.SpanId,
+            ParentSpanId = fields.ParentSpanId,
+            JobId = fields.JobId,
+            EventSeq = fields.EventSeq,
+            Timestamp = fields.Timestamp,
+            Payload = payload,
+            Extensions = fields.Extensions,
+        };
+    }
 
+    private static EnvelopeFields ParseFields(JsonElement root)
+    {
+        var fields = new EnvelopeFields();
         foreach (var p in root.EnumerateObject())
         {
             switch (p.Name)
             {
-                case "arcp": arcp = p.Value.GetString(); break;
-                case "id": id = p.Value.GetString(); break;
-                case "type": type = p.Value.GetString(); break;
-                case "session_id": sessionId = p.Value.GetString(); break;
-                case "trace_id": traceId = p.Value.GetString(); break;
-                case "span_id": spanId = p.Value.GetString(); break;
-                case "parent_span_id": parentSpanId = p.Value.GetString(); break;
-                case "job_id": jobId = p.Value.GetString(); break;
+                case "arcp": fields.Arcp = p.Value.GetString(); break;
+                case "id": fields.Id = p.Value.GetString(); break;
+                case "type": fields.Type = p.Value.GetString(); break;
+                case "session_id": fields.SessionId = p.Value.GetString(); break;
+                case "trace_id": fields.TraceId = p.Value.GetString(); break;
+                case "span_id": fields.SpanId = p.Value.GetString(); break;
+                case "parent_span_id": fields.ParentSpanId = p.Value.GetString(); break;
+                case "job_id": fields.JobId = p.Value.GetString(); break;
                 case "event_seq":
-                    if (p.Value.ValueKind == JsonValueKind.Number) eventSeq = p.Value.GetInt64();
+                    if (p.Value.ValueKind == JsonValueKind.Number) fields.EventSeq = p.Value.GetInt64();
                     break;
                 case "timestamp":
                     if (p.Value.ValueKind == JsonValueKind.String && DateTimeOffset.TryParse(p.Value.GetString(), out var ts))
-                        timestamp = ts;
+                        fields.Timestamp = ts;
                     break;
-                case "payload": payloadElement = p.Value.Clone(); break;
+                case "payload": fields.PayloadElement = p.Value.Clone(); break;
                 default:
-                    extensions ??= new Dictionary<string, JsonElement>(StringComparer.Ordinal);
-                    extensions[p.Name] = p.Value.Clone();
+                    fields.Extensions ??= new Dictionary<string, JsonElement>(StringComparer.Ordinal);
+                    fields.Extensions[p.Name] = p.Value.Clone();
                     break;
             }
         }
+        return fields;
+    }
 
-        if (string.IsNullOrEmpty(type))
+    private static void ValidateHeader(EnvelopeFields fields)
+    {
+        if (string.IsNullOrEmpty(fields.Type))
             throw new Errors.InvalidRequestException("Envelope missing required 'type' field (spec §5.1).");
-        if (arcp is not null && arcp != "1")
-            throw new Errors.InvalidRequestException($"Unsupported ARCP envelope version: '{arcp}' (spec §5.1; expected '1').");
+        if (fields.Arcp is not null && fields.Arcp != "1")
+            throw new Errors.InvalidRequestException($"Unsupported ARCP envelope version: '{fields.Arcp}' (spec §5.1; expected '1').");
+    }
 
-        object? payload = null;
-        if (payloadElement is { ValueKind: not JsonValueKind.Null and not JsonValueKind.Undefined } pe)
-        {
-            if (_registry.TryGet(type, out var clrType) && clrType is not null)
-            {
-                payload = pe.Deserialize(clrType, options);
-            }
-            else
-            {
-                payload = pe;
-            }
-        }
-
-        return new Envelope
-        {
-            Arcp = arcp ?? "1",
-            Id = id ?? "msg_" + Ulid.NewUlid(),
-            Type = type,
-            SessionId = sessionId,
-            TraceId = traceId,
-            SpanId = spanId,
-            ParentSpanId = parentSpanId,
-            JobId = jobId,
-            EventSeq = eventSeq,
-            Timestamp = timestamp,
-            Payload = payload,
-            Extensions = extensions,
-        };
+    private object? DeserializePayload(EnvelopeFields fields, JsonSerializerOptions options)
+    {
+        if (fields.PayloadElement is not { ValueKind: not JsonValueKind.Null and not JsonValueKind.Undefined } pe)
+            return null;
+        if (_registry.TryGet(fields.Type!, out var clrType) && clrType is not null)
+            return pe.Deserialize(clrType, options);
+        return pe;
     }
 
     public override void Write(Utf8JsonWriter writer, Envelope value, JsonSerializerOptions options)
     {
         writer.WriteStartObject();
+        WriteHeader(writer, value);
+        WritePayload(writer, value, options);
+        WriteExtensions(writer, value);
+        writer.WriteEndObject();
+    }
+
+    private static void WriteHeader(Utf8JsonWriter writer, Envelope value)
+    {
         writer.WriteString("arcp", value.Arcp);
         writer.WriteString("id", value.Id);
         writer.WriteString("type", value.Type);
@@ -116,28 +133,29 @@ public sealed class EnvelopeJsonConverter : JsonConverter<Envelope>
         if (value.JobId is not null) writer.WriteString("job_id", value.JobId);
         if (value.EventSeq is { } seq) writer.WriteNumber("event_seq", seq);
         writer.WriteString("timestamp", value.Timestamp);
+    }
 
-        if (value.Payload is not null)
+    private static void WritePayload(Utf8JsonWriter writer, Envelope value, JsonSerializerOptions options)
+    {
+        if (value.Payload is null) return;
+        writer.WritePropertyName("payload");
+        if (value.Payload is JsonElement el)
         {
-            writer.WritePropertyName("payload");
-            if (value.Payload is JsonElement el)
-            {
-                el.WriteTo(writer);
-            }
-            else
-            {
-                JsonSerializer.Serialize(writer, value.Payload, value.Payload.GetType(), options);
-            }
+            el.WriteTo(writer);
         }
+        else
+        {
+            JsonSerializer.Serialize(writer, value.Payload, value.Payload.GetType(), options);
+        }
+    }
 
-        if (value.Extensions is not null)
+    private static void WriteExtensions(Utf8JsonWriter writer, Envelope value)
+    {
+        if (value.Extensions is null) return;
+        foreach (var kv in value.Extensions)
         {
-            foreach (var kv in value.Extensions)
-            {
-                writer.WritePropertyName(kv.Key);
-                kv.Value.WriteTo(writer);
-            }
+            writer.WritePropertyName(kv.Key);
+            kv.Value.WriteTo(writer);
         }
-        writer.WriteEndObject();
     }
 }
