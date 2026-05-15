@@ -1,0 +1,3 @@
+#nullable enable
+Arcp.Cli.Program
+static Arcp.Cli.Program.Main(string![]! args) -> System.Threading.Tasks.Task<int>!

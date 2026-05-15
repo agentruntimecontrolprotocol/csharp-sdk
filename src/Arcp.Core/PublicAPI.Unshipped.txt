@@ -1,0 +1,964 @@
+#nullable enable
+Arcp.Core.Agents.AgentRef
+Arcp.Core.Agents.AgentRef.AgentRef() -> void
+Arcp.Core.Agents.AgentRef.AgentRef(string! name, string? version = null) -> void
+Arcp.Core.Agents.AgentRef.Equals(Arcp.Core.Agents.AgentRef other) -> bool
+Arcp.Core.Agents.AgentRef.Name.get -> string!
+Arcp.Core.Agents.AgentRef.Version.get -> string?
+Arcp.Core.Auth.AllowAnyBearerVerifier
+Arcp.Core.Auth.AllowAnyBearerVerifier.AllowAnyBearerVerifier() -> void
+Arcp.Core.Auth.AllowAnyBearerVerifier.VerifyAsync(string? token, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Arcp.Core.Auth.AuthPrincipal?>
+Arcp.Core.Auth.AuthPrincipal
+Arcp.Core.Auth.AuthPrincipal.<Clone>$() -> Arcp.Core.Auth.AuthPrincipal!
+Arcp.Core.Auth.AuthPrincipal.AuthPrincipal(string! Subject, System.Collections.Generic.IReadOnlyDictionary<string!, string!>? Claims = null) -> void
+Arcp.Core.Auth.AuthPrincipal.Claims.get -> System.Collections.Generic.IReadOnlyDictionary<string!, string!>?
+Arcp.Core.Auth.AuthPrincipal.Claims.init -> void
+Arcp.Core.Auth.AuthPrincipal.Deconstruct(out string! Subject, out System.Collections.Generic.IReadOnlyDictionary<string!, string!>? Claims) -> void
+Arcp.Core.Auth.AuthPrincipal.Equals(Arcp.Core.Auth.AuthPrincipal? other) -> bool
+Arcp.Core.Auth.AuthPrincipal.Subject.get -> string!
+Arcp.Core.Auth.AuthPrincipal.Subject.init -> void
+Arcp.Core.Auth.IBearerVerifier
+Arcp.Core.Auth.IBearerVerifier.VerifyAsync(string? token, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Arcp.Core.Auth.AuthPrincipal?>
+Arcp.Core.Auth.StaticBearerVerifier
+Arcp.Core.Auth.StaticBearerVerifier.StaticBearerVerifier(params (string! Token, Arcp.Core.Auth.AuthPrincipal! Principal)[]! entries) -> void
+Arcp.Core.Auth.StaticBearerVerifier.StaticBearerVerifier(System.Collections.Generic.IReadOnlyDictionary<string!, Arcp.Core.Auth.AuthPrincipal!>! table) -> void
+Arcp.Core.Auth.StaticBearerVerifier.VerifyAsync(string? token, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Arcp.Core.Auth.AuthPrincipal?>
+Arcp.Core.Caps.AgentInventoryEntry
+Arcp.Core.Caps.AgentInventoryEntry.<Clone>$() -> Arcp.Core.Caps.AgentInventoryEntry!
+Arcp.Core.Caps.AgentInventoryEntry.AgentInventoryEntry() -> void
+Arcp.Core.Caps.AgentInventoryEntry.Default.get -> string?
+Arcp.Core.Caps.AgentInventoryEntry.Default.init -> void
+Arcp.Core.Caps.AgentInventoryEntry.Equals(Arcp.Core.Caps.AgentInventoryEntry? other) -> bool
+Arcp.Core.Caps.AgentInventoryEntry.Name.get -> string!
+Arcp.Core.Caps.AgentInventoryEntry.Name.init -> void
+Arcp.Core.Caps.AgentInventoryEntry.Versions.get -> System.Collections.Generic.IReadOnlyList<string!>?
+Arcp.Core.Caps.AgentInventoryEntry.Versions.init -> void
+Arcp.Core.Caps.Capabilities
+Arcp.Core.Caps.Capabilities.<Clone>$() -> Arcp.Core.Caps.Capabilities!
+Arcp.Core.Caps.Capabilities.Agents.get -> System.Collections.Generic.IReadOnlyList<Arcp.Core.Caps.AgentInventoryEntry!>?
+Arcp.Core.Caps.Capabilities.Agents.init -> void
+Arcp.Core.Caps.Capabilities.Capabilities() -> void
+Arcp.Core.Caps.Capabilities.Encodings.get -> System.Collections.Generic.IReadOnlyList<string!>!
+Arcp.Core.Caps.Capabilities.Encodings.init -> void
+Arcp.Core.Caps.Capabilities.Equals(Arcp.Core.Caps.Capabilities? other) -> bool
+Arcp.Core.Caps.Capabilities.Features.get -> System.Collections.Generic.IReadOnlyList<string!>?
+Arcp.Core.Caps.Capabilities.Features.init -> void
+Arcp.Core.Caps.FeatureFlags
+Arcp.Core.Caps.FeatureSet
+Arcp.Core.Errors.AgentNotAvailableException
+Arcp.Core.Errors.AgentNotAvailableException.AgentNotAvailableException(string! message, string? detail = null) -> void
+Arcp.Core.Errors.AgentVersionNotAvailableException
+Arcp.Core.Errors.AgentVersionNotAvailableException.AgentVersionNotAvailableException(string! message, string? detail = null) -> void
+Arcp.Core.Errors.ArcpException
+Arcp.Core.Errors.ArcpException.ArcpException(string! code, string! message, string? detail = null, System.Exception? inner = null) -> void
+Arcp.Core.Errors.ArcpException.Code.get -> string!
+Arcp.Core.Errors.ArcpException.Detail.get -> string?
+Arcp.Core.Errors.ArcpException.Retryable.get -> bool
+Arcp.Core.Errors.BudgetExhaustedException
+Arcp.Core.Errors.BudgetExhaustedException.BudgetExhaustedException(string! message, string? detail = null) -> void
+Arcp.Core.Errors.CancelledException
+Arcp.Core.Errors.CancelledException.CancelledException(string! message, string? detail = null) -> void
+Arcp.Core.Errors.DuplicateKeyException
+Arcp.Core.Errors.DuplicateKeyException.DuplicateKeyException(string! message, string? detail = null) -> void
+Arcp.Core.Errors.ErrorCode
+Arcp.Core.Errors.HeartbeatLostException
+Arcp.Core.Errors.HeartbeatLostException.HeartbeatLostException(string! message, string? detail = null) -> void
+Arcp.Core.Errors.InternalErrorException
+Arcp.Core.Errors.InternalErrorException.InternalErrorException(string! message, string? detail = null) -> void
+Arcp.Core.Errors.InvalidRequestException
+Arcp.Core.Errors.InvalidRequestException.InvalidRequestException(string! message, string? detail = null) -> void
+Arcp.Core.Errors.JobNotFoundException
+Arcp.Core.Errors.JobNotFoundException.JobNotFoundException(string! message, string? detail = null) -> void
+Arcp.Core.Errors.LeaseExpiredException
+Arcp.Core.Errors.LeaseExpiredException.LeaseExpiredException(string! message, string? detail = null) -> void
+Arcp.Core.Errors.LeaseSubsetViolationException
+Arcp.Core.Errors.LeaseSubsetViolationException.LeaseSubsetViolationException(string! message, string? detail = null) -> void
+Arcp.Core.Errors.PermissionDeniedException
+Arcp.Core.Errors.PermissionDeniedException.PermissionDeniedException(string! message, string? detail = null) -> void
+Arcp.Core.Errors.ResumeWindowExpiredException
+Arcp.Core.Errors.ResumeWindowExpiredException.ResumeWindowExpiredException(string! message, string? detail = null) -> void
+Arcp.Core.Errors.TimeoutException
+Arcp.Core.Errors.TimeoutException.TimeoutException(string! message, string? detail = null) -> void
+Arcp.Core.Errors.UnauthenticatedException
+Arcp.Core.Errors.UnauthenticatedException.UnauthenticatedException(string! message, string? detail = null) -> void
+Arcp.Core.Ids.ArtifactId
+Arcp.Core.Ids.ArtifactId.ArtifactId() -> void
+Arcp.Core.Ids.ArtifactId.ArtifactId(string! Value) -> void
+Arcp.Core.Ids.ArtifactId.Deconstruct(out string! Value) -> void
+Arcp.Core.Ids.ArtifactId.Equals(Arcp.Core.Ids.ArtifactId other) -> bool
+Arcp.Core.Ids.ArtifactId.Value.get -> string!
+Arcp.Core.Ids.ArtifactId.Value.init -> void
+Arcp.Core.Ids.JobId
+Arcp.Core.Ids.JobId.Deconstruct(out string! Value) -> void
+Arcp.Core.Ids.JobId.Equals(Arcp.Core.Ids.JobId other) -> bool
+Arcp.Core.Ids.JobId.JobId() -> void
+Arcp.Core.Ids.JobId.JobId(string! Value) -> void
+Arcp.Core.Ids.JobId.Value.get -> string!
+Arcp.Core.Ids.JobId.Value.init -> void
+Arcp.Core.Ids.MessageId
+Arcp.Core.Ids.MessageId.Deconstruct(out string! Value) -> void
+Arcp.Core.Ids.MessageId.Equals(Arcp.Core.Ids.MessageId other) -> bool
+Arcp.Core.Ids.MessageId.MessageId() -> void
+Arcp.Core.Ids.MessageId.MessageId(string! Value) -> void
+Arcp.Core.Ids.MessageId.Value.get -> string!
+Arcp.Core.Ids.MessageId.Value.init -> void
+Arcp.Core.Ids.ResultId
+Arcp.Core.Ids.ResultId.Deconstruct(out string! Value) -> void
+Arcp.Core.Ids.ResultId.Equals(Arcp.Core.Ids.ResultId other) -> bool
+Arcp.Core.Ids.ResultId.ResultId() -> void
+Arcp.Core.Ids.ResultId.ResultId(string! Value) -> void
+Arcp.Core.Ids.ResultId.Value.get -> string!
+Arcp.Core.Ids.ResultId.Value.init -> void
+Arcp.Core.Ids.SessionId
+Arcp.Core.Ids.SessionId.Deconstruct(out string! Value) -> void
+Arcp.Core.Ids.SessionId.Equals(Arcp.Core.Ids.SessionId other) -> bool
+Arcp.Core.Ids.SessionId.SessionId() -> void
+Arcp.Core.Ids.SessionId.SessionId(string! Value) -> void
+Arcp.Core.Ids.SessionId.Value.get -> string!
+Arcp.Core.Ids.SessionId.Value.init -> void
+Arcp.Core.Ids.SpanId
+Arcp.Core.Ids.SpanId.Deconstruct(out string! Value) -> void
+Arcp.Core.Ids.SpanId.Equals(Arcp.Core.Ids.SpanId other) -> bool
+Arcp.Core.Ids.SpanId.SpanId() -> void
+Arcp.Core.Ids.SpanId.SpanId(string! Value) -> void
+Arcp.Core.Ids.SpanId.Value.get -> string!
+Arcp.Core.Ids.SpanId.Value.init -> void
+Arcp.Core.Ids.TraceId
+Arcp.Core.Ids.TraceId.Deconstruct(out string! Value) -> void
+Arcp.Core.Ids.TraceId.Equals(Arcp.Core.Ids.TraceId other) -> bool
+Arcp.Core.Ids.TraceId.TraceId() -> void
+Arcp.Core.Ids.TraceId.TraceId(string! Value) -> void
+Arcp.Core.Ids.TraceId.Value.get -> string!
+Arcp.Core.Ids.TraceId.Value.init -> void
+Arcp.Core.Leases.BudgetAmount
+Arcp.Core.Leases.BudgetAmount.Amount.get -> decimal
+Arcp.Core.Leases.BudgetAmount.Amount.init -> void
+Arcp.Core.Leases.BudgetAmount.BudgetAmount() -> void
+Arcp.Core.Leases.BudgetAmount.BudgetAmount(string! Currency, decimal Amount) -> void
+Arcp.Core.Leases.BudgetAmount.Currency.get -> string!
+Arcp.Core.Leases.BudgetAmount.Currency.init -> void
+Arcp.Core.Leases.BudgetAmount.Deconstruct(out string! Currency, out decimal Amount) -> void
+Arcp.Core.Leases.BudgetAmount.Equals(Arcp.Core.Leases.BudgetAmount other) -> bool
+Arcp.Core.Leases.Lease
+Arcp.Core.Leases.Lease.<Clone>$() -> Arcp.Core.Leases.Lease!
+Arcp.Core.Leases.Lease.Capabilities.get -> System.Collections.Generic.IDictionary<string!, System.Collections.Generic.IReadOnlyList<string!>!>!
+Arcp.Core.Leases.Lease.Capabilities.init -> void
+Arcp.Core.Leases.Lease.Equals(Arcp.Core.Leases.Lease? other) -> bool
+Arcp.Core.Leases.Lease.Get(string! namespaceName) -> System.Collections.Generic.IReadOnlyList<string!>!
+Arcp.Core.Leases.Lease.Lease() -> void
+Arcp.Core.Leases.Lease.Lease(System.Collections.Generic.IReadOnlyDictionary<string!, System.Collections.Generic.IReadOnlyList<string!>!>! capabilities) -> void
+Arcp.Core.Leases.LeaseConstraints
+Arcp.Core.Leases.LeaseConstraints.<Clone>$() -> Arcp.Core.Leases.LeaseConstraints!
+Arcp.Core.Leases.LeaseConstraints.Equals(Arcp.Core.Leases.LeaseConstraints? other) -> bool
+Arcp.Core.Leases.LeaseConstraints.ExpiresAt.get -> System.DateTimeOffset?
+Arcp.Core.Leases.LeaseConstraints.ExpiresAt.init -> void
+Arcp.Core.Leases.LeaseConstraints.LeaseConstraints() -> void
+Arcp.Core.Leases.LeaseNamespaces
+Arcp.Core.Messages.ArtifactRefBody
+Arcp.Core.Messages.ArtifactRefBody.<Clone>$() -> Arcp.Core.Messages.ArtifactRefBody!
+Arcp.Core.Messages.ArtifactRefBody.ArtifactRefBody() -> void
+Arcp.Core.Messages.ArtifactRefBody.ByteSize.get -> long?
+Arcp.Core.Messages.ArtifactRefBody.ByteSize.init -> void
+Arcp.Core.Messages.ArtifactRefBody.ContentType.get -> string?
+Arcp.Core.Messages.ArtifactRefBody.ContentType.init -> void
+Arcp.Core.Messages.ArtifactRefBody.Equals(Arcp.Core.Messages.ArtifactRefBody? other) -> bool
+Arcp.Core.Messages.ArtifactRefBody.Sha256.get -> string?
+Arcp.Core.Messages.ArtifactRefBody.Sha256.init -> void
+Arcp.Core.Messages.ArtifactRefBody.Uri.get -> string!
+Arcp.Core.Messages.ArtifactRefBody.Uri.init -> void
+Arcp.Core.Messages.AuthCredential
+Arcp.Core.Messages.AuthCredential.<Clone>$() -> Arcp.Core.Messages.AuthCredential!
+Arcp.Core.Messages.AuthCredential.AuthCredential() -> void
+Arcp.Core.Messages.AuthCredential.Equals(Arcp.Core.Messages.AuthCredential? other) -> bool
+Arcp.Core.Messages.AuthCredential.Scheme.get -> string!
+Arcp.Core.Messages.AuthCredential.Scheme.init -> void
+Arcp.Core.Messages.AuthCredential.Token.get -> string?
+Arcp.Core.Messages.AuthCredential.Token.init -> void
+Arcp.Core.Messages.ClientInfo
+Arcp.Core.Messages.ClientInfo.<Clone>$() -> Arcp.Core.Messages.ClientInfo!
+Arcp.Core.Messages.ClientInfo.ClientInfo() -> void
+Arcp.Core.Messages.ClientInfo.Equals(Arcp.Core.Messages.ClientInfo? other) -> bool
+Arcp.Core.Messages.ClientInfo.Name.get -> string!
+Arcp.Core.Messages.ClientInfo.Name.init -> void
+Arcp.Core.Messages.ClientInfo.Version.get -> string!
+Arcp.Core.Messages.ClientInfo.Version.init -> void
+Arcp.Core.Messages.DelegateBody
+Arcp.Core.Messages.DelegateBody.<Clone>$() -> Arcp.Core.Messages.DelegateBody!
+Arcp.Core.Messages.DelegateBody.Agent.get -> string!
+Arcp.Core.Messages.DelegateBody.Agent.init -> void
+Arcp.Core.Messages.DelegateBody.ChildJobId.get -> string!
+Arcp.Core.Messages.DelegateBody.ChildJobId.init -> void
+Arcp.Core.Messages.DelegateBody.DelegateBody() -> void
+Arcp.Core.Messages.DelegateBody.Equals(Arcp.Core.Messages.DelegateBody? other) -> bool
+Arcp.Core.Messages.DelegateBody.Input.get -> System.Text.Json.JsonElement?
+Arcp.Core.Messages.DelegateBody.Input.init -> void
+Arcp.Core.Messages.EventKinds
+Arcp.Core.Messages.JobAcceptedPayload
+Arcp.Core.Messages.JobAcceptedPayload.<Clone>$() -> Arcp.Core.Messages.JobAcceptedPayload!
+Arcp.Core.Messages.JobAcceptedPayload.AcceptedAt.get -> System.DateTimeOffset
+Arcp.Core.Messages.JobAcceptedPayload.AcceptedAt.init -> void
+Arcp.Core.Messages.JobAcceptedPayload.Agent.get -> string!
+Arcp.Core.Messages.JobAcceptedPayload.Agent.init -> void
+Arcp.Core.Messages.JobAcceptedPayload.Budget.get -> System.Collections.Generic.IReadOnlyDictionary<string!, decimal>?
+Arcp.Core.Messages.JobAcceptedPayload.Budget.init -> void
+Arcp.Core.Messages.JobAcceptedPayload.Equals(Arcp.Core.Messages.JobAcceptedPayload? other) -> bool
+Arcp.Core.Messages.JobAcceptedPayload.JobAcceptedPayload() -> void
+Arcp.Core.Messages.JobAcceptedPayload.JobId.get -> string!
+Arcp.Core.Messages.JobAcceptedPayload.JobId.init -> void
+Arcp.Core.Messages.JobAcceptedPayload.Lease.get -> Arcp.Core.Leases.Lease?
+Arcp.Core.Messages.JobAcceptedPayload.Lease.init -> void
+Arcp.Core.Messages.JobAcceptedPayload.LeaseConstraints.get -> Arcp.Core.Leases.LeaseConstraints?
+Arcp.Core.Messages.JobAcceptedPayload.LeaseConstraints.init -> void
+Arcp.Core.Messages.JobAcceptedPayload.ParentJobId.get -> string?
+Arcp.Core.Messages.JobAcceptedPayload.ParentJobId.init -> void
+Arcp.Core.Messages.JobAcceptedPayload.TraceId.get -> string?
+Arcp.Core.Messages.JobAcceptedPayload.TraceId.init -> void
+Arcp.Core.Messages.JobCancelPayload
+Arcp.Core.Messages.JobCancelPayload.<Clone>$() -> Arcp.Core.Messages.JobCancelPayload!
+Arcp.Core.Messages.JobCancelPayload.Equals(Arcp.Core.Messages.JobCancelPayload? other) -> bool
+Arcp.Core.Messages.JobCancelPayload.JobCancelPayload() -> void
+Arcp.Core.Messages.JobCancelPayload.JobId.get -> string!
+Arcp.Core.Messages.JobCancelPayload.JobId.init -> void
+Arcp.Core.Messages.JobCancelPayload.Reason.get -> string?
+Arcp.Core.Messages.JobCancelPayload.Reason.init -> void
+Arcp.Core.Messages.JobErrorPayload
+Arcp.Core.Messages.JobErrorPayload.<Clone>$() -> Arcp.Core.Messages.JobErrorPayload!
+Arcp.Core.Messages.JobErrorPayload.Code.get -> string!
+Arcp.Core.Messages.JobErrorPayload.Code.init -> void
+Arcp.Core.Messages.JobErrorPayload.Detail.get -> string?
+Arcp.Core.Messages.JobErrorPayload.Detail.init -> void
+Arcp.Core.Messages.JobErrorPayload.Equals(Arcp.Core.Messages.JobErrorPayload? other) -> bool
+Arcp.Core.Messages.JobErrorPayload.FinalStatus.get -> string!
+Arcp.Core.Messages.JobErrorPayload.FinalStatus.init -> void
+Arcp.Core.Messages.JobErrorPayload.JobErrorPayload() -> void
+Arcp.Core.Messages.JobErrorPayload.Message.get -> string!
+Arcp.Core.Messages.JobErrorPayload.Message.init -> void
+Arcp.Core.Messages.JobErrorPayload.Retryable.get -> bool
+Arcp.Core.Messages.JobErrorPayload.Retryable.init -> void
+Arcp.Core.Messages.JobEventPayload
+Arcp.Core.Messages.JobEventPayload.<Clone>$() -> Arcp.Core.Messages.JobEventPayload!
+Arcp.Core.Messages.JobEventPayload.Body.get -> System.Text.Json.JsonElement
+Arcp.Core.Messages.JobEventPayload.Body.init -> void
+Arcp.Core.Messages.JobEventPayload.Equals(Arcp.Core.Messages.JobEventPayload? other) -> bool
+Arcp.Core.Messages.JobEventPayload.JobEventPayload() -> void
+Arcp.Core.Messages.JobEventPayload.Kind.get -> string!
+Arcp.Core.Messages.JobEventPayload.Kind.init -> void
+Arcp.Core.Messages.JobEventPayload.Ts.get -> System.DateTimeOffset
+Arcp.Core.Messages.JobEventPayload.Ts.init -> void
+Arcp.Core.Messages.JobListEntry
+Arcp.Core.Messages.JobListEntry.<Clone>$() -> Arcp.Core.Messages.JobListEntry!
+Arcp.Core.Messages.JobListEntry.Agent.get -> string!
+Arcp.Core.Messages.JobListEntry.Agent.init -> void
+Arcp.Core.Messages.JobListEntry.CreatedAt.get -> System.DateTimeOffset
+Arcp.Core.Messages.JobListEntry.CreatedAt.init -> void
+Arcp.Core.Messages.JobListEntry.Equals(Arcp.Core.Messages.JobListEntry? other) -> bool
+Arcp.Core.Messages.JobListEntry.JobId.get -> string!
+Arcp.Core.Messages.JobListEntry.JobId.init -> void
+Arcp.Core.Messages.JobListEntry.JobListEntry() -> void
+Arcp.Core.Messages.JobListEntry.LastEventSeq.get -> long?
+Arcp.Core.Messages.JobListEntry.LastEventSeq.init -> void
+Arcp.Core.Messages.JobListEntry.Lease.get -> Arcp.Core.Leases.Lease?
+Arcp.Core.Messages.JobListEntry.Lease.init -> void
+Arcp.Core.Messages.JobListEntry.ParentJobId.get -> string?
+Arcp.Core.Messages.JobListEntry.ParentJobId.init -> void
+Arcp.Core.Messages.JobListEntry.Status.get -> string!
+Arcp.Core.Messages.JobListEntry.Status.init -> void
+Arcp.Core.Messages.JobListEntry.TraceId.get -> string?
+Arcp.Core.Messages.JobListEntry.TraceId.init -> void
+Arcp.Core.Messages.JobListFilter
+Arcp.Core.Messages.JobListFilter.<Clone>$() -> Arcp.Core.Messages.JobListFilter!
+Arcp.Core.Messages.JobListFilter.Agent.get -> string?
+Arcp.Core.Messages.JobListFilter.Agent.init -> void
+Arcp.Core.Messages.JobListFilter.CreatedAfter.get -> System.DateTimeOffset?
+Arcp.Core.Messages.JobListFilter.CreatedAfter.init -> void
+Arcp.Core.Messages.JobListFilter.Equals(Arcp.Core.Messages.JobListFilter? other) -> bool
+Arcp.Core.Messages.JobListFilter.JobListFilter() -> void
+Arcp.Core.Messages.JobListFilter.Status.get -> System.Collections.Generic.IReadOnlyList<string!>?
+Arcp.Core.Messages.JobListFilter.Status.init -> void
+Arcp.Core.Messages.JobResultPayload
+Arcp.Core.Messages.JobResultPayload.<Clone>$() -> Arcp.Core.Messages.JobResultPayload!
+Arcp.Core.Messages.JobResultPayload.Equals(Arcp.Core.Messages.JobResultPayload? other) -> bool
+Arcp.Core.Messages.JobResultPayload.FinalStatus.get -> string!
+Arcp.Core.Messages.JobResultPayload.FinalStatus.init -> void
+Arcp.Core.Messages.JobResultPayload.JobResultPayload() -> void
+Arcp.Core.Messages.JobResultPayload.Result.get -> System.Text.Json.JsonElement?
+Arcp.Core.Messages.JobResultPayload.Result.init -> void
+Arcp.Core.Messages.JobResultPayload.ResultId.get -> string?
+Arcp.Core.Messages.JobResultPayload.ResultId.init -> void
+Arcp.Core.Messages.JobResultPayload.ResultSize.get -> long?
+Arcp.Core.Messages.JobResultPayload.ResultSize.init -> void
+Arcp.Core.Messages.JobResultPayload.Summary.get -> string?
+Arcp.Core.Messages.JobResultPayload.Summary.init -> void
+Arcp.Core.Messages.JobSubmitPayload
+Arcp.Core.Messages.JobSubmitPayload.<Clone>$() -> Arcp.Core.Messages.JobSubmitPayload!
+Arcp.Core.Messages.JobSubmitPayload.Agent.get -> string!
+Arcp.Core.Messages.JobSubmitPayload.Agent.init -> void
+Arcp.Core.Messages.JobSubmitPayload.Equals(Arcp.Core.Messages.JobSubmitPayload? other) -> bool
+Arcp.Core.Messages.JobSubmitPayload.IdempotencyKey.get -> string?
+Arcp.Core.Messages.JobSubmitPayload.IdempotencyKey.init -> void
+Arcp.Core.Messages.JobSubmitPayload.Input.get -> System.Text.Json.JsonElement?
+Arcp.Core.Messages.JobSubmitPayload.Input.init -> void
+Arcp.Core.Messages.JobSubmitPayload.JobSubmitPayload() -> void
+Arcp.Core.Messages.JobSubmitPayload.LeaseConstraints.get -> Arcp.Core.Leases.LeaseConstraints?
+Arcp.Core.Messages.JobSubmitPayload.LeaseConstraints.init -> void
+Arcp.Core.Messages.JobSubmitPayload.LeaseRequest.get -> Arcp.Core.Leases.Lease?
+Arcp.Core.Messages.JobSubmitPayload.LeaseRequest.init -> void
+Arcp.Core.Messages.JobSubmitPayload.MaxRuntimeSec.get -> int?
+Arcp.Core.Messages.JobSubmitPayload.MaxRuntimeSec.init -> void
+Arcp.Core.Messages.JobSubmitPayload.ParentJobId.get -> string?
+Arcp.Core.Messages.JobSubmitPayload.ParentJobId.init -> void
+Arcp.Core.Messages.JobSubscribedPayload
+Arcp.Core.Messages.JobSubscribedPayload.<Clone>$() -> Arcp.Core.Messages.JobSubscribedPayload!
+Arcp.Core.Messages.JobSubscribedPayload.Agent.get -> string!
+Arcp.Core.Messages.JobSubscribedPayload.Agent.init -> void
+Arcp.Core.Messages.JobSubscribedPayload.CurrentStatus.get -> string!
+Arcp.Core.Messages.JobSubscribedPayload.CurrentStatus.init -> void
+Arcp.Core.Messages.JobSubscribedPayload.Equals(Arcp.Core.Messages.JobSubscribedPayload? other) -> bool
+Arcp.Core.Messages.JobSubscribedPayload.JobId.get -> string!
+Arcp.Core.Messages.JobSubscribedPayload.JobId.init -> void
+Arcp.Core.Messages.JobSubscribedPayload.JobSubscribedPayload() -> void
+Arcp.Core.Messages.JobSubscribedPayload.Lease.get -> Arcp.Core.Leases.Lease?
+Arcp.Core.Messages.JobSubscribedPayload.Lease.init -> void
+Arcp.Core.Messages.JobSubscribedPayload.LeaseConstraints.get -> Arcp.Core.Leases.LeaseConstraints?
+Arcp.Core.Messages.JobSubscribedPayload.LeaseConstraints.init -> void
+Arcp.Core.Messages.JobSubscribedPayload.ParentJobId.get -> string?
+Arcp.Core.Messages.JobSubscribedPayload.ParentJobId.init -> void
+Arcp.Core.Messages.JobSubscribedPayload.Replayed.get -> bool
+Arcp.Core.Messages.JobSubscribedPayload.Replayed.init -> void
+Arcp.Core.Messages.JobSubscribedPayload.SubscribedFrom.get -> long?
+Arcp.Core.Messages.JobSubscribedPayload.SubscribedFrom.init -> void
+Arcp.Core.Messages.JobSubscribedPayload.TraceId.get -> string?
+Arcp.Core.Messages.JobSubscribedPayload.TraceId.init -> void
+Arcp.Core.Messages.JobSubscribePayload
+Arcp.Core.Messages.JobSubscribePayload.<Clone>$() -> Arcp.Core.Messages.JobSubscribePayload!
+Arcp.Core.Messages.JobSubscribePayload.Equals(Arcp.Core.Messages.JobSubscribePayload? other) -> bool
+Arcp.Core.Messages.JobSubscribePayload.FromEventSeq.get -> long?
+Arcp.Core.Messages.JobSubscribePayload.FromEventSeq.init -> void
+Arcp.Core.Messages.JobSubscribePayload.History.get -> bool
+Arcp.Core.Messages.JobSubscribePayload.History.init -> void
+Arcp.Core.Messages.JobSubscribePayload.JobId.get -> string!
+Arcp.Core.Messages.JobSubscribePayload.JobId.init -> void
+Arcp.Core.Messages.JobSubscribePayload.JobSubscribePayload() -> void
+Arcp.Core.Messages.JobUnsubscribePayload
+Arcp.Core.Messages.JobUnsubscribePayload.<Clone>$() -> Arcp.Core.Messages.JobUnsubscribePayload!
+Arcp.Core.Messages.JobUnsubscribePayload.Equals(Arcp.Core.Messages.JobUnsubscribePayload? other) -> bool
+Arcp.Core.Messages.JobUnsubscribePayload.JobId.get -> string!
+Arcp.Core.Messages.JobUnsubscribePayload.JobId.init -> void
+Arcp.Core.Messages.JobUnsubscribePayload.JobUnsubscribePayload() -> void
+Arcp.Core.Messages.LogBody
+Arcp.Core.Messages.LogBody.<Clone>$() -> Arcp.Core.Messages.LogBody!
+Arcp.Core.Messages.LogBody.Equals(Arcp.Core.Messages.LogBody? other) -> bool
+Arcp.Core.Messages.LogBody.Level.get -> string!
+Arcp.Core.Messages.LogBody.Level.init -> void
+Arcp.Core.Messages.LogBody.LogBody() -> void
+Arcp.Core.Messages.LogBody.Message.get -> string!
+Arcp.Core.Messages.LogBody.Message.init -> void
+Arcp.Core.Messages.MessageTypeNames
+Arcp.Core.Messages.MetricBody
+Arcp.Core.Messages.MetricBody.<Clone>$() -> Arcp.Core.Messages.MetricBody!
+Arcp.Core.Messages.MetricBody.Dimensions.get -> System.Collections.Generic.IReadOnlyDictionary<string!, string!>?
+Arcp.Core.Messages.MetricBody.Dimensions.init -> void
+Arcp.Core.Messages.MetricBody.Equals(Arcp.Core.Messages.MetricBody? other) -> bool
+Arcp.Core.Messages.MetricBody.MetricBody() -> void
+Arcp.Core.Messages.MetricBody.Name.get -> string!
+Arcp.Core.Messages.MetricBody.Name.init -> void
+Arcp.Core.Messages.MetricBody.Unit.get -> string?
+Arcp.Core.Messages.MetricBody.Unit.init -> void
+Arcp.Core.Messages.MetricBody.Value.get -> double
+Arcp.Core.Messages.MetricBody.Value.init -> void
+Arcp.Core.Messages.ProgressBody
+Arcp.Core.Messages.ProgressBody.<Clone>$() -> Arcp.Core.Messages.ProgressBody!
+Arcp.Core.Messages.ProgressBody.Current.get -> long
+Arcp.Core.Messages.ProgressBody.Current.init -> void
+Arcp.Core.Messages.ProgressBody.Equals(Arcp.Core.Messages.ProgressBody? other) -> bool
+Arcp.Core.Messages.ProgressBody.Message.get -> string?
+Arcp.Core.Messages.ProgressBody.Message.init -> void
+Arcp.Core.Messages.ProgressBody.ProgressBody() -> void
+Arcp.Core.Messages.ProgressBody.Total.get -> long?
+Arcp.Core.Messages.ProgressBody.Total.init -> void
+Arcp.Core.Messages.ProgressBody.Units.get -> string?
+Arcp.Core.Messages.ProgressBody.Units.init -> void
+Arcp.Core.Messages.ProgressBody.Validate() -> Arcp.Core.Messages.ProgressBody!
+Arcp.Core.Messages.ResultChunkBody
+Arcp.Core.Messages.ResultChunkBody.<Clone>$() -> Arcp.Core.Messages.ResultChunkBody!
+Arcp.Core.Messages.ResultChunkBody.ChunkSeq.get -> long
+Arcp.Core.Messages.ResultChunkBody.ChunkSeq.init -> void
+Arcp.Core.Messages.ResultChunkBody.Data.get -> string!
+Arcp.Core.Messages.ResultChunkBody.Data.init -> void
+Arcp.Core.Messages.ResultChunkBody.Encoding.get -> string!
+Arcp.Core.Messages.ResultChunkBody.Encoding.init -> void
+Arcp.Core.Messages.ResultChunkBody.Equals(Arcp.Core.Messages.ResultChunkBody? other) -> bool
+Arcp.Core.Messages.ResultChunkBody.More.get -> bool
+Arcp.Core.Messages.ResultChunkBody.More.init -> void
+Arcp.Core.Messages.ResultChunkBody.ResultChunkBody() -> void
+Arcp.Core.Messages.ResultChunkBody.ResultId.get -> string!
+Arcp.Core.Messages.ResultChunkBody.ResultId.init -> void
+Arcp.Core.Messages.RuntimeInfo
+Arcp.Core.Messages.RuntimeInfo.<Clone>$() -> Arcp.Core.Messages.RuntimeInfo!
+Arcp.Core.Messages.RuntimeInfo.Equals(Arcp.Core.Messages.RuntimeInfo? other) -> bool
+Arcp.Core.Messages.RuntimeInfo.Name.get -> string!
+Arcp.Core.Messages.RuntimeInfo.Name.init -> void
+Arcp.Core.Messages.RuntimeInfo.RuntimeInfo() -> void
+Arcp.Core.Messages.RuntimeInfo.Version.get -> string!
+Arcp.Core.Messages.RuntimeInfo.Version.init -> void
+Arcp.Core.Messages.SessionAckPayload
+Arcp.Core.Messages.SessionAckPayload.<Clone>$() -> Arcp.Core.Messages.SessionAckPayload!
+Arcp.Core.Messages.SessionAckPayload.Equals(Arcp.Core.Messages.SessionAckPayload? other) -> bool
+Arcp.Core.Messages.SessionAckPayload.LastProcessedSeq.get -> long
+Arcp.Core.Messages.SessionAckPayload.LastProcessedSeq.init -> void
+Arcp.Core.Messages.SessionAckPayload.SessionAckPayload() -> void
+Arcp.Core.Messages.SessionByePayload
+Arcp.Core.Messages.SessionByePayload.<Clone>$() -> Arcp.Core.Messages.SessionByePayload!
+Arcp.Core.Messages.SessionByePayload.Equals(Arcp.Core.Messages.SessionByePayload? other) -> bool
+Arcp.Core.Messages.SessionByePayload.Reason.get -> string?
+Arcp.Core.Messages.SessionByePayload.Reason.init -> void
+Arcp.Core.Messages.SessionByePayload.SessionByePayload() -> void
+Arcp.Core.Messages.SessionErrorPayload
+Arcp.Core.Messages.SessionErrorPayload.<Clone>$() -> Arcp.Core.Messages.SessionErrorPayload!
+Arcp.Core.Messages.SessionErrorPayload.Code.get -> string!
+Arcp.Core.Messages.SessionErrorPayload.Code.init -> void
+Arcp.Core.Messages.SessionErrorPayload.Detail.get -> string?
+Arcp.Core.Messages.SessionErrorPayload.Detail.init -> void
+Arcp.Core.Messages.SessionErrorPayload.Equals(Arcp.Core.Messages.SessionErrorPayload? other) -> bool
+Arcp.Core.Messages.SessionErrorPayload.Message.get -> string!
+Arcp.Core.Messages.SessionErrorPayload.Message.init -> void
+Arcp.Core.Messages.SessionErrorPayload.Retryable.get -> bool
+Arcp.Core.Messages.SessionErrorPayload.Retryable.init -> void
+Arcp.Core.Messages.SessionErrorPayload.SessionErrorPayload() -> void
+Arcp.Core.Messages.SessionHelloPayload
+Arcp.Core.Messages.SessionHelloPayload.<Clone>$() -> Arcp.Core.Messages.SessionHelloPayload!
+Arcp.Core.Messages.SessionHelloPayload.Auth.get -> Arcp.Core.Messages.AuthCredential?
+Arcp.Core.Messages.SessionHelloPayload.Auth.init -> void
+Arcp.Core.Messages.SessionHelloPayload.Capabilities.get -> Arcp.Core.Caps.Capabilities!
+Arcp.Core.Messages.SessionHelloPayload.Capabilities.init -> void
+Arcp.Core.Messages.SessionHelloPayload.Client.get -> Arcp.Core.Messages.ClientInfo!
+Arcp.Core.Messages.SessionHelloPayload.Client.init -> void
+Arcp.Core.Messages.SessionHelloPayload.Equals(Arcp.Core.Messages.SessionHelloPayload? other) -> bool
+Arcp.Core.Messages.SessionHelloPayload.LastEventSeq.get -> long?
+Arcp.Core.Messages.SessionHelloPayload.LastEventSeq.init -> void
+Arcp.Core.Messages.SessionHelloPayload.ResumeToken.get -> string?
+Arcp.Core.Messages.SessionHelloPayload.ResumeToken.init -> void
+Arcp.Core.Messages.SessionHelloPayload.SessionHelloPayload() -> void
+Arcp.Core.Messages.SessionJobsPayload
+Arcp.Core.Messages.SessionJobsPayload.<Clone>$() -> Arcp.Core.Messages.SessionJobsPayload!
+Arcp.Core.Messages.SessionJobsPayload.Equals(Arcp.Core.Messages.SessionJobsPayload? other) -> bool
+Arcp.Core.Messages.SessionJobsPayload.Jobs.get -> System.Collections.Generic.IReadOnlyList<Arcp.Core.Messages.JobListEntry!>!
+Arcp.Core.Messages.SessionJobsPayload.Jobs.init -> void
+Arcp.Core.Messages.SessionJobsPayload.NextCursor.get -> string?
+Arcp.Core.Messages.SessionJobsPayload.NextCursor.init -> void
+Arcp.Core.Messages.SessionJobsPayload.RequestId.get -> string?
+Arcp.Core.Messages.SessionJobsPayload.RequestId.init -> void
+Arcp.Core.Messages.SessionJobsPayload.SessionJobsPayload() -> void
+Arcp.Core.Messages.SessionListJobsPayload
+Arcp.Core.Messages.SessionListJobsPayload.<Clone>$() -> Arcp.Core.Messages.SessionListJobsPayload!
+Arcp.Core.Messages.SessionListJobsPayload.Cursor.get -> string?
+Arcp.Core.Messages.SessionListJobsPayload.Cursor.init -> void
+Arcp.Core.Messages.SessionListJobsPayload.Equals(Arcp.Core.Messages.SessionListJobsPayload? other) -> bool
+Arcp.Core.Messages.SessionListJobsPayload.Filter.get -> Arcp.Core.Messages.JobListFilter?
+Arcp.Core.Messages.SessionListJobsPayload.Filter.init -> void
+Arcp.Core.Messages.SessionListJobsPayload.Limit.get -> int?
+Arcp.Core.Messages.SessionListJobsPayload.Limit.init -> void
+Arcp.Core.Messages.SessionListJobsPayload.SessionListJobsPayload() -> void
+Arcp.Core.Messages.SessionPingPayload
+Arcp.Core.Messages.SessionPingPayload.<Clone>$() -> Arcp.Core.Messages.SessionPingPayload!
+Arcp.Core.Messages.SessionPingPayload.Equals(Arcp.Core.Messages.SessionPingPayload? other) -> bool
+Arcp.Core.Messages.SessionPingPayload.Nonce.get -> string!
+Arcp.Core.Messages.SessionPingPayload.Nonce.init -> void
+Arcp.Core.Messages.SessionPingPayload.SentAt.get -> System.DateTimeOffset
+Arcp.Core.Messages.SessionPingPayload.SentAt.init -> void
+Arcp.Core.Messages.SessionPingPayload.SessionPingPayload() -> void
+Arcp.Core.Messages.SessionPongPayload
+Arcp.Core.Messages.SessionPongPayload.<Clone>$() -> Arcp.Core.Messages.SessionPongPayload!
+Arcp.Core.Messages.SessionPongPayload.Equals(Arcp.Core.Messages.SessionPongPayload? other) -> bool
+Arcp.Core.Messages.SessionPongPayload.PingNonce.get -> string!
+Arcp.Core.Messages.SessionPongPayload.PingNonce.init -> void
+Arcp.Core.Messages.SessionPongPayload.ReceivedAt.get -> System.DateTimeOffset
+Arcp.Core.Messages.SessionPongPayload.ReceivedAt.init -> void
+Arcp.Core.Messages.SessionPongPayload.SessionPongPayload() -> void
+Arcp.Core.Messages.SessionWelcomePayload
+Arcp.Core.Messages.SessionWelcomePayload.<Clone>$() -> Arcp.Core.Messages.SessionWelcomePayload!
+Arcp.Core.Messages.SessionWelcomePayload.Capabilities.get -> Arcp.Core.Caps.Capabilities!
+Arcp.Core.Messages.SessionWelcomePayload.Capabilities.init -> void
+Arcp.Core.Messages.SessionWelcomePayload.Equals(Arcp.Core.Messages.SessionWelcomePayload? other) -> bool
+Arcp.Core.Messages.SessionWelcomePayload.HeartbeatIntervalSec.get -> int?
+Arcp.Core.Messages.SessionWelcomePayload.HeartbeatIntervalSec.init -> void
+Arcp.Core.Messages.SessionWelcomePayload.ResumeToken.get -> string?
+Arcp.Core.Messages.SessionWelcomePayload.ResumeToken.init -> void
+Arcp.Core.Messages.SessionWelcomePayload.ResumeWindowSec.get -> int?
+Arcp.Core.Messages.SessionWelcomePayload.ResumeWindowSec.init -> void
+Arcp.Core.Messages.SessionWelcomePayload.Runtime.get -> Arcp.Core.Messages.RuntimeInfo!
+Arcp.Core.Messages.SessionWelcomePayload.Runtime.init -> void
+Arcp.Core.Messages.SessionWelcomePayload.SessionWelcomePayload() -> void
+Arcp.Core.Messages.StatusBody
+Arcp.Core.Messages.StatusBody.<Clone>$() -> Arcp.Core.Messages.StatusBody!
+Arcp.Core.Messages.StatusBody.Equals(Arcp.Core.Messages.StatusBody? other) -> bool
+Arcp.Core.Messages.StatusBody.Message.get -> string?
+Arcp.Core.Messages.StatusBody.Message.init -> void
+Arcp.Core.Messages.StatusBody.Phase.get -> string!
+Arcp.Core.Messages.StatusBody.Phase.init -> void
+Arcp.Core.Messages.StatusBody.StatusBody() -> void
+Arcp.Core.Messages.ThoughtBody
+Arcp.Core.Messages.ThoughtBody.<Clone>$() -> Arcp.Core.Messages.ThoughtBody!
+Arcp.Core.Messages.ThoughtBody.Equals(Arcp.Core.Messages.ThoughtBody? other) -> bool
+Arcp.Core.Messages.ThoughtBody.Text.get -> string!
+Arcp.Core.Messages.ThoughtBody.Text.init -> void
+Arcp.Core.Messages.ThoughtBody.ThoughtBody() -> void
+Arcp.Core.Messages.ToolCallBody
+Arcp.Core.Messages.ToolCallBody.<Clone>$() -> Arcp.Core.Messages.ToolCallBody!
+Arcp.Core.Messages.ToolCallBody.Args.get -> System.Text.Json.JsonElement?
+Arcp.Core.Messages.ToolCallBody.Args.init -> void
+Arcp.Core.Messages.ToolCallBody.CallId.get -> string!
+Arcp.Core.Messages.ToolCallBody.CallId.init -> void
+Arcp.Core.Messages.ToolCallBody.Equals(Arcp.Core.Messages.ToolCallBody? other) -> bool
+Arcp.Core.Messages.ToolCallBody.Tool.get -> string!
+Arcp.Core.Messages.ToolCallBody.Tool.init -> void
+Arcp.Core.Messages.ToolCallBody.ToolCallBody() -> void
+Arcp.Core.Messages.ToolError
+Arcp.Core.Messages.ToolError.<Clone>$() -> Arcp.Core.Messages.ToolError!
+Arcp.Core.Messages.ToolError.Code.get -> string!
+Arcp.Core.Messages.ToolError.Code.init -> void
+Arcp.Core.Messages.ToolError.Equals(Arcp.Core.Messages.ToolError? other) -> bool
+Arcp.Core.Messages.ToolError.Message.get -> string!
+Arcp.Core.Messages.ToolError.Message.init -> void
+Arcp.Core.Messages.ToolError.Retryable.get -> bool
+Arcp.Core.Messages.ToolError.Retryable.init -> void
+Arcp.Core.Messages.ToolError.ToolError() -> void
+Arcp.Core.Messages.ToolResultBody
+Arcp.Core.Messages.ToolResultBody.<Clone>$() -> Arcp.Core.Messages.ToolResultBody!
+Arcp.Core.Messages.ToolResultBody.CallId.get -> string!
+Arcp.Core.Messages.ToolResultBody.CallId.init -> void
+Arcp.Core.Messages.ToolResultBody.Equals(Arcp.Core.Messages.ToolResultBody? other) -> bool
+Arcp.Core.Messages.ToolResultBody.Error.get -> Arcp.Core.Messages.ToolError?
+Arcp.Core.Messages.ToolResultBody.Error.init -> void
+Arcp.Core.Messages.ToolResultBody.Result.get -> System.Text.Json.JsonElement?
+Arcp.Core.Messages.ToolResultBody.Result.init -> void
+Arcp.Core.Messages.ToolResultBody.ToolResultBody() -> void
+Arcp.Core.Store.EventLog
+Arcp.Core.Store.EventLog.Append(Arcp.Core.Wire.Envelope! envelope) -> Arcp.Core.Wire.Envelope!
+Arcp.Core.Store.EventLog.Capacity.get -> int
+Arcp.Core.Store.EventLog.EventLog(int capacity = 4096) -> void
+Arcp.Core.Store.EventLog.HighWatermark.get -> long
+Arcp.Core.Store.EventLog.LastAckedSeq.get -> long
+Arcp.Core.Store.EventLog.NextSeq.get -> long
+Arcp.Core.Store.EventLog.ReadFrom(long fromSeq) -> System.Collections.Generic.IReadOnlyList<Arcp.Core.Wire.Envelope!>!
+Arcp.Core.Store.EventLog.Trim(long upToSeq) -> void
+Arcp.Core.Tracing.ArcpDiagnostics
+Arcp.Core.Tracing.TraceAttributes
+Arcp.Core.Transport.ITransport
+Arcp.Core.Transport.ITransport.CloseAsync(string? reason = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask
+Arcp.Core.Transport.ITransport.ReceiveAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Collections.Generic.IAsyncEnumerable<Arcp.Core.Wire.Envelope!>!
+Arcp.Core.Transport.ITransport.SendAsync(Arcp.Core.Wire.Envelope! envelope, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask
+Arcp.Core.Transport.MemoryTransport
+Arcp.Core.Transport.MemoryTransport.CloseAsync(string? reason = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask
+Arcp.Core.Transport.MemoryTransport.DisposeAsync() -> System.Threading.Tasks.ValueTask
+Arcp.Core.Transport.MemoryTransport.ReceiveAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Collections.Generic.IAsyncEnumerable<Arcp.Core.Wire.Envelope!>!
+Arcp.Core.Transport.MemoryTransport.SendAsync(Arcp.Core.Wire.Envelope! envelope, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask
+Arcp.Core.Transport.StdioTransport
+Arcp.Core.Transport.StdioTransport.CloseAsync(string? reason = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask
+Arcp.Core.Transport.StdioTransport.DisposeAsync() -> System.Threading.Tasks.ValueTask
+Arcp.Core.Transport.StdioTransport.ReceiveAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Collections.Generic.IAsyncEnumerable<Arcp.Core.Wire.Envelope!>!
+Arcp.Core.Transport.StdioTransport.SendAsync(Arcp.Core.Wire.Envelope! envelope, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask
+Arcp.Core.Transport.StdioTransport.StdioTransport(System.IO.Stream! input, System.IO.Stream! output) -> void
+Arcp.Core.Transport.WebSocketTransport
+Arcp.Core.Transport.WebSocketTransport.CloseAsync(string? reason = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask
+Arcp.Core.Transport.WebSocketTransport.DisposeAsync() -> System.Threading.Tasks.ValueTask
+Arcp.Core.Transport.WebSocketTransport.ReceiveAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Collections.Generic.IAsyncEnumerable<Arcp.Core.Wire.Envelope!>!
+Arcp.Core.Transport.WebSocketTransport.SendAsync(Arcp.Core.Wire.Envelope! envelope, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask
+Arcp.Core.Transport.WebSocketTransport.WebSocketTransport(System.Net.WebSockets.WebSocket! socket, bool ownsSocket = true) -> void
+Arcp.Core.Wire.ArcpJson
+Arcp.Core.Wire.Envelope
+Arcp.Core.Wire.Envelope.<Clone>$() -> Arcp.Core.Wire.Envelope!
+Arcp.Core.Wire.Envelope.Arcp.get -> string!
+Arcp.Core.Wire.Envelope.Arcp.init -> void
+Arcp.Core.Wire.Envelope.Envelope() -> void
+Arcp.Core.Wire.Envelope.Equals(Arcp.Core.Wire.Envelope? other) -> bool
+Arcp.Core.Wire.Envelope.EventSeq.get -> long?
+Arcp.Core.Wire.Envelope.EventSeq.init -> void
+Arcp.Core.Wire.Envelope.Extensions.get -> System.Collections.Generic.IDictionary<string!, System.Text.Json.JsonElement>?
+Arcp.Core.Wire.Envelope.Extensions.init -> void
+Arcp.Core.Wire.Envelope.Id.get -> string!
+Arcp.Core.Wire.Envelope.Id.init -> void
+Arcp.Core.Wire.Envelope.JobId.get -> string?
+Arcp.Core.Wire.Envelope.JobId.init -> void
+Arcp.Core.Wire.Envelope.ParentSpanId.get -> string?
+Arcp.Core.Wire.Envelope.ParentSpanId.init -> void
+Arcp.Core.Wire.Envelope.Payload.get -> object?
+Arcp.Core.Wire.Envelope.Payload.init -> void
+Arcp.Core.Wire.Envelope.SessionId.get -> string?
+Arcp.Core.Wire.Envelope.SessionId.init -> void
+Arcp.Core.Wire.Envelope.SpanId.get -> string?
+Arcp.Core.Wire.Envelope.SpanId.init -> void
+Arcp.Core.Wire.Envelope.Timestamp.get -> System.DateTimeOffset
+Arcp.Core.Wire.Envelope.Timestamp.init -> void
+Arcp.Core.Wire.Envelope.TraceId.get -> string?
+Arcp.Core.Wire.Envelope.TraceId.init -> void
+Arcp.Core.Wire.Envelope.Type.get -> string!
+Arcp.Core.Wire.Envelope.Type.init -> void
+Arcp.Core.Wire.EnvelopeJsonConverter
+Arcp.Core.Wire.EnvelopeJsonConverter.EnvelopeJsonConverter() -> void
+Arcp.Core.Wire.EnvelopeJsonConverter.EnvelopeJsonConverter(Arcp.Core.Wire.MessageTypeRegistry! registry) -> void
+Arcp.Core.Wire.MessageTypeRegistry
+Arcp.Core.Wire.MessageTypeRegistry.Entries.get -> System.Collections.Generic.IReadOnlyDictionary<string!, System.Type!>!
+Arcp.Core.Wire.MessageTypeRegistry.MessageTypeRegistry() -> void
+Arcp.Core.Wire.MessageTypeRegistry.Register(string! typeName, System.Type! payloadType) -> Arcp.Core.Wire.MessageTypeRegistry!
+Arcp.Core.Wire.MessageTypeRegistry.TryGet(string! typeName, out System.Type? payloadType) -> bool
+const Arcp.Core.Caps.FeatureFlags.Ack = "ack" -> string!
+const Arcp.Core.Caps.FeatureFlags.AgentVersions = "agent_versions" -> string!
+const Arcp.Core.Caps.FeatureFlags.CostBudget = "cost.budget" -> string!
+const Arcp.Core.Caps.FeatureFlags.Heartbeat = "heartbeat" -> string!
+const Arcp.Core.Caps.FeatureFlags.LeaseExpiresAt = "lease_expires_at" -> string!
+const Arcp.Core.Caps.FeatureFlags.ListJobs = "list_jobs" -> string!
+const Arcp.Core.Caps.FeatureFlags.Progress = "progress" -> string!
+const Arcp.Core.Caps.FeatureFlags.ResultChunk = "result_chunk" -> string!
+const Arcp.Core.Caps.FeatureFlags.Subscribe = "subscribe" -> string!
+const Arcp.Core.Errors.ErrorCode.AgentNotAvailable = "AGENT_NOT_AVAILABLE" -> string!
+const Arcp.Core.Errors.ErrorCode.AgentVersionNotAvailable = "AGENT_VERSION_NOT_AVAILABLE" -> string!
+const Arcp.Core.Errors.ErrorCode.BudgetExhausted = "BUDGET_EXHAUSTED" -> string!
+const Arcp.Core.Errors.ErrorCode.Cancelled = "CANCELLED" -> string!
+const Arcp.Core.Errors.ErrorCode.DuplicateKey = "DUPLICATE_KEY" -> string!
+const Arcp.Core.Errors.ErrorCode.HeartbeatLost = "HEARTBEAT_LOST" -> string!
+const Arcp.Core.Errors.ErrorCode.InternalError = "INTERNAL_ERROR" -> string!
+const Arcp.Core.Errors.ErrorCode.InvalidRequest = "INVALID_REQUEST" -> string!
+const Arcp.Core.Errors.ErrorCode.JobNotFound = "JOB_NOT_FOUND" -> string!
+const Arcp.Core.Errors.ErrorCode.LeaseExpired = "LEASE_EXPIRED" -> string!
+const Arcp.Core.Errors.ErrorCode.LeaseSubsetViolation = "LEASE_SUBSET_VIOLATION" -> string!
+const Arcp.Core.Errors.ErrorCode.PermissionDenied = "PERMISSION_DENIED" -> string!
+const Arcp.Core.Errors.ErrorCode.ResumeWindowExpired = "RESUME_WINDOW_EXPIRED" -> string!
+const Arcp.Core.Errors.ErrorCode.Timeout = "TIMEOUT" -> string!
+const Arcp.Core.Errors.ErrorCode.Unauthenticated = "UNAUTHENTICATED" -> string!
+const Arcp.Core.Leases.LeaseNamespaces.AgentDelegate = "agent.delegate" -> string!
+const Arcp.Core.Leases.LeaseNamespaces.CostBudget = "cost.budget" -> string!
+const Arcp.Core.Leases.LeaseNamespaces.FsRead = "fs.read" -> string!
+const Arcp.Core.Leases.LeaseNamespaces.FsWrite = "fs.write" -> string!
+const Arcp.Core.Leases.LeaseNamespaces.NetFetch = "net.fetch" -> string!
+const Arcp.Core.Leases.LeaseNamespaces.ToolCall = "tool.call" -> string!
+const Arcp.Core.Messages.EventKinds.ArtifactRef = "artifact_ref" -> string!
+const Arcp.Core.Messages.EventKinds.Delegate = "delegate" -> string!
+const Arcp.Core.Messages.EventKinds.Log = "log" -> string!
+const Arcp.Core.Messages.EventKinds.Metric = "metric" -> string!
+const Arcp.Core.Messages.EventKinds.Progress = "progress" -> string!
+const Arcp.Core.Messages.EventKinds.ResultChunk = "result_chunk" -> string!
+const Arcp.Core.Messages.EventKinds.Status = "status" -> string!
+const Arcp.Core.Messages.EventKinds.Thought = "thought" -> string!
+const Arcp.Core.Messages.EventKinds.ToolCall = "tool_call" -> string!
+const Arcp.Core.Messages.EventKinds.ToolResult = "tool_result" -> string!
+const Arcp.Core.Messages.MessageTypeNames.JobAccepted = "job.accepted" -> string!
+const Arcp.Core.Messages.MessageTypeNames.JobCancel = "job.cancel" -> string!
+const Arcp.Core.Messages.MessageTypeNames.JobError = "job.error" -> string!
+const Arcp.Core.Messages.MessageTypeNames.JobEvent = "job.event" -> string!
+const Arcp.Core.Messages.MessageTypeNames.JobResult = "job.result" -> string!
+const Arcp.Core.Messages.MessageTypeNames.JobSubmit = "job.submit" -> string!
+const Arcp.Core.Messages.MessageTypeNames.JobSubscribe = "job.subscribe" -> string!
+const Arcp.Core.Messages.MessageTypeNames.JobSubscribed = "job.subscribed" -> string!
+const Arcp.Core.Messages.MessageTypeNames.JobUnsubscribe = "job.unsubscribe" -> string!
+const Arcp.Core.Messages.MessageTypeNames.SessionAck = "session.ack" -> string!
+const Arcp.Core.Messages.MessageTypeNames.SessionBye = "session.bye" -> string!
+const Arcp.Core.Messages.MessageTypeNames.SessionError = "session.error" -> string!
+const Arcp.Core.Messages.MessageTypeNames.SessionHello = "session.hello" -> string!
+const Arcp.Core.Messages.MessageTypeNames.SessionJobs = "session.jobs" -> string!
+const Arcp.Core.Messages.MessageTypeNames.SessionListJobs = "session.list_jobs" -> string!
+const Arcp.Core.Messages.MessageTypeNames.SessionPing = "session.ping" -> string!
+const Arcp.Core.Messages.MessageTypeNames.SessionPong = "session.pong" -> string!
+const Arcp.Core.Messages.MessageTypeNames.SessionResume = "session.resume" -> string!
+const Arcp.Core.Messages.MessageTypeNames.SessionWelcome = "session.welcome" -> string!
+const Arcp.Core.Tracing.ArcpDiagnostics.RuntimeSourceName = "Arcp.Runtime" -> string!
+const Arcp.Core.Tracing.ArcpDiagnostics.TransportSourceName = "Arcp.Transport" -> string!
+const Arcp.Core.Tracing.TraceAttributes.Agent = "arcp.agent" -> string!
+const Arcp.Core.Tracing.TraceAttributes.BudgetRemaining = "arcp.budget.remaining" -> string!
+const Arcp.Core.Tracing.TraceAttributes.Direction = "arcp.direction" -> string!
+const Arcp.Core.Tracing.TraceAttributes.EventSeq = "arcp.event_seq" -> string!
+const Arcp.Core.Tracing.TraceAttributes.Id = "arcp.id" -> string!
+const Arcp.Core.Tracing.TraceAttributes.JobId = "arcp.job_id" -> string!
+const Arcp.Core.Tracing.TraceAttributes.LeaseCapabilities = "arcp.lease.capabilities" -> string!
+const Arcp.Core.Tracing.TraceAttributes.LeaseExpiresAt = "arcp.lease.expires_at" -> string!
+const Arcp.Core.Tracing.TraceAttributes.SessionId = "arcp.session_id" -> string!
+const Arcp.Core.Tracing.TraceAttributes.TraceId = "arcp.trace_id" -> string!
+const Arcp.Core.Tracing.TraceAttributes.Type = "arcp.type" -> string!
+override Arcp.Core.Agents.AgentRef.GetHashCode() -> int
+override Arcp.Core.Agents.AgentRef.ToString() -> string!
+override Arcp.Core.Auth.AuthPrincipal.Equals(object? obj) -> bool
+override Arcp.Core.Auth.AuthPrincipal.GetHashCode() -> int
+override Arcp.Core.Auth.AuthPrincipal.ToString() -> string!
+override Arcp.Core.Caps.AgentInventoryEntry.Equals(object? obj) -> bool
+override Arcp.Core.Caps.AgentInventoryEntry.GetHashCode() -> int
+override Arcp.Core.Caps.AgentInventoryEntry.ToString() -> string!
+override Arcp.Core.Caps.Capabilities.Equals(object? obj) -> bool
+override Arcp.Core.Caps.Capabilities.GetHashCode() -> int
+override Arcp.Core.Caps.Capabilities.ToString() -> string!
+override Arcp.Core.Ids.ArtifactId.GetHashCode() -> int
+override Arcp.Core.Ids.ArtifactId.ToString() -> string!
+override Arcp.Core.Ids.JobId.GetHashCode() -> int
+override Arcp.Core.Ids.JobId.ToString() -> string!
+override Arcp.Core.Ids.MessageId.GetHashCode() -> int
+override Arcp.Core.Ids.MessageId.ToString() -> string!
+override Arcp.Core.Ids.ResultId.GetHashCode() -> int
+override Arcp.Core.Ids.ResultId.ToString() -> string!
+override Arcp.Core.Ids.SessionId.GetHashCode() -> int
+override Arcp.Core.Ids.SessionId.ToString() -> string!
+override Arcp.Core.Ids.SpanId.GetHashCode() -> int
+override Arcp.Core.Ids.SpanId.ToString() -> string!
+override Arcp.Core.Ids.TraceId.GetHashCode() -> int
+override Arcp.Core.Ids.TraceId.ToString() -> string!
+override Arcp.Core.Leases.BudgetAmount.GetHashCode() -> int
+override Arcp.Core.Leases.BudgetAmount.ToString() -> string!
+override Arcp.Core.Leases.Lease.Equals(object? obj) -> bool
+override Arcp.Core.Leases.Lease.GetHashCode() -> int
+override Arcp.Core.Leases.Lease.ToString() -> string!
+override Arcp.Core.Leases.LeaseConstraints.Equals(object? obj) -> bool
+override Arcp.Core.Leases.LeaseConstraints.GetHashCode() -> int
+override Arcp.Core.Leases.LeaseConstraints.ToString() -> string!
+override Arcp.Core.Messages.ArtifactRefBody.Equals(object? obj) -> bool
+override Arcp.Core.Messages.ArtifactRefBody.GetHashCode() -> int
+override Arcp.Core.Messages.ArtifactRefBody.ToString() -> string!
+override Arcp.Core.Messages.AuthCredential.Equals(object? obj) -> bool
+override Arcp.Core.Messages.AuthCredential.GetHashCode() -> int
+override Arcp.Core.Messages.AuthCredential.ToString() -> string!
+override Arcp.Core.Messages.ClientInfo.Equals(object? obj) -> bool
+override Arcp.Core.Messages.ClientInfo.GetHashCode() -> int
+override Arcp.Core.Messages.ClientInfo.ToString() -> string!
+override Arcp.Core.Messages.DelegateBody.Equals(object? obj) -> bool
+override Arcp.Core.Messages.DelegateBody.GetHashCode() -> int
+override Arcp.Core.Messages.DelegateBody.ToString() -> string!
+override Arcp.Core.Messages.JobAcceptedPayload.Equals(object? obj) -> bool
+override Arcp.Core.Messages.JobAcceptedPayload.GetHashCode() -> int
+override Arcp.Core.Messages.JobAcceptedPayload.ToString() -> string!
+override Arcp.Core.Messages.JobCancelPayload.Equals(object? obj) -> bool
+override Arcp.Core.Messages.JobCancelPayload.GetHashCode() -> int
+override Arcp.Core.Messages.JobCancelPayload.ToString() -> string!
+override Arcp.Core.Messages.JobErrorPayload.Equals(object? obj) -> bool
+override Arcp.Core.Messages.JobErrorPayload.GetHashCode() -> int
+override Arcp.Core.Messages.JobErrorPayload.ToString() -> string!
+override Arcp.Core.Messages.JobEventPayload.Equals(object? obj) -> bool
+override Arcp.Core.Messages.JobEventPayload.GetHashCode() -> int
+override Arcp.Core.Messages.JobEventPayload.ToString() -> string!
+override Arcp.Core.Messages.JobListEntry.Equals(object? obj) -> bool
+override Arcp.Core.Messages.JobListEntry.GetHashCode() -> int
+override Arcp.Core.Messages.JobListEntry.ToString() -> string!
+override Arcp.Core.Messages.JobListFilter.Equals(object? obj) -> bool
+override Arcp.Core.Messages.JobListFilter.GetHashCode() -> int
+override Arcp.Core.Messages.JobListFilter.ToString() -> string!
+override Arcp.Core.Messages.JobResultPayload.Equals(object? obj) -> bool
+override Arcp.Core.Messages.JobResultPayload.GetHashCode() -> int
+override Arcp.Core.Messages.JobResultPayload.ToString() -> string!
+override Arcp.Core.Messages.JobSubmitPayload.Equals(object? obj) -> bool
+override Arcp.Core.Messages.JobSubmitPayload.GetHashCode() -> int
+override Arcp.Core.Messages.JobSubmitPayload.ToString() -> string!
+override Arcp.Core.Messages.JobSubscribedPayload.Equals(object? obj) -> bool
+override Arcp.Core.Messages.JobSubscribedPayload.GetHashCode() -> int
+override Arcp.Core.Messages.JobSubscribedPayload.ToString() -> string!
+override Arcp.Core.Messages.JobSubscribePayload.Equals(object? obj) -> bool
+override Arcp.Core.Messages.JobSubscribePayload.GetHashCode() -> int
+override Arcp.Core.Messages.JobSubscribePayload.ToString() -> string!
+override Arcp.Core.Messages.JobUnsubscribePayload.Equals(object? obj) -> bool
+override Arcp.Core.Messages.JobUnsubscribePayload.GetHashCode() -> int
+override Arcp.Core.Messages.JobUnsubscribePayload.ToString() -> string!
+override Arcp.Core.Messages.LogBody.Equals(object? obj) -> bool
+override Arcp.Core.Messages.LogBody.GetHashCode() -> int
+override Arcp.Core.Messages.LogBody.ToString() -> string!
+override Arcp.Core.Messages.MetricBody.Equals(object? obj) -> bool
+override Arcp.Core.Messages.MetricBody.GetHashCode() -> int
+override Arcp.Core.Messages.MetricBody.ToString() -> string!
+override Arcp.Core.Messages.ProgressBody.Equals(object? obj) -> bool
+override Arcp.Core.Messages.ProgressBody.GetHashCode() -> int
+override Arcp.Core.Messages.ProgressBody.ToString() -> string!
+override Arcp.Core.Messages.ResultChunkBody.Equals(object? obj) -> bool
+override Arcp.Core.Messages.ResultChunkBody.GetHashCode() -> int
+override Arcp.Core.Messages.ResultChunkBody.ToString() -> string!
+override Arcp.Core.Messages.RuntimeInfo.Equals(object? obj) -> bool
+override Arcp.Core.Messages.RuntimeInfo.GetHashCode() -> int
+override Arcp.Core.Messages.RuntimeInfo.ToString() -> string!
+override Arcp.Core.Messages.SessionAckPayload.Equals(object? obj) -> bool
+override Arcp.Core.Messages.SessionAckPayload.GetHashCode() -> int
+override Arcp.Core.Messages.SessionAckPayload.ToString() -> string!
+override Arcp.Core.Messages.SessionByePayload.Equals(object? obj) -> bool
+override Arcp.Core.Messages.SessionByePayload.GetHashCode() -> int
+override Arcp.Core.Messages.SessionByePayload.ToString() -> string!
+override Arcp.Core.Messages.SessionErrorPayload.Equals(object? obj) -> bool
+override Arcp.Core.Messages.SessionErrorPayload.GetHashCode() -> int
+override Arcp.Core.Messages.SessionErrorPayload.ToString() -> string!
+override Arcp.Core.Messages.SessionHelloPayload.Equals(object? obj) -> bool
+override Arcp.Core.Messages.SessionHelloPayload.GetHashCode() -> int
+override Arcp.Core.Messages.SessionHelloPayload.ToString() -> string!
+override Arcp.Core.Messages.SessionJobsPayload.Equals(object? obj) -> bool
+override Arcp.Core.Messages.SessionJobsPayload.GetHashCode() -> int
+override Arcp.Core.Messages.SessionJobsPayload.ToString() -> string!
+override Arcp.Core.Messages.SessionListJobsPayload.Equals(object? obj) -> bool
+override Arcp.Core.Messages.SessionListJobsPayload.GetHashCode() -> int
+override Arcp.Core.Messages.SessionListJobsPayload.ToString() -> string!
+override Arcp.Core.Messages.SessionPingPayload.Equals(object? obj) -> bool
+override Arcp.Core.Messages.SessionPingPayload.GetHashCode() -> int
+override Arcp.Core.Messages.SessionPingPayload.ToString() -> string!
+override Arcp.Core.Messages.SessionPongPayload.Equals(object? obj) -> bool
+override Arcp.Core.Messages.SessionPongPayload.GetHashCode() -> int
+override Arcp.Core.Messages.SessionPongPayload.ToString() -> string!
+override Arcp.Core.Messages.SessionWelcomePayload.Equals(object? obj) -> bool
+override Arcp.Core.Messages.SessionWelcomePayload.GetHashCode() -> int
+override Arcp.Core.Messages.SessionWelcomePayload.ToString() -> string!
+override Arcp.Core.Messages.StatusBody.Equals(object? obj) -> bool
+override Arcp.Core.Messages.StatusBody.GetHashCode() -> int
+override Arcp.Core.Messages.StatusBody.ToString() -> string!
+override Arcp.Core.Messages.ThoughtBody.Equals(object? obj) -> bool
+override Arcp.Core.Messages.ThoughtBody.GetHashCode() -> int
+override Arcp.Core.Messages.ThoughtBody.ToString() -> string!
+override Arcp.Core.Messages.ToolCallBody.Equals(object? obj) -> bool
+override Arcp.Core.Messages.ToolCallBody.GetHashCode() -> int
+override Arcp.Core.Messages.ToolCallBody.ToString() -> string!
+override Arcp.Core.Messages.ToolError.Equals(object? obj) -> bool
+override Arcp.Core.Messages.ToolError.GetHashCode() -> int
+override Arcp.Core.Messages.ToolError.ToString() -> string!
+override Arcp.Core.Messages.ToolResultBody.Equals(object? obj) -> bool
+override Arcp.Core.Messages.ToolResultBody.GetHashCode() -> int
+override Arcp.Core.Messages.ToolResultBody.ToString() -> string!
+override Arcp.Core.Wire.Envelope.Equals(object? obj) -> bool
+override Arcp.Core.Wire.Envelope.GetHashCode() -> int
+override Arcp.Core.Wire.Envelope.ToString() -> string!
+override Arcp.Core.Wire.EnvelopeJsonConverter.Read(ref System.Text.Json.Utf8JsonReader reader, System.Type! typeToConvert, System.Text.Json.JsonSerializerOptions! options) -> Arcp.Core.Wire.Envelope!
+override Arcp.Core.Wire.EnvelopeJsonConverter.Write(System.Text.Json.Utf8JsonWriter! writer, Arcp.Core.Wire.Envelope! value, System.Text.Json.JsonSerializerOptions! options) -> void
+static Arcp.Core.Agents.AgentRef.operator !=(Arcp.Core.Agents.AgentRef left, Arcp.Core.Agents.AgentRef right) -> bool
+static Arcp.Core.Agents.AgentRef.operator ==(Arcp.Core.Agents.AgentRef left, Arcp.Core.Agents.AgentRef right) -> bool
+static Arcp.Core.Agents.AgentRef.Parse(string! s, System.IFormatProvider? provider = null) -> Arcp.Core.Agents.AgentRef
+static Arcp.Core.Agents.AgentRef.TryParse(string? s, System.IFormatProvider? provider, out Arcp.Core.Agents.AgentRef result) -> bool
+static Arcp.Core.Auth.AuthPrincipal.operator !=(Arcp.Core.Auth.AuthPrincipal? left, Arcp.Core.Auth.AuthPrincipal? right) -> bool
+static Arcp.Core.Auth.AuthPrincipal.operator ==(Arcp.Core.Auth.AuthPrincipal? left, Arcp.Core.Auth.AuthPrincipal? right) -> bool
+static Arcp.Core.Caps.AgentInventoryEntry.operator !=(Arcp.Core.Caps.AgentInventoryEntry? left, Arcp.Core.Caps.AgentInventoryEntry? right) -> bool
+static Arcp.Core.Caps.AgentInventoryEntry.operator ==(Arcp.Core.Caps.AgentInventoryEntry? left, Arcp.Core.Caps.AgentInventoryEntry? right) -> bool
+static Arcp.Core.Caps.Capabilities.operator !=(Arcp.Core.Caps.Capabilities? left, Arcp.Core.Caps.Capabilities? right) -> bool
+static Arcp.Core.Caps.Capabilities.operator ==(Arcp.Core.Caps.Capabilities? left, Arcp.Core.Caps.Capabilities? right) -> bool
+static Arcp.Core.Caps.FeatureSet.AllFeatures.get -> System.Collections.Generic.IReadOnlyList<string!>!
+static Arcp.Core.Caps.FeatureSet.Has(System.Collections.Generic.IReadOnlyList<string!>? features, string! flag) -> bool
+static Arcp.Core.Caps.FeatureSet.Intersect(System.Collections.Generic.IReadOnlyList<string!>? a, System.Collections.Generic.IReadOnlyList<string!>? b) -> System.Collections.Generic.IReadOnlyList<string!>!
+static Arcp.Core.Errors.ErrorCode.IsRetryable(string! code) -> bool
+static Arcp.Core.Ids.ArtifactId.New() -> Arcp.Core.Ids.ArtifactId
+static Arcp.Core.Ids.ArtifactId.operator !=(Arcp.Core.Ids.ArtifactId left, Arcp.Core.Ids.ArtifactId right) -> bool
+static Arcp.Core.Ids.ArtifactId.operator ==(Arcp.Core.Ids.ArtifactId left, Arcp.Core.Ids.ArtifactId right) -> bool
+static Arcp.Core.Ids.JobId.New() -> Arcp.Core.Ids.JobId
+static Arcp.Core.Ids.JobId.operator !=(Arcp.Core.Ids.JobId left, Arcp.Core.Ids.JobId right) -> bool
+static Arcp.Core.Ids.JobId.operator ==(Arcp.Core.Ids.JobId left, Arcp.Core.Ids.JobId right) -> bool
+static Arcp.Core.Ids.JobId.Parse(string! s, System.IFormatProvider? provider = null) -> Arcp.Core.Ids.JobId
+static Arcp.Core.Ids.JobId.TryParse(string? s, System.IFormatProvider? provider, out Arcp.Core.Ids.JobId result) -> bool
+static Arcp.Core.Ids.MessageId.New() -> Arcp.Core.Ids.MessageId
+static Arcp.Core.Ids.MessageId.operator !=(Arcp.Core.Ids.MessageId left, Arcp.Core.Ids.MessageId right) -> bool
+static Arcp.Core.Ids.MessageId.operator ==(Arcp.Core.Ids.MessageId left, Arcp.Core.Ids.MessageId right) -> bool
+static Arcp.Core.Ids.MessageId.Parse(string! s, System.IFormatProvider? provider = null) -> Arcp.Core.Ids.MessageId
+static Arcp.Core.Ids.MessageId.TryParse(string? s, System.IFormatProvider? provider, out Arcp.Core.Ids.MessageId result) -> bool
+static Arcp.Core.Ids.ResultId.New() -> Arcp.Core.Ids.ResultId
+static Arcp.Core.Ids.ResultId.operator !=(Arcp.Core.Ids.ResultId left, Arcp.Core.Ids.ResultId right) -> bool
+static Arcp.Core.Ids.ResultId.operator ==(Arcp.Core.Ids.ResultId left, Arcp.Core.Ids.ResultId right) -> bool
+static Arcp.Core.Ids.SessionId.New() -> Arcp.Core.Ids.SessionId
+static Arcp.Core.Ids.SessionId.operator !=(Arcp.Core.Ids.SessionId left, Arcp.Core.Ids.SessionId right) -> bool
+static Arcp.Core.Ids.SessionId.operator ==(Arcp.Core.Ids.SessionId left, Arcp.Core.Ids.SessionId right) -> bool
+static Arcp.Core.Ids.SessionId.Parse(string! s, System.IFormatProvider? provider = null) -> Arcp.Core.Ids.SessionId
+static Arcp.Core.Ids.SessionId.TryParse(string? s, System.IFormatProvider? provider, out Arcp.Core.Ids.SessionId result) -> bool
+static Arcp.Core.Ids.SpanId.New() -> Arcp.Core.Ids.SpanId
+static Arcp.Core.Ids.SpanId.operator !=(Arcp.Core.Ids.SpanId left, Arcp.Core.Ids.SpanId right) -> bool
+static Arcp.Core.Ids.SpanId.operator ==(Arcp.Core.Ids.SpanId left, Arcp.Core.Ids.SpanId right) -> bool
+static Arcp.Core.Ids.TraceId.New() -> Arcp.Core.Ids.TraceId
+static Arcp.Core.Ids.TraceId.operator !=(Arcp.Core.Ids.TraceId left, Arcp.Core.Ids.TraceId right) -> bool
+static Arcp.Core.Ids.TraceId.operator ==(Arcp.Core.Ids.TraceId left, Arcp.Core.Ids.TraceId right) -> bool
+static Arcp.Core.Ids.TraceId.Parse(string! s, System.IFormatProvider? provider = null) -> Arcp.Core.Ids.TraceId
+static Arcp.Core.Ids.TraceId.TryParse(string? s, System.IFormatProvider? provider, out Arcp.Core.Ids.TraceId result) -> bool
+static Arcp.Core.Leases.BudgetAmount.operator !=(Arcp.Core.Leases.BudgetAmount left, Arcp.Core.Leases.BudgetAmount right) -> bool
+static Arcp.Core.Leases.BudgetAmount.operator ==(Arcp.Core.Leases.BudgetAmount left, Arcp.Core.Leases.BudgetAmount right) -> bool
+static Arcp.Core.Leases.BudgetAmount.Parse(string! s) -> Arcp.Core.Leases.BudgetAmount
+static Arcp.Core.Leases.BudgetAmount.TryParse(string? s, out Arcp.Core.Leases.BudgetAmount value) -> bool
+static Arcp.Core.Leases.Lease.operator !=(Arcp.Core.Leases.Lease? left, Arcp.Core.Leases.Lease? right) -> bool
+static Arcp.Core.Leases.Lease.operator ==(Arcp.Core.Leases.Lease? left, Arcp.Core.Leases.Lease? right) -> bool
+static Arcp.Core.Leases.LeaseConstraints.operator !=(Arcp.Core.Leases.LeaseConstraints? left, Arcp.Core.Leases.LeaseConstraints? right) -> bool
+static Arcp.Core.Leases.LeaseConstraints.operator ==(Arcp.Core.Leases.LeaseConstraints? left, Arcp.Core.Leases.LeaseConstraints? right) -> bool
+static Arcp.Core.Messages.ArtifactRefBody.operator !=(Arcp.Core.Messages.ArtifactRefBody? left, Arcp.Core.Messages.ArtifactRefBody? right) -> bool
+static Arcp.Core.Messages.ArtifactRefBody.operator ==(Arcp.Core.Messages.ArtifactRefBody? left, Arcp.Core.Messages.ArtifactRefBody? right) -> bool
+static Arcp.Core.Messages.AuthCredential.operator !=(Arcp.Core.Messages.AuthCredential? left, Arcp.Core.Messages.AuthCredential? right) -> bool
+static Arcp.Core.Messages.AuthCredential.operator ==(Arcp.Core.Messages.AuthCredential? left, Arcp.Core.Messages.AuthCredential? right) -> bool
+static Arcp.Core.Messages.ClientInfo.operator !=(Arcp.Core.Messages.ClientInfo? left, Arcp.Core.Messages.ClientInfo? right) -> bool
+static Arcp.Core.Messages.ClientInfo.operator ==(Arcp.Core.Messages.ClientInfo? left, Arcp.Core.Messages.ClientInfo? right) -> bool
+static Arcp.Core.Messages.DelegateBody.operator !=(Arcp.Core.Messages.DelegateBody? left, Arcp.Core.Messages.DelegateBody? right) -> bool
+static Arcp.Core.Messages.DelegateBody.operator ==(Arcp.Core.Messages.DelegateBody? left, Arcp.Core.Messages.DelegateBody? right) -> bool
+static Arcp.Core.Messages.JobAcceptedPayload.operator !=(Arcp.Core.Messages.JobAcceptedPayload? left, Arcp.Core.Messages.JobAcceptedPayload? right) -> bool
+static Arcp.Core.Messages.JobAcceptedPayload.operator ==(Arcp.Core.Messages.JobAcceptedPayload? left, Arcp.Core.Messages.JobAcceptedPayload? right) -> bool
+static Arcp.Core.Messages.JobCancelPayload.operator !=(Arcp.Core.Messages.JobCancelPayload? left, Arcp.Core.Messages.JobCancelPayload? right) -> bool
+static Arcp.Core.Messages.JobCancelPayload.operator ==(Arcp.Core.Messages.JobCancelPayload? left, Arcp.Core.Messages.JobCancelPayload? right) -> bool
+static Arcp.Core.Messages.JobErrorPayload.operator !=(Arcp.Core.Messages.JobErrorPayload? left, Arcp.Core.Messages.JobErrorPayload? right) -> bool
+static Arcp.Core.Messages.JobErrorPayload.operator ==(Arcp.Core.Messages.JobErrorPayload? left, Arcp.Core.Messages.JobErrorPayload? right) -> bool
+static Arcp.Core.Messages.JobEventPayload.operator !=(Arcp.Core.Messages.JobEventPayload? left, Arcp.Core.Messages.JobEventPayload? right) -> bool
+static Arcp.Core.Messages.JobEventPayload.operator ==(Arcp.Core.Messages.JobEventPayload? left, Arcp.Core.Messages.JobEventPayload? right) -> bool
+static Arcp.Core.Messages.JobListEntry.operator !=(Arcp.Core.Messages.JobListEntry? left, Arcp.Core.Messages.JobListEntry? right) -> bool
+static Arcp.Core.Messages.JobListEntry.operator ==(Arcp.Core.Messages.JobListEntry? left, Arcp.Core.Messages.JobListEntry? right) -> bool
+static Arcp.Core.Messages.JobListFilter.operator !=(Arcp.Core.Messages.JobListFilter? left, Arcp.Core.Messages.JobListFilter? right) -> bool
+static Arcp.Core.Messages.JobListFilter.operator ==(Arcp.Core.Messages.JobListFilter? left, Arcp.Core.Messages.JobListFilter? right) -> bool
+static Arcp.Core.Messages.JobResultPayload.operator !=(Arcp.Core.Messages.JobResultPayload? left, Arcp.Core.Messages.JobResultPayload? right) -> bool
+static Arcp.Core.Messages.JobResultPayload.operator ==(Arcp.Core.Messages.JobResultPayload? left, Arcp.Core.Messages.JobResultPayload? right) -> bool
+static Arcp.Core.Messages.JobSubmitPayload.operator !=(Arcp.Core.Messages.JobSubmitPayload? left, Arcp.Core.Messages.JobSubmitPayload? right) -> bool
+static Arcp.Core.Messages.JobSubmitPayload.operator ==(Arcp.Core.Messages.JobSubmitPayload? left, Arcp.Core.Messages.JobSubmitPayload? right) -> bool
+static Arcp.Core.Messages.JobSubscribedPayload.operator !=(Arcp.Core.Messages.JobSubscribedPayload? left, Arcp.Core.Messages.JobSubscribedPayload? right) -> bool
+static Arcp.Core.Messages.JobSubscribedPayload.operator ==(Arcp.Core.Messages.JobSubscribedPayload? left, Arcp.Core.Messages.JobSubscribedPayload? right) -> bool
+static Arcp.Core.Messages.JobSubscribePayload.operator !=(Arcp.Core.Messages.JobSubscribePayload? left, Arcp.Core.Messages.JobSubscribePayload? right) -> bool
+static Arcp.Core.Messages.JobSubscribePayload.operator ==(Arcp.Core.Messages.JobSubscribePayload? left, Arcp.Core.Messages.JobSubscribePayload? right) -> bool
+static Arcp.Core.Messages.JobUnsubscribePayload.operator !=(Arcp.Core.Messages.JobUnsubscribePayload? left, Arcp.Core.Messages.JobUnsubscribePayload? right) -> bool
+static Arcp.Core.Messages.JobUnsubscribePayload.operator ==(Arcp.Core.Messages.JobUnsubscribePayload? left, Arcp.Core.Messages.JobUnsubscribePayload? right) -> bool
+static Arcp.Core.Messages.LogBody.operator !=(Arcp.Core.Messages.LogBody? left, Arcp.Core.Messages.LogBody? right) -> bool
+static Arcp.Core.Messages.LogBody.operator ==(Arcp.Core.Messages.LogBody? left, Arcp.Core.Messages.LogBody? right) -> bool
+static Arcp.Core.Messages.MetricBody.operator !=(Arcp.Core.Messages.MetricBody? left, Arcp.Core.Messages.MetricBody? right) -> bool
+static Arcp.Core.Messages.MetricBody.operator ==(Arcp.Core.Messages.MetricBody? left, Arcp.Core.Messages.MetricBody? right) -> bool
+static Arcp.Core.Messages.ProgressBody.operator !=(Arcp.Core.Messages.ProgressBody? left, Arcp.Core.Messages.ProgressBody? right) -> bool
+static Arcp.Core.Messages.ProgressBody.operator ==(Arcp.Core.Messages.ProgressBody? left, Arcp.Core.Messages.ProgressBody? right) -> bool
+static Arcp.Core.Messages.ResultChunkBody.operator !=(Arcp.Core.Messages.ResultChunkBody? left, Arcp.Core.Messages.ResultChunkBody? right) -> bool
+static Arcp.Core.Messages.ResultChunkBody.operator ==(Arcp.Core.Messages.ResultChunkBody? left, Arcp.Core.Messages.ResultChunkBody? right) -> bool
+static Arcp.Core.Messages.RuntimeInfo.operator !=(Arcp.Core.Messages.RuntimeInfo? left, Arcp.Core.Messages.RuntimeInfo? right) -> bool
+static Arcp.Core.Messages.RuntimeInfo.operator ==(Arcp.Core.Messages.RuntimeInfo? left, Arcp.Core.Messages.RuntimeInfo? right) -> bool
+static Arcp.Core.Messages.SessionAckPayload.operator !=(Arcp.Core.Messages.SessionAckPayload? left, Arcp.Core.Messages.SessionAckPayload? right) -> bool
+static Arcp.Core.Messages.SessionAckPayload.operator ==(Arcp.Core.Messages.SessionAckPayload? left, Arcp.Core.Messages.SessionAckPayload? right) -> bool
+static Arcp.Core.Messages.SessionByePayload.operator !=(Arcp.Core.Messages.SessionByePayload? left, Arcp.Core.Messages.SessionByePayload? right) -> bool
+static Arcp.Core.Messages.SessionByePayload.operator ==(Arcp.Core.Messages.SessionByePayload? left, Arcp.Core.Messages.SessionByePayload? right) -> bool
+static Arcp.Core.Messages.SessionErrorPayload.operator !=(Arcp.Core.Messages.SessionErrorPayload? left, Arcp.Core.Messages.SessionErrorPayload? right) -> bool
+static Arcp.Core.Messages.SessionErrorPayload.operator ==(Arcp.Core.Messages.SessionErrorPayload? left, Arcp.Core.Messages.SessionErrorPayload? right) -> bool
+static Arcp.Core.Messages.SessionHelloPayload.operator !=(Arcp.Core.Messages.SessionHelloPayload? left, Arcp.Core.Messages.SessionHelloPayload? right) -> bool
+static Arcp.Core.Messages.SessionHelloPayload.operator ==(Arcp.Core.Messages.SessionHelloPayload? left, Arcp.Core.Messages.SessionHelloPayload? right) -> bool
+static Arcp.Core.Messages.SessionJobsPayload.operator !=(Arcp.Core.Messages.SessionJobsPayload? left, Arcp.Core.Messages.SessionJobsPayload? right) -> bool
+static Arcp.Core.Messages.SessionJobsPayload.operator ==(Arcp.Core.Messages.SessionJobsPayload? left, Arcp.Core.Messages.SessionJobsPayload? right) -> bool
+static Arcp.Core.Messages.SessionListJobsPayload.operator !=(Arcp.Core.Messages.SessionListJobsPayload? left, Arcp.Core.Messages.SessionListJobsPayload? right) -> bool
+static Arcp.Core.Messages.SessionListJobsPayload.operator ==(Arcp.Core.Messages.SessionListJobsPayload? left, Arcp.Core.Messages.SessionListJobsPayload? right) -> bool
+static Arcp.Core.Messages.SessionPingPayload.operator !=(Arcp.Core.Messages.SessionPingPayload? left, Arcp.Core.Messages.SessionPingPayload? right) -> bool
+static Arcp.Core.Messages.SessionPingPayload.operator ==(Arcp.Core.Messages.SessionPingPayload? left, Arcp.Core.Messages.SessionPingPayload? right) -> bool
+static Arcp.Core.Messages.SessionPongPayload.operator !=(Arcp.Core.Messages.SessionPongPayload? left, Arcp.Core.Messages.SessionPongPayload? right) -> bool
+static Arcp.Core.Messages.SessionPongPayload.operator ==(Arcp.Core.Messages.SessionPongPayload? left, Arcp.Core.Messages.SessionPongPayload? right) -> bool
+static Arcp.Core.Messages.SessionWelcomePayload.operator !=(Arcp.Core.Messages.SessionWelcomePayload? left, Arcp.Core.Messages.SessionWelcomePayload? right) -> bool
+static Arcp.Core.Messages.SessionWelcomePayload.operator ==(Arcp.Core.Messages.SessionWelcomePayload? left, Arcp.Core.Messages.SessionWelcomePayload? right) -> bool
+static Arcp.Core.Messages.StatusBody.operator !=(Arcp.Core.Messages.StatusBody? left, Arcp.Core.Messages.StatusBody? right) -> bool
+static Arcp.Core.Messages.StatusBody.operator ==(Arcp.Core.Messages.StatusBody? left, Arcp.Core.Messages.StatusBody? right) -> bool
+static Arcp.Core.Messages.ThoughtBody.operator !=(Arcp.Core.Messages.ThoughtBody? left, Arcp.Core.Messages.ThoughtBody? right) -> bool
+static Arcp.Core.Messages.ThoughtBody.operator ==(Arcp.Core.Messages.ThoughtBody? left, Arcp.Core.Messages.ThoughtBody? right) -> bool
+static Arcp.Core.Messages.ToolCallBody.operator !=(Arcp.Core.Messages.ToolCallBody? left, Arcp.Core.Messages.ToolCallBody? right) -> bool
+static Arcp.Core.Messages.ToolCallBody.operator ==(Arcp.Core.Messages.ToolCallBody? left, Arcp.Core.Messages.ToolCallBody? right) -> bool
+static Arcp.Core.Messages.ToolError.operator !=(Arcp.Core.Messages.ToolError? left, Arcp.Core.Messages.ToolError? right) -> bool
+static Arcp.Core.Messages.ToolError.operator ==(Arcp.Core.Messages.ToolError? left, Arcp.Core.Messages.ToolError? right) -> bool
+static Arcp.Core.Messages.ToolResultBody.operator !=(Arcp.Core.Messages.ToolResultBody? left, Arcp.Core.Messages.ToolResultBody? right) -> bool
+static Arcp.Core.Messages.ToolResultBody.operator ==(Arcp.Core.Messages.ToolResultBody? left, Arcp.Core.Messages.ToolResultBody? right) -> bool
+static Arcp.Core.Tracing.ArcpDiagnostics.Runtime.get -> System.Diagnostics.ActivitySource!
+static Arcp.Core.Tracing.ArcpDiagnostics.Transport.get -> System.Diagnostics.ActivitySource!
+static Arcp.Core.Transport.MemoryTransport.Pair() -> (Arcp.Core.Transport.MemoryTransport! Client, Arcp.Core.Transport.MemoryTransport! Server)
+static Arcp.Core.Transport.StdioTransport.FromConsole() -> Arcp.Core.Transport.StdioTransport!
+static Arcp.Core.Wire.ArcpJson.Create(Arcp.Core.Wire.MessageTypeRegistry? registry = null) -> System.Text.Json.JsonSerializerOptions!
+static Arcp.Core.Wire.ArcpJson.Deserialize(string! json) -> Arcp.Core.Wire.Envelope!
+static Arcp.Core.Wire.ArcpJson.Deserialize(System.ReadOnlySpan<byte> utf8) -> Arcp.Core.Wire.Envelope!
+static Arcp.Core.Wire.ArcpJson.Options.get -> System.Text.Json.JsonSerializerOptions!
+static Arcp.Core.Wire.ArcpJson.Serialize(Arcp.Core.Wire.Envelope! env) -> string!
+static Arcp.Core.Wire.ArcpJson.SerializeUtf8(Arcp.Core.Wire.Envelope! env) -> byte[]!
+static Arcp.Core.Wire.ArcpJson.ToJsonElement<T>(T value) -> System.Text.Json.JsonElement
+static Arcp.Core.Wire.Envelope.operator !=(Arcp.Core.Wire.Envelope? left, Arcp.Core.Wire.Envelope? right) -> bool
+static Arcp.Core.Wire.Envelope.operator ==(Arcp.Core.Wire.Envelope? left, Arcp.Core.Wire.Envelope? right) -> bool
+static Arcp.Core.Wire.MessageTypeRegistry.CreateCoreCatalog() -> Arcp.Core.Wire.MessageTypeRegistry!
+static Arcp.Core.Wire.MessageTypeRegistry.Default.get -> Arcp.Core.Wire.MessageTypeRegistry!
+static readonly Arcp.Core.Caps.FeatureFlags.All -> System.Collections.Frozen.FrozenSet<string!>!
+static readonly Arcp.Core.Errors.ErrorCode.All -> System.Collections.Frozen.FrozenSet<string!>!
+static readonly Arcp.Core.Leases.LeaseNamespaces.All -> System.Collections.Frozen.FrozenSet<string!>!
+static readonly Arcp.Core.Messages.EventKinds.All -> System.Collections.Frozen.FrozenSet<string!>!
+static readonly Arcp.Core.Messages.MessageTypeNames.All -> System.Collections.Frozen.FrozenSet<string!>!
+~override Arcp.Core.Agents.AgentRef.Equals(object obj) -> bool
+~override Arcp.Core.Ids.ArtifactId.Equals(object obj) -> bool
+~override Arcp.Core.Ids.JobId.Equals(object obj) -> bool
+~override Arcp.Core.Ids.MessageId.Equals(object obj) -> bool
+~override Arcp.Core.Ids.ResultId.Equals(object obj) -> bool
+~override Arcp.Core.Ids.SessionId.Equals(object obj) -> bool
+~override Arcp.Core.Ids.SpanId.Equals(object obj) -> bool
+~override Arcp.Core.Ids.TraceId.Equals(object obj) -> bool
+~override Arcp.Core.Leases.BudgetAmount.Equals(object obj) -> bool

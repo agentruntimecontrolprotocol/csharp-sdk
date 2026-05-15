@@ -1,0 +1,4 @@
+#nullable enable
+Arcp.Otel.ArcpTracing
+const Arcp.Otel.ArcpTracing.OtelExtensionName = "x-vendor.opentelemetry.tracecontext" -> string!
+static Arcp.Otel.ArcpTracing.WithTracing(this Arcp.Core.Transport.ITransport! inner) -> Arcp.Core.Transport.ITransport!

@@ -1,0 +1,109 @@
+#nullable enable
+Arcp.Client.ArcpClient
+Arcp.Client.ArcpClient.AckAsync(long lastProcessedSeq, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask
+Arcp.Client.ArcpClient.Agents.get -> System.Collections.Generic.IReadOnlyList<Arcp.Core.Caps.AgentInventoryEntry!>!
+Arcp.Client.ArcpClient.ArcpClient(Arcp.Core.Transport.ITransport! transport, Arcp.Client.ArcpClientOptions! options) -> void
+Arcp.Client.ArcpClient.CancelJobAsync(Arcp.Core.Ids.JobId jobId, string? reason = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Arcp.Client.ArcpClient.ConnectAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Arcp.Client.ArcpClient.DisposeAsync() -> System.Threading.Tasks.ValueTask
+Arcp.Client.ArcpClient.EffectiveFeatures.get -> System.Collections.Generic.IReadOnlyList<string!>!
+Arcp.Client.ArcpClient.HeartbeatIntervalSec.get -> int?
+Arcp.Client.ArcpClient.LastReceivedSeq.get -> long
+Arcp.Client.ArcpClient.ListJobsAsync(Arcp.Core.Messages.JobListFilter? filter = null, int? limit = null, string? cursor = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Arcp.Core.Messages.SessionJobsPayload!>!
+Arcp.Client.ArcpClient.ResumeToken.get -> string?
+Arcp.Client.ArcpClient.Runtime.get -> Arcp.Core.Messages.RuntimeInfo?
+Arcp.Client.ArcpClient.SessionId.get -> Arcp.Core.Ids.SessionId
+Arcp.Client.ArcpClient.SubmitAsync(string! agent, object? input = null, Arcp.Core.Leases.Lease? leaseRequest = null, Arcp.Core.Leases.LeaseConstraints? leaseConstraints = null, string? idempotencyKey = null, int? maxRuntimeSec = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Arcp.Client.JobHandle!>!
+Arcp.Client.ArcpClient.SubscribeAsync(Arcp.Core.Ids.JobId jobId, bool history = false, long? fromEventSeq = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Arcp.Client.JobSubscription!>!
+Arcp.Client.ArcpClient.UnsubscribeAsync(Arcp.Core.Ids.JobId jobId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Arcp.Client.ArcpClientOptions
+Arcp.Client.ArcpClientOptions.ArcpClientOptions() -> void
+Arcp.Client.ArcpClientOptions.AuthScheme.get -> string!
+Arcp.Client.ArcpClientOptions.AuthScheme.init -> void
+Arcp.Client.ArcpClientOptions.Client.get -> Arcp.Core.Messages.ClientInfo!
+Arcp.Client.ArcpClientOptions.Client.init -> void
+Arcp.Client.ArcpClientOptions.Encodings.get -> System.Collections.Generic.IReadOnlyList<string!>?
+Arcp.Client.ArcpClientOptions.Encodings.init -> void
+Arcp.Client.ArcpClientOptions.Features.get -> System.Collections.Generic.IReadOnlyList<string!>?
+Arcp.Client.ArcpClientOptions.Features.init -> void
+Arcp.Client.ArcpClientOptions.TimeProvider.get -> System.TimeProvider!
+Arcp.Client.ArcpClientOptions.TimeProvider.init -> void
+Arcp.Client.ArcpClientOptions.Token.get -> string?
+Arcp.Client.ArcpClientOptions.Token.init -> void
+Arcp.Client.JobEvent
+Arcp.Client.JobEvent.<Clone>$() -> Arcp.Client.JobEvent!
+Arcp.Client.JobEvent.Body.get -> System.Text.Json.JsonElement
+Arcp.Client.JobEvent.Body.init -> void
+Arcp.Client.JobEvent.BodyAs<T>() -> T?
+Arcp.Client.JobEvent.Deconstruct(out string! Kind, out System.DateTimeOffset Ts, out System.Text.Json.JsonElement Body, out long EventSeq, out string? JobId) -> void
+Arcp.Client.JobEvent.Equals(Arcp.Client.JobEvent? other) -> bool
+Arcp.Client.JobEvent.EventSeq.get -> long
+Arcp.Client.JobEvent.EventSeq.init -> void
+Arcp.Client.JobEvent.JobEvent(string! Kind, System.DateTimeOffset Ts, System.Text.Json.JsonElement Body, long EventSeq, string? JobId) -> void
+Arcp.Client.JobEvent.JobId.get -> string?
+Arcp.Client.JobEvent.JobId.init -> void
+Arcp.Client.JobEvent.Kind.get -> string!
+Arcp.Client.JobEvent.Kind.init -> void
+Arcp.Client.JobEvent.Ts.get -> System.DateTimeOffset
+Arcp.Client.JobEvent.Ts.init -> void
+Arcp.Client.JobHandle
+Arcp.Client.JobHandle.Accepted.get -> System.Threading.Tasks.Task<Arcp.Core.Messages.JobAcceptedPayload!>!
+Arcp.Client.JobHandle.Agent.get -> string!
+Arcp.Client.JobHandle.Budget.get -> System.Collections.Generic.IReadOnlyDictionary<string!, decimal>?
+Arcp.Client.JobHandle.CancelAsync(string? reason = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Arcp.Client.JobHandle.Chunks(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Collections.Generic.IAsyncEnumerable<Arcp.Client.ResultChunk!>!
+Arcp.Client.JobHandle.DisposeAsync() -> System.Threading.Tasks.ValueTask
+Arcp.Client.JobHandle.Events(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Collections.Generic.IAsyncEnumerable<Arcp.Client.JobEvent!>!
+Arcp.Client.JobHandle.JobId.get -> Arcp.Core.Ids.JobId
+Arcp.Client.JobHandle.Lease.get -> Arcp.Core.Leases.Lease?
+Arcp.Client.JobHandle.LeaseConstraints.get -> Arcp.Core.Leases.LeaseConstraints?
+Arcp.Client.JobHandle.Result.get -> System.Threading.Tasks.Task<Arcp.Client.JobResult!>!
+Arcp.Client.JobHandle.TraceId.get -> Arcp.Core.Ids.TraceId?
+Arcp.Client.JobResult
+Arcp.Client.JobResult.<Clone>$() -> Arcp.Client.JobResult!
+Arcp.Client.JobResult.Deconstruct(out bool Success, out Arcp.Core.Messages.JobResultPayload? Result, out Arcp.Core.Messages.JobErrorPayload? Error) -> void
+Arcp.Client.JobResult.EnsureSuccess() -> void
+Arcp.Client.JobResult.Equals(Arcp.Client.JobResult? other) -> bool
+Arcp.Client.JobResult.Error.get -> Arcp.Core.Messages.JobErrorPayload?
+Arcp.Client.JobResult.Error.init -> void
+Arcp.Client.JobResult.FinalStatus.get -> string!
+Arcp.Client.JobResult.JobResult(bool Success, Arcp.Core.Messages.JobResultPayload? Result, Arcp.Core.Messages.JobErrorPayload? Error) -> void
+Arcp.Client.JobResult.Result.get -> Arcp.Core.Messages.JobResultPayload?
+Arcp.Client.JobResult.Result.init -> void
+Arcp.Client.JobResult.Success.get -> bool
+Arcp.Client.JobResult.Success.init -> void
+Arcp.Client.JobSubscription
+Arcp.Client.JobSubscription.Acknowledged.get -> System.Threading.Tasks.Task<Arcp.Core.Messages.JobSubscribedPayload!>!
+Arcp.Client.JobSubscription.Events(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Collections.Generic.IAsyncEnumerable<Arcp.Client.JobEvent!>!
+Arcp.Client.JobSubscription.JobId.get -> Arcp.Core.Ids.JobId
+Arcp.Client.JobSubscription.UnsubscribeAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Arcp.Client.ResultChunk
+Arcp.Client.ResultChunk.<Clone>$() -> Arcp.Client.ResultChunk!
+Arcp.Client.ResultChunk.Body.get -> Arcp.Core.Messages.ResultChunkBody!
+Arcp.Client.ResultChunk.Body.init -> void
+Arcp.Client.ResultChunk.ChunkSeq.get -> long
+Arcp.Client.ResultChunk.DecodedBytes.get -> byte[]!
+Arcp.Client.ResultChunk.DecodedString.get -> string!
+Arcp.Client.ResultChunk.Deconstruct(out Arcp.Core.Messages.ResultChunkBody! Body) -> void
+Arcp.Client.ResultChunk.Encoding.get -> string!
+Arcp.Client.ResultChunk.Equals(Arcp.Client.ResultChunk? other) -> bool
+Arcp.Client.ResultChunk.More.get -> bool
+Arcp.Client.ResultChunk.ResultChunk(Arcp.Core.Messages.ResultChunkBody! Body) -> void
+Arcp.Client.ResultChunk.ResultId.get -> Arcp.Core.Ids.ResultId
+override Arcp.Client.JobEvent.Equals(object? obj) -> bool
+override Arcp.Client.JobEvent.GetHashCode() -> int
+override Arcp.Client.JobEvent.ToString() -> string!
+override Arcp.Client.JobResult.Equals(object? obj) -> bool
+override Arcp.Client.JobResult.GetHashCode() -> int
+override Arcp.Client.JobResult.ToString() -> string!
+override Arcp.Client.ResultChunk.Equals(object? obj) -> bool
+override Arcp.Client.ResultChunk.GetHashCode() -> int
+override Arcp.Client.ResultChunk.ToString() -> string!
+static Arcp.Client.ArcpClient.ConnectAsync(Arcp.Core.Transport.ITransport! transport, Arcp.Client.ArcpClientOptions! options, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Arcp.Client.ArcpClient!>!
+static Arcp.Client.JobEvent.From(Arcp.Core.Wire.Envelope! env) -> Arcp.Client.JobEvent!
+static Arcp.Client.JobEvent.operator !=(Arcp.Client.JobEvent? left, Arcp.Client.JobEvent? right) -> bool
+static Arcp.Client.JobEvent.operator ==(Arcp.Client.JobEvent? left, Arcp.Client.JobEvent? right) -> bool
+static Arcp.Client.JobResult.operator !=(Arcp.Client.JobResult? left, Arcp.Client.JobResult? right) -> bool
+static Arcp.Client.JobResult.operator ==(Arcp.Client.JobResult? left, Arcp.Client.JobResult? right) -> bool
+static Arcp.Client.ResultChunk.operator !=(Arcp.Client.ResultChunk? left, Arcp.Client.ResultChunk? right) -> bool
+static Arcp.Client.ResultChunk.operator ==(Arcp.Client.ResultChunk? left, Arcp.Client.ResultChunk? right) -> bool

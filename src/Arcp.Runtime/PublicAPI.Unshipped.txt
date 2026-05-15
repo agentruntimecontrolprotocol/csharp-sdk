@@ -1,0 +1,151 @@
+#nullable enable
+Arcp.Runtime.Agents.AgentRegistry
+Arcp.Runtime.Agents.AgentRegistry.AgentRegistry() -> void
+Arcp.Runtime.Agents.AgentRegistry.Register(string! name, Arcp.Runtime.Agents.IAgent! agent) -> void
+Arcp.Runtime.Agents.AgentRegistry.RegisterVersion(string! name, string! version, Arcp.Runtime.Agents.IAgent! agent) -> void
+Arcp.Runtime.Agents.AgentRegistry.Resolve(Arcp.Core.Agents.AgentRef requested) -> (Arcp.Core.Agents.AgentRef Resolved, Arcp.Runtime.Agents.IAgent! Agent)
+Arcp.Runtime.Agents.AgentRegistry.SetDefaultVersion(string! name, string! version) -> void
+Arcp.Runtime.Agents.AgentRegistry.ToInventory() -> System.Collections.Generic.IReadOnlyList<Arcp.Core.Caps.AgentInventoryEntry!>!
+Arcp.Runtime.Agents.DelegateAgent
+Arcp.Runtime.Agents.DelegateAgent.DelegateAgent(System.Func<Arcp.Runtime.JobContext!, System.Threading.CancellationToken, System.Threading.Tasks.Task<object?>!>! impl) -> void
+Arcp.Runtime.Agents.DelegateAgent.RunAsync(Arcp.Runtime.JobContext! context, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<object?>!
+Arcp.Runtime.Agents.IAgent
+Arcp.Runtime.Agents.IAgent.RunAsync(Arcp.Runtime.JobContext! context, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<object?>!
+Arcp.Runtime.ArcpServer
+Arcp.Runtime.ArcpServer.AcceptAsync(Arcp.Core.Transport.ITransport! transport, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Arcp.Runtime.ArcpServer.AgentRegistry.get -> Arcp.Runtime.Agents.AgentRegistry!
+Arcp.Runtime.ArcpServer.ArcpServer(Arcp.Runtime.ArcpServerOptions! options, Microsoft.Extensions.Logging.ILoggerFactory? loggerFactory = null) -> void
+Arcp.Runtime.ArcpServer.DisposeAsync() -> System.Threading.Tasks.ValueTask
+Arcp.Runtime.ArcpServer.JobManager.get -> Arcp.Runtime.JobManager!
+Arcp.Runtime.ArcpServer.LeaseManager.get -> Arcp.Runtime.Leases.LeaseManager!
+Arcp.Runtime.ArcpServer.Options.get -> Arcp.Runtime.ArcpServerOptions!
+Arcp.Runtime.ArcpServer.RegisterAgent(string! name, Arcp.Runtime.Agents.IAgent! agent) -> void
+Arcp.Runtime.ArcpServer.RegisterAgent(string! name, System.Func<Arcp.Runtime.JobContext!, System.Threading.CancellationToken, System.Threading.Tasks.Task<object?>!>! impl) -> void
+Arcp.Runtime.ArcpServer.RegisterAgentVersion(string! name, string! version, Arcp.Runtime.Agents.IAgent! agent) -> void
+Arcp.Runtime.ArcpServer.RegisterAgentVersion(string! name, string! version, System.Func<Arcp.Runtime.JobContext!, System.Threading.CancellationToken, System.Threading.Tasks.Task<object?>!>! impl) -> void
+Arcp.Runtime.ArcpServer.SetDefaultAgentVersion(string! name, string! version) -> void
+Arcp.Runtime.ArcpServer.Subscriptions.get -> Arcp.Runtime.Subscriptions.SubscriptionManager!
+Arcp.Runtime.ArcpServerOptions
+Arcp.Runtime.ArcpServerOptions.ArcpServerOptions() -> void
+Arcp.Runtime.ArcpServerOptions.Auth.get -> Arcp.Core.Auth.IBearerVerifier?
+Arcp.Runtime.ArcpServerOptions.Auth.init -> void
+Arcp.Runtime.ArcpServerOptions.AuthorizationPolicy.get -> Arcp.Runtime.Authorization.IJobAuthorizationPolicy!
+Arcp.Runtime.ArcpServerOptions.AuthorizationPolicy.init -> void
+Arcp.Runtime.ArcpServerOptions.BackPressureThreshold.get -> int
+Arcp.Runtime.ArcpServerOptions.BackPressureThreshold.init -> void
+Arcp.Runtime.ArcpServerOptions.Encodings.get -> System.Collections.Generic.IReadOnlyList<string!>?
+Arcp.Runtime.ArcpServerOptions.Encodings.init -> void
+Arcp.Runtime.ArcpServerOptions.Features.get -> System.Collections.Generic.IReadOnlyList<string!>?
+Arcp.Runtime.ArcpServerOptions.Features.init -> void
+Arcp.Runtime.ArcpServerOptions.HeartbeatIntervalSec.get -> int
+Arcp.Runtime.ArcpServerOptions.HeartbeatIntervalSec.init -> void
+Arcp.Runtime.ArcpServerOptions.ResumeWindowSec.get -> int
+Arcp.Runtime.ArcpServerOptions.ResumeWindowSec.init -> void
+Arcp.Runtime.ArcpServerOptions.Runtime.get -> Arcp.Core.Messages.RuntimeInfo!
+Arcp.Runtime.ArcpServerOptions.Runtime.init -> void
+Arcp.Runtime.ArcpServerOptions.TimeProvider.get -> System.TimeProvider!
+Arcp.Runtime.ArcpServerOptions.TimeProvider.init -> void
+Arcp.Runtime.Authorization.AllowAllPolicy
+Arcp.Runtime.Authorization.AllowAllPolicy.AllowAllPolicy() -> void
+Arcp.Runtime.Authorization.AllowAllPolicy.CanObserve(string? jobSubmitterPrincipal, Arcp.Core.Auth.AuthPrincipal? requestor) -> bool
+Arcp.Runtime.Authorization.IJobAuthorizationPolicy
+Arcp.Runtime.Authorization.IJobAuthorizationPolicy.CanObserve(string? jobSubmitterPrincipal, Arcp.Core.Auth.AuthPrincipal? requestor) -> bool
+Arcp.Runtime.Authorization.SamePrincipalPolicy
+Arcp.Runtime.Authorization.SamePrincipalPolicy.CanObserve(string? jobSubmitterPrincipal, Arcp.Core.Auth.AuthPrincipal? requestor) -> bool
+Arcp.Runtime.Authorization.SamePrincipalPolicy.SamePrincipalPolicy() -> void
+Arcp.Runtime.Budget.BudgetLedger
+Arcp.Runtime.Budget.BudgetLedger.ApplyMetric(string! metricName, double value, string? unit) -> bool
+Arcp.Runtime.Budget.BudgetLedger.AssertNotExhausted() -> void
+Arcp.Runtime.Budget.BudgetLedger.BudgetLedger() -> void
+Arcp.Runtime.Budget.BudgetLedger.Initial.get -> System.Collections.Generic.IReadOnlyDictionary<string!, decimal>!
+Arcp.Runtime.Budget.BudgetLedger.Initialize(Arcp.Core.Leases.Lease! lease) -> void
+Arcp.Runtime.Budget.BudgetLedger.IsActive.get -> bool
+Arcp.Runtime.Budget.BudgetLedger.IsExhausted(string! currency) -> bool
+Arcp.Runtime.Budget.BudgetLedger.Remaining.get -> System.Collections.Generic.IReadOnlyDictionary<string!, decimal>!
+Arcp.Runtime.Job
+Arcp.Runtime.Job.Agent.get -> Arcp.Core.Agents.AgentRef
+Arcp.Runtime.Job.BeginResultStream() -> Arcp.Core.Ids.ResultId
+Arcp.Runtime.Job.BudgetLedger.get -> Arcp.Runtime.Budget.BudgetLedger!
+Arcp.Runtime.Job.CancellationSource.get -> System.Threading.CancellationTokenSource!
+Arcp.Runtime.Job.CancellationToken.get -> System.Threading.CancellationToken
+Arcp.Runtime.Job.CreatedAt.get -> System.DateTimeOffset
+Arcp.Runtime.Job.EmitEventAsync(string! kind, object! body, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask
+Arcp.Runtime.Job.EmitMetricAsync(Arcp.Core.Messages.MetricBody! body, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask
+Arcp.Runtime.Job.IdempotencyKey.get -> string?
+Arcp.Runtime.Job.InlineResultEmitted.get -> bool
+Arcp.Runtime.Job.Input.get -> System.Text.Json.JsonElement?
+Arcp.Runtime.Job.JobId.get -> Arcp.Core.Ids.JobId
+Arcp.Runtime.Job.Lease.get -> Arcp.Core.Leases.Lease!
+Arcp.Runtime.Job.LeaseConstraints.get -> Arcp.Core.Leases.LeaseConstraints?
+Arcp.Runtime.Job.MarkInlineResult() -> void
+Arcp.Runtime.Job.MarkRunning() -> void
+Arcp.Runtime.Job.MarkTerminal(Arcp.Runtime.JobStatus terminal) -> void
+Arcp.Runtime.Job.ParentJobId.get -> string?
+Arcp.Runtime.Job.SessionId.get -> Arcp.Core.Ids.SessionId
+Arcp.Runtime.Job.Status.get -> Arcp.Runtime.JobStatus
+Arcp.Runtime.Job.StreamedResultId.get -> Arcp.Core.Ids.ResultId?
+Arcp.Runtime.Job.StreamedResultSize.get -> long
+Arcp.Runtime.Job.SubmitterPrincipal.get -> string?
+Arcp.Runtime.Job.TraceId.get -> Arcp.Core.Ids.TraceId?
+Arcp.Runtime.Job.WriteChunkAsync(Arcp.Core.Ids.ResultId resultId, string! data, string! encoding, bool more, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask
+Arcp.Runtime.JobContext
+Arcp.Runtime.JobContext.Agent.get -> Arcp.Core.Agents.AgentRef
+Arcp.Runtime.JobContext.ArtifactRefAsync(string! uri, string? contentType = null, long? byteSize = null, string? sha256 = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask
+Arcp.Runtime.JobContext.BeginResultStream() -> Arcp.Core.Ids.ResultId
+Arcp.Runtime.JobContext.Budget.get -> System.Collections.Generic.IReadOnlyDictionary<string!, decimal>!
+Arcp.Runtime.JobContext.Cancellation.get -> System.Threading.CancellationToken
+Arcp.Runtime.JobContext.DelegateAsync(string! childJobId, string! agent, object? input, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask
+Arcp.Runtime.JobContext.EmitEventAsync(string! kind, object! body, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask
+Arcp.Runtime.JobContext.Input.get -> System.Text.Json.JsonElement?
+Arcp.Runtime.JobContext.JobId.get -> Arcp.Core.Ids.JobId
+Arcp.Runtime.JobContext.Lease.get -> Arcp.Core.Leases.Lease!
+Arcp.Runtime.JobContext.LeaseConstraints.get -> Arcp.Core.Leases.LeaseConstraints?
+Arcp.Runtime.JobContext.LogAsync(string! level, string! message, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask
+Arcp.Runtime.JobContext.Logger.get -> Microsoft.Extensions.Logging.ILogger!
+Arcp.Runtime.JobContext.MetricAsync(string! name, double value, string? unit = null, System.Collections.Generic.IReadOnlyDictionary<string!, string!>? dimensions = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask
+Arcp.Runtime.JobContext.ProgressAsync(long current, long? total = null, string? units = null, string? message = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask
+Arcp.Runtime.JobContext.SessionId.get -> Arcp.Core.Ids.SessionId
+Arcp.Runtime.JobContext.StatusAsync(string! phase, string? message = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask
+Arcp.Runtime.JobContext.ThoughtAsync(string! text, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask
+Arcp.Runtime.JobContext.ToolCallAsync(string! tool, string! callId, object? args, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask
+Arcp.Runtime.JobContext.ToolResultAsync(string! callId, object? result, Arcp.Core.Messages.ToolError? error = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask
+Arcp.Runtime.JobContext.TraceId.get -> Arcp.Core.Ids.TraceId?
+Arcp.Runtime.JobContext.WriteChunkAsync(Arcp.Core.Ids.ResultId resultId, string! text, bool more, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask
+Arcp.Runtime.JobContext.WriteChunkAsync(Arcp.Core.Ids.ResultId resultId, System.ReadOnlyMemory<byte> bytes, bool more, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask
+Arcp.Runtime.JobManager
+Arcp.Runtime.JobManager.Cancel(Arcp.Core.Ids.JobId jobId, string? requesterPrincipal, string? reason) -> bool
+Arcp.Runtime.JobManager.JobManager(Arcp.Runtime.Agents.AgentRegistry! agents, Arcp.Runtime.Leases.LeaseManager! leases, System.TimeProvider! time, Microsoft.Extensions.Logging.ILoggerFactory! loggers) -> void
+Arcp.Runtime.JobManager.Jobs.get -> System.Collections.Generic.IEnumerable<Arcp.Runtime.Job!>!
+Arcp.Runtime.JobManager.List(string? requesterPrincipal, Arcp.Runtime.Authorization.IJobAuthorizationPolicy! policy, Arcp.Core.Messages.JobListFilter? filter, int? limit, string? cursor, out string? nextCursor) -> System.Collections.Generic.IReadOnlyList<Arcp.Core.Messages.JobListEntry!>!
+Arcp.Runtime.JobManager.RunAsync(Arcp.Runtime.Job! job, Arcp.Runtime.Agents.IAgent! agent, System.Func<Arcp.Core.Wire.Envelope!, System.Threading.CancellationToken, System.Threading.Tasks.ValueTask>! emit, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+Arcp.Runtime.JobManager.Submit(Arcp.Core.Messages.JobSubmitPayload! submit, Arcp.Core.Ids.SessionId sessionId, string? submitterPrincipal, System.Func<Arcp.Core.Wire.Envelope!, System.Threading.CancellationToken, System.Threading.Tasks.ValueTask>! emit, System.Threading.CancellationToken parentCancellation, out Arcp.Core.Messages.JobAcceptedPayload! accepted) -> Arcp.Runtime.Job!
+Arcp.Runtime.JobManager.TryGet(Arcp.Core.Ids.JobId id, out Arcp.Runtime.Job? job) -> bool
+Arcp.Runtime.JobStatus
+Arcp.Runtime.JobStatus.Cancelled = 4 -> Arcp.Runtime.JobStatus
+Arcp.Runtime.JobStatus.Error = 3 -> Arcp.Runtime.JobStatus
+Arcp.Runtime.JobStatus.Pending = 0 -> Arcp.Runtime.JobStatus
+Arcp.Runtime.JobStatus.Running = 1 -> Arcp.Runtime.JobStatus
+Arcp.Runtime.JobStatus.Success = 2 -> Arcp.Runtime.JobStatus
+Arcp.Runtime.JobStatus.TimedOut = 5 -> Arcp.Runtime.JobStatus
+Arcp.Runtime.Leases.LeaseManager
+Arcp.Runtime.Leases.LeaseManager.AssertSubset(Arcp.Core.Leases.Lease! parent, Arcp.Core.Leases.Lease! child, System.Collections.Generic.IReadOnlyDictionary<string!, decimal>? parentBudgetRemaining = null, Arcp.Core.Leases.LeaseConstraints? parentConstraints = null, Arcp.Core.Leases.LeaseConstraints? childConstraints = null) -> void
+Arcp.Runtime.Leases.LeaseManager.Authorize(Arcp.Core.Leases.Lease? requested, Arcp.Core.Leases.LeaseConstraints? constraints) -> Arcp.Core.Leases.Lease!
+Arcp.Runtime.Leases.LeaseManager.AuthorizeOperation(Arcp.Core.Leases.Lease! lease, Arcp.Core.Leases.LeaseConstraints? constraints, string! namespaceName, string! pattern) -> void
+Arcp.Runtime.Leases.LeaseManager.LeaseManager(System.TimeProvider? time = null) -> void
+Arcp.Runtime.SessionState
+Arcp.Runtime.SessionState.CloseAsync(string? reason = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask
+Arcp.Runtime.SessionState.DisposeAsync() -> System.Threading.Tasks.ValueTask
+Arcp.Runtime.SessionState.EffectiveFeatures.get -> System.Collections.Generic.IReadOnlyList<string!>!
+Arcp.Runtime.SessionState.EventLog.get -> Arcp.Core.Store.EventLog!
+Arcp.Runtime.SessionState.IsClosed.get -> bool
+Arcp.Runtime.SessionState.Principal.get -> Arcp.Core.Auth.AuthPrincipal?
+Arcp.Runtime.SessionState.ResumeToken.get -> string!
+Arcp.Runtime.SessionState.RunAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+Arcp.Runtime.SessionState.SendAsync(Arcp.Core.Wire.Envelope! env, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask
+Arcp.Runtime.SessionState.SessionId.get -> Arcp.Core.Ids.SessionId
+Arcp.Runtime.Subscriptions.SubscriptionManager
+Arcp.Runtime.Subscriptions.SubscriptionManager.RemoveSession(Arcp.Core.Ids.SessionId sessionId) -> void
+Arcp.Runtime.Subscriptions.SubscriptionManager.Subscribe(Arcp.Core.Ids.JobId jobId, Arcp.Core.Ids.SessionId sessionId) -> void
+Arcp.Runtime.Subscriptions.SubscriptionManager.SubscribersOf(Arcp.Core.Ids.JobId jobId) -> System.Collections.Generic.IReadOnlyCollection<Arcp.Core.Ids.SessionId>!
+Arcp.Runtime.Subscriptions.SubscriptionManager.SubscriptionManager() -> void
+Arcp.Runtime.Subscriptions.SubscriptionManager.Unsubscribe(Arcp.Core.Ids.JobId jobId, Arcp.Core.Ids.SessionId sessionId) -> void

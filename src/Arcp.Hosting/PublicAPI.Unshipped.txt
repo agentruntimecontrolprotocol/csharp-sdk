@@ -1,0 +1,3 @@
+#nullable enable
+Arcp.Hosting.ArcpHostingExtensions
+static Arcp.Hosting.ArcpHostingExtensions.AddArcpRuntime(this Microsoft.Extensions.DependencyInjection.IServiceCollection! services, System.Action<Arcp.Runtime.ArcpServerOptions!>! configure) -> Microsoft.Extensions.DependencyInjection.IServiceCollection!

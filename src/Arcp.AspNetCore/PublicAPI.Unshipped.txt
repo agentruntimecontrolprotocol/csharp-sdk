@@ -1,0 +1,9 @@
+#nullable enable
+Arcp.AspNetCore.ArcpEndpointOptions
+Arcp.AspNetCore.ArcpEndpointOptions.AllowedHosts.get -> System.Collections.Generic.IReadOnlyList<string!>?
+Arcp.AspNetCore.ArcpEndpointOptions.AllowedHosts.set -> void
+Arcp.AspNetCore.ArcpEndpointOptions.ArcpEndpointOptions() -> void
+Arcp.AspNetCore.ArcpEndpointOptions.Path.get -> string!
+Arcp.AspNetCore.ArcpEndpointOptions.Path.set -> void
+Arcp.AspNetCore.ArcpEndpointRouteBuilderExtensions
+static Arcp.AspNetCore.ArcpEndpointRouteBuilderExtensions.MapArcp(this Microsoft.AspNetCore.Routing.IEndpointRouteBuilder! endpoints, Arcp.Runtime.ArcpServer! runtime, System.Action<Arcp.AspNetCore.ArcpEndpointOptions!>? configure = null) -> Microsoft.AspNetCore.Builder.IEndpointConventionBuilder!
