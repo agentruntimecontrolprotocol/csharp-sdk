@@ -63,20 +63,22 @@ public sealed class SessionState : IAsyncDisposable
         _lastInboundAt = options.TimeProvider.GetUtcNow();
     }
 
-    public async Task RunAsync()
+    public async Task RunAsync(CancellationToken cancellationToken = default)
     {
-        var sender = Task.Run(() => SenderLoop(_cts.Token));
-        var heartbeat = Task.Run(() => HeartbeatLoop(_cts.Token));
+        using var linked = CancellationTokenSource.CreateLinkedTokenSource(_cts.Token, cancellationToken);
+        var token = linked.Token;
+        var sender = Task.Run(() => SenderLoop(token), token);
+        var heartbeat = Task.Run(() => HeartbeatLoop(token), token);
         try
         {
-            await ReceiverLoop(_cts.Token).ConfigureAwait(false);
+            await ReceiverLoop(token).ConfigureAwait(false);
         }
         finally
         {
             _cts.Cancel();
             _outbound.Writer.TryComplete();
-            try { await sender.ConfigureAwait(false); } catch { /* shutdown */ }
-            try { await heartbeat.ConfigureAwait(false); } catch { /* shutdown */ }
+            try { await sender.ConfigureAwait(false); } catch (OperationCanceledException) { }
+            try { await heartbeat.ConfigureAwait(false); } catch (OperationCanceledException) { }
             IsClosed = true;
             _server.RemoveSession(this);
         }

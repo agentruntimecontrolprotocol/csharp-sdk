@@ -97,7 +97,10 @@ public sealed class ArcpClient : IAsyncDisposable
                 Dispatch(env, cancellationToken);
             }
         }
-        catch (OperationCanceledException) { }
+        catch (OperationCanceledException)
+        {
+            // Expected on shutdown; reader loop exits silently.
+        }
         catch (Exception)
         {
             // Surface as a session error to in-flight handles.
@@ -303,7 +306,10 @@ public sealed class ArcpClient : IAsyncDisposable
                 Payload = new SessionByePayload { Reason = "client_close" },
             }).ConfigureAwait(false);
         }
-        catch { /* already closed */ }
+        catch (Exception)
+        {
+            // Transport may already be closed; suppress on dispose path.
+        }
         _cts.Cancel();
         await _transport.DisposeAsync().ConfigureAwait(false);
         _cts.Dispose();

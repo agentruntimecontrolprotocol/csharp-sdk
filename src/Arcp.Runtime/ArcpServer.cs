@@ -60,7 +60,7 @@ public sealed class ArcpServer : IAsyncDisposable
         _sessions[session.SessionId] = session;
         try
         {
-            await session.RunAsync().ConfigureAwait(false);
+            await session.RunAsync(cancellationToken).ConfigureAwait(false);
         }
         finally
         {

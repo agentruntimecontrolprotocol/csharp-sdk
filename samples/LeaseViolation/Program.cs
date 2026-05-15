@@ -25,7 +25,7 @@ server.RegisterAgent("scanner", async (ctx, ct) =>
         {
             Code = ex.Code,
             Message = ex.Message,
-        });
+        }, ct);
     }
     return "scan-complete";
 });

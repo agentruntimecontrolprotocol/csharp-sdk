@@ -12,9 +12,9 @@ var server = new ArcpServer(new ArcpServerOptions
 });
 server.RegisterAgent("greeter", async (ctx, ct) =>
 {
-    await ctx.StatusAsync("starting");
+    await ctx.StatusAsync("starting", cancellationToken: ct);
     await ctx.LogAsync("info", $"Hello, {ctx.Input}!", ct);
-    await ctx.StatusAsync("complete");
+    await ctx.StatusAsync("complete", cancellationToken: ct);
     return new { greeting = $"Hello, {ctx.Input}!" };
 });
 
