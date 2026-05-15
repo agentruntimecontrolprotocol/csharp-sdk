@@ -1,0 +1,28 @@
+// ARCP capability negotiation sequence (light)
+digraph CapabilityNegotiation {
+  rankdir=TB; bgcolor="transparent"; compound=true; fontname="Helvetica";
+  splines=spline; nodesep=0.32; ranksep=0.55; pad="0.35,0.25";
+
+  node [shape=box, style="rounded,filled", fillcolor="white", color="#CBD5E1",
+        fontname="Helvetica", fontsize=11, fontcolor="#1F2937",
+        margin="0.22,0.11", penwidth=1.0];
+  edge [fontname="Helvetica", fontsize=9, fontcolor="#64748B", color="#94A3B8",
+        penwidth=1.1, arrowsize=0.75, arrowhead=vee];
+
+  Client [label=<<FONT POINT-SIZE="12"><B>Client</B></FONT>>,
+          fillcolor="#3B82F6", color="#2563EB", fontcolor="white", penwidth=1.4];
+  Runtime [label="Runtime"];
+
+  { rank=min; Client; Runtime; }
+
+  M1 [label="1: session.hello\\ncapabilities.features = A"];
+  M2 [label="2: session.welcome\\ncapabilities.features = B\\ncapabilities.agents = [...]"];
+  Note [label="Effective set = A ∩ B\\nNeither peer MUST use a feature\\noutside the intersection (§6.2)",
+        style="rounded,dashed,filled", fillcolor="#F8FAFC", color="#CBD5E1", fontcolor="#475569"];
+
+  Client -> M1 [style=invis];
+  M1 -> Runtime [label="C → R"];
+  Runtime -> M2 [style=invis];
+  M2 -> Client [label="R → C"];
+  M2 -> Note [style=dashed, color="#F472B6", fontcolor="#DB2777", constraint=false];
+}

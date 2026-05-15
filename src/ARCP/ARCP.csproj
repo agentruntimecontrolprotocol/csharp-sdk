@@ -1,42 +1,17 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <PackageId>ARCP</PackageId>
-    <Description>Reference C# implementation of the Agent Runtime Control Protocol (ARCP) v1.0 — RFC-0001-v2.</Description>
-    <PackageTags>arcp;agent;protocol;runtime;mcp</PackageTags>
-    <IsPackable>true</IsPackable>
-    <RootNamespace>ARCP</RootNamespace>
-    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace>Arcp</RootNamespace>
+    <PackageId>Arcp</PackageId>
+    <Description>ARCP v1.1 umbrella package: re-exports Arcp.Core, Arcp.Client, Arcp.Runtime.</Description>
+    <NoWarn>$(NoWarn);NU5128</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
-    <!--
-      Note: Microsoft.Extensions.Logging.Abstractions is provided transitively
-      by the Microsoft.AspNetCore.App framework reference below; declaring it
-      explicitly triggers NU1510 (warning-as-error).
-    -->
-    <PackageReference Include="Microsoft.Data.Sqlite" />
-    <PackageReference Include="Microsoft.IdentityModel.JsonWebTokens" />
-    <PackageReference Include="Ulid" />
-    <PackageReference Include="JsonSchema.Net" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <!--
-      ASP.NET Core framework reference is the cleanest way to host the
-      WebSocket server transport (§22). Documented in PLAN.md §6: this means
-      consumers of ARCP that only use the client will still pull in the
-      framework reference. v0.2 will split out ARCP.Server.WebSocket.
-    -->
-    <FrameworkReference Include="Microsoft.AspNetCore.App" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <EmbeddedResource Include="Resources/Schema.sql" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Include="../../README.md" Pack="true" PackagePath="\" Condition="Exists('../../README.md')" />
+    <ProjectReference Include="..\Arcp.Core\Arcp.Core.csproj" />
+    <ProjectReference Include="..\Arcp.Client\Arcp.Client.csproj" />
+    <ProjectReference Include="..\Arcp.Runtime\Arcp.Runtime.csproj" />
   </ItemGroup>
 
 </Project>

@@ -1,0 +1,33 @@
+// ARCP heartbeat + ack flow (dark)
+digraph HeartbeatAck {
+  rankdir=TB; bgcolor="transparent"; compound=true; fontname="Helvetica";
+  splines=spline; nodesep=0.32; ranksep=0.55; pad="0.35,0.25";
+
+  node [shape=box, style="rounded,filled", fillcolor="#334155", color="#475569",
+        fontname="Helvetica", fontsize=11, fontcolor="#F1F5F9",
+        margin="0.22,0.11", penwidth=1.0];
+  edge [fontname="Helvetica", fontsize=9, fontcolor="#94A3B8", color="#64748B",
+        penwidth=1.1, arrowsize=0.75, arrowhead=vee];
+
+  Client [label=<<FONT POINT-SIZE="12"><B>Client</B></FONT>>,
+          fillcolor="#3B82F6", color="#2563EB", fontcolor="white", penwidth=1.4];
+  Runtime [label="Runtime"];
+
+  { rank=min; Client; Runtime; }
+
+  Idle  [label="1: idle for heartbeat_interval_sec\\n(advertised on session.welcome)",
+         style="rounded,dashed,filled", fillcolor="#1E293B", color="#475569", fontcolor="#94A3B8"];
+  Ping  [label="2: session.ping { nonce, sent_at }"];
+  Pong  [label="3: session.pong { ping_nonce, received_at }\\n(not counted in event_seq)"];
+  Ack   [label="4: session.ack { last_processed_seq }"];
+  Back  [label="5: status { phase: \\\"back_pressure\\\" }\\nwhen lag > threshold"];
+
+  Idle -> Ping [style=invis];
+  Runtime -> Ping [label="R → C"];
+  Ping -> Pong [style=invis];
+  Pong -> Runtime [label="C → R"];
+  Pong -> Ack [style=invis];
+  Ack -> Runtime [label="C → R", style=dashed, color="#F472B6", fontcolor="#F472B6", constraint=false];
+  Ack -> Back [style=invis];
+  Back -> Client [label="R → C", style=dashed, color="#F472B6", fontcolor="#F472B6", constraint=false];
+}

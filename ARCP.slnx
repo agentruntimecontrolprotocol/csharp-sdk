@@ -1,0 +1,40 @@
+<Solution>
+  <Folder Name="/samples/">
+    <Project Path="samples/AckBackpressure/AckBackpressure.csproj" />
+    <Project Path="samples/AgentVersions/AgentVersions.csproj" />
+    <Project Path="samples/AspNetCore/AspNetCore.csproj" />
+    <Project Path="samples/Cancel/Cancel.csproj" />
+    <Project Path="samples/CostBudget/CostBudget.csproj" />
+    <Project Path="samples/CustomAuth/CustomAuth.csproj" />
+    <Project Path="samples/Delegate/Delegate.csproj" />
+    <Project Path="samples/Heartbeat/Heartbeat.csproj" />
+    <Project Path="samples/IdempotentRetry/IdempotentRetry.csproj" />
+    <Project Path="samples/LeaseExpiresAt/LeaseExpiresAt.csproj" />
+    <Project Path="samples/LeaseViolation/LeaseViolation.csproj" />
+    <Project Path="samples/ListJobs/ListJobs.csproj" />
+    <Project Path="samples/Progress/Progress.csproj" />
+    <Project Path="samples/ResultChunk/ResultChunk.csproj" />
+    <Project Path="samples/Resume/Resume.csproj" />
+    <Project Path="samples/Stdio/Stdio.csproj" />
+    <Project Path="samples/SubmitAndStream/SubmitAndStream.csproj" />
+    <Project Path="samples/Subscribe/Subscribe.csproj" />
+    <Project Path="samples/Tracing/Tracing.csproj" />
+    <Project Path="samples/VendorExtensions/VendorExtensions.csproj" />
+  </Folder>
+  <Folder Name="/src/">
+    <Project Path="src/Arcp.AspNetCore/Arcp.AspNetCore.csproj" />
+    <Project Path="src/Arcp.Cli/Arcp.Cli.csproj" />
+    <Project Path="src/Arcp.Client/Arcp.Client.csproj" />
+    <Project Path="src/Arcp.Core/Arcp.Core.csproj" />
+    <Project Path="src/Arcp.Hosting/Arcp.Hosting.csproj" />
+    <Project Path="src/Arcp.Otel/Arcp.Otel.csproj" />
+    <Project Path="src/Arcp.Runtime/Arcp.Runtime.csproj" />
+    <Project Path="src/Arcp/Arcp.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Arcp.AspNetCore.Tests/Arcp.AspNetCore.Tests.csproj" />
+    <Project Path="tests/Arcp.ConformanceTests/Arcp.ConformanceTests.csproj" />
+    <Project Path="tests/Arcp.IntegrationTests/Arcp.IntegrationTests.csproj" />
+    <Project Path="tests/Arcp.UnitTests/Arcp.UnitTests.csproj" />
+  </Folder>
+</Solution>

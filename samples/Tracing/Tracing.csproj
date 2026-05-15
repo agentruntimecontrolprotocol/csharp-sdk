@@ -1,0 +1,8 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Arcp.Core\Arcp.Core.csproj" />
+    <ProjectReference Include="..\..\src\Arcp.Client\Arcp.Client.csproj" />
+    <ProjectReference Include="..\..\src\Arcp.Runtime\Arcp.Runtime.csproj" />
+    <ProjectReference Include="..\..\src\Arcp.Otel\Arcp.Otel.csproj" />
+  </ItemGroup>
+</Project>

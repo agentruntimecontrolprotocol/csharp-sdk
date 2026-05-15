@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace>Arcp.Runtime</RootNamespace>
+    <PackageId>Arcp.Runtime</PackageId>
+    <Description>ARCP v1.1 runtime: ArcpServer, JobManager, LeaseManager, SessionState.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Arcp.Core\Arcp.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Arcp.AspNetCore" />
+    <InternalsVisibleTo Include="Arcp.Hosting" />
+    <InternalsVisibleTo Include="Arcp.UnitTests" />
+    <InternalsVisibleTo Include="Arcp.IntegrationTests" />
+    <InternalsVisibleTo Include="Arcp.ConformanceTests" />
+    <InternalsVisibleTo Include="Arcp.AspNetCore.Tests" />
+  </ItemGroup>
+
+</Project>

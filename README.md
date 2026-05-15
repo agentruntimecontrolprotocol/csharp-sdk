@@ -1,41 +1,118 @@
-# ARCP — C# SDK
+# ARCP — Agent Runtime Control Protocol (C# / .NET reference)
 
-Reference C# / .NET 10 implementation of the
-[Agent Runtime Control Protocol (ARCP) v1.0](RFC-0001-v2.md).
+[![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](./LICENSE)
+[![.NET](https://img.shields.io/badge/.NET-10.0-512BD4.svg)](#)
+[![ARCP](https://img.shields.io/badge/arcp-v1.1-orange.svg)](../spec/docs/draft-arcp-02.1.md)
 
-> Status: **v0.1 in development.** See [PLAN.md](PLAN.md) for scope and phase
-> ordering, and [CONFORMANCE.md](CONFORMANCE.md) for the implemented vs.
-> deferred surfaces.
+Reference C# / .NET 10 implementation of ARCP v1.1, the Agent Runtime Control Protocol — a transport-agnostic wire protocol for submitting, observing, and controlling long-running AI agent jobs.
 
-## Quickstart
-
-Prerequisites: .NET 10 SDK (10.0.x). Pinned via `global.json`.
+## Install
 
 ```sh
-git clone <repo-url>
-cd csharp-sdk
-dotnet build -c Release
-dotnet test  -c Release
-dotnet run   --project samples/01.MinimalSession
+dotnet add package Arcp
 ```
 
-## Packages
+| Package           | Purpose                                                                    |
+| ----------------- | -------------------------------------------------------------------------- |
+| `Arcp`            | Umbrella meta-package; pulls Core + Client + Runtime.                       |
+| `Arcp.Core`       | Wire primitives — envelopes, messages, errors, IDs, transports, event log. |
+| `Arcp.Client`     | `ArcpClient`, `JobHandle`, `JobEvent`.                                     |
+| `Arcp.Runtime`    | `ArcpServer`, `JobManager`, `LeaseManager`, `SessionState`.                |
+| `Arcp.AspNetCore` | `IEndpointRouteBuilder.MapArcp("/arcp")` over Kestrel.                      |
+| `Arcp.Otel`       | `ITransport.WithTracing()` — W3C trace propagation, ARCP span attributes.   |
+| `Arcp.Hosting`    | `IServiceCollection.AddArcpRuntime()` for non-ASP.NET workers.              |
+| `Arcp.Cli`        | `arcp` executable — `serve`, `submit`, `version`.                          |
 
-- `ARCP` — protocol library (envelopes, runtime, client, transports, store).
-- `ARCP.Cli` — `arcp` command-line tool (`serve`, `tail`, `send`, `replay`).
+## 20-line quickstart
 
-## Layout
+```csharp
+using Arcp.Client;
+using Arcp.Core.Messages;
+using Arcp.Core.Transport;
+using Arcp.Runtime;
 
-| Path                          | Purpose                                       |
-| ----------------------------- | --------------------------------------------- |
-| `src/ARCP/`                   | Main library                                  |
-| `src/ARCP.Cli/`               | Command-line tool                             |
-| `tests/ARCP.UnitTests/`       | Per-component unit tests                      |
-| `tests/ARCP.IntegrationTests/`| End-to-end protocol tests                     |
-| `samples/`                    | Six runnable sample applications              |
-| `RFC-0001-v2.md`              | The protocol specification (source of truth)  |
-| `PLAN.md`                     | Implementation plan                           |
-| `CONFORMANCE.md`              | Section-by-section conformance status         |
+var server = new ArcpServer(new ArcpServerOptions
+{
+    Runtime = new RuntimeInfo { Name = "demo-runtime", Version = "1.0.0" },
+});
+server.RegisterAgent("echo", async (ctx, ct) =>
+{
+    await ctx.LogAsync("info", "received", ct);
+    return ctx.Input;
+});
 
-Phase 7 fills out the rest of this README with architecture diagrams and a
-mapping from RFC sections to source paths.
+var (clientTransport, serverTransport) = MemoryTransport.Pair();
+_ = server.AcceptAsync(serverTransport);
+
+await using var client = await ArcpClient.ConnectAsync(clientTransport, new ArcpClientOptions
+{
+    Client = new ClientInfo { Name = "demo-client", Version = "1.0.0" },
+});
+var handle = await client.SubmitAsync("echo", new { hi = 1 });
+var result = await handle.Result;
+// result.Success == true; result.Result.FinalStatus == "success"
+```
+
+## v1.1 feature surface
+
+Every feature ships behind a feature flag negotiated in `session.hello` / `session.welcome` (spec §6.2). The C# SDK advertises all of them by default:
+
+| Flag                 | Spec   | Surface                                                                                        |
+| -------------------- | ------ | ---------------------------------------------------------------------------------------------- |
+| `heartbeat`          | §6.4   | `PeriodicTimer` ping/pong; not counted in `event_seq`.                                          |
+| `ack`                | §6.5   | `ArcpClient.AckAsync(long)`; runtime emits `status{phase:"back_pressure"}` when lag is high.   |
+| `list_jobs`          | §6.6   | `ArcpClient.ListJobsAsync()` returns paginated `JobListEntry`s.                                |
+| `subscribe`          | §7.6   | `ArcpClient.SubscribeAsync(jobId)` returns a `JobSubscription` with `IAsyncEnumerable<JobEvent>`. |
+| `agent_versions`     | §7.5   | `AgentRef.Parse("name@version")`; `RegisterAgentVersion()`; `AGENT_VERSION_NOT_AVAILABLE`.     |
+| `progress`           | §8.2.1 | `JobContext.ProgressAsync(current, total?, units?, message?)`.                                 |
+| `result_chunk`       | §8.4   | `JobContext.BeginResultStream()` + `WriteChunkAsync`; `JobHandle.Chunks()`.                    |
+| `lease_expires_at`   | §9.5   | `LeaseConstraints { ExpiresAt = DateTimeOffset }`; watchdog emits `LEASE_EXPIRED`.             |
+| `cost.budget`        | §9.6   | `BudgetAmount("USD:5.00")` patterns; `cost.*` metrics decrement the ledger; `BUDGET_EXHAUSTED`.|
+
+## Repository layout
+
+```
+src/
+  Arcp.Core/           wire types, IDs, envelopes, transports, event log
+  Arcp.Client/         ArcpClient + JobHandle
+  Arcp.Runtime/        ArcpServer + JobManager + LeaseManager + SessionState
+  Arcp/                umbrella package
+  Arcp.AspNetCore/     IEndpointRouteBuilder.MapArcp("/arcp")
+  Arcp.Otel/           ITransport.WithTracing()
+  Arcp.Hosting/        IServiceCollection.AddArcpRuntime()
+  Arcp.Cli/            arcp serve / submit
+samples/               20 runnable demos covering v1.0 core + v1.1 features
+tests/
+  Arcp.UnitTests/        envelope, parsers, event log
+  Arcp.IntegrationTests/ end-to-end flows over MemoryTransport
+  Arcp.ConformanceTests/ one [Fact] per spec § requirement
+  Arcp.AspNetCore.Tests/ loopback Kestrel + ClientWebSocket
+docs/                  narrative documentation
+docs/diagrams/         6 Graphviz pairs (light/dark)
+planning/v1.1/         design plan
+```
+
+## Run the samples
+
+```sh
+dotnet run --project samples/SubmitAndStream
+dotnet run --project samples/Progress
+dotnet run --project samples/ResultChunk
+dotnet run --project samples/Heartbeat
+dotnet run --project samples/CostBudget
+dotnet run --project samples/AspNetCore   # listens on http://127.0.0.1:5519
+```
+
+## Conformance
+
+See [`CONFORMANCE.md`](./CONFORMANCE.md) — one row per spec § with a pointer to the test that demonstrates it.
+
+## Development
+
+```sh
+dotnet restore
+dotnet build
+dotnet test
+```
+
+Spec text lives in [`../spec/docs/draft-arcp-02.1.md`](../spec/docs/draft-arcp-02.1.md). The C#-specific plan that drove this implementation is at [`planning/v1.1/`](./planning/v1.1/).

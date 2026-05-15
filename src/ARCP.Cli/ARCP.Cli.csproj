@@ -1,23 +1,22 @@
-<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
     <OutputType>Exe</OutputType>
-    <PackageId>ARCP.Cli</PackageId>
-    <Description>Command-line tools for the ARCP C# SDK (serve, tail, send, replay).</Description>
-    <PackageTags>arcp;agent;protocol;cli</PackageTags>
-    <!-- CLI is not published until commands are implemented; library ships separately. -->
-    <IsPackable>false</IsPackable>
-    <PackAsTool>false</PackAsTool>
-    <RootNamespace>ARCP.Cli</RootNamespace>
+    <RootNamespace>Arcp.Cli</RootNamespace>
+    <PackageId>Arcp.Cli</PackageId>
+    <AssemblyName>arcp</AssemblyName>
+    <ToolCommandName>arcp</ToolCommandName>
+    <PackAsTool>true</PackAsTool>
+    <Description>Command-line interface for ARCP v1.1 (serve, submit, replay).</Description>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="System.CommandLine" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Console" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\ARCP\ARCP.csproj" />
+    <ProjectReference Include="..\Arcp\Arcp.csproj" />
+    <ProjectReference Include="..\Arcp.Client\Arcp.Client.csproj" />
+    <ProjectReference Include="..\Arcp.Runtime\Arcp.Runtime.csproj" />
+    <ProjectReference Include="..\Arcp.AspNetCore\Arcp.AspNetCore.csproj" />
   </ItemGroup>
 
 </Project>

@@ -1,0 +1,53 @@
+// ARCP result_chunk + progress event sequence (light)
+digraph ResultChunkProgress {
+  rankdir=TB; bgcolor="transparent"; compound=true; fontname="Helvetica";
+  splines=spline; nodesep=0.32; ranksep=0.55; pad="0.35,0.25";
+
+  node [shape=box, style="rounded,filled", fillcolor="white", color="#CBD5E1",
+        fontname="Helvetica", fontsize=11, fontcolor="#1F2937",
+        margin="0.22,0.11", penwidth=1.0];
+  edge [fontname="Helvetica", fontsize=9, fontcolor="#64748B", color="#94A3B8",
+        penwidth=1.1, arrowsize=0.75, arrowhead=vee];
+
+  Client [label=<<FONT POINT-SIZE="12"><B>Client</B></FONT>>,
+          fillcolor="#3B82F6", color="#2563EB", fontcolor="white", penwidth=1.4];
+  Runtime [label="Runtime"];
+
+  { rank=min; Client; Runtime; }
+
+  M1 [label="1: job.submit { agent, input }"];
+  M2 [label="2: job.accepted { job_id, lease }"];
+  M3a [label="3a: job.event kind=progress\\n{ current, total?, units?, message? }"];
+  M3b [label="3b: job.event kind=result_chunk\\n{ result_id, chunk_seq, data, encoding, more: true }"];
+  M3c [label="3c: job.event kind=progress"];
+  M3d [label="3d: job.event kind=result_chunk\\n{ chunk_seq: N, more: false }"];
+  M4  [label="4: job.result\\n{ result_id, result_size, summary? }"];
+
+  subgraph cluster_csharp {
+    label=<<TABLE BORDER="0" CELLBORDER="0" CELLPADDING="0" CELLSPACING="0"><TR><TD COLSPAN="3" HEIGHT="8"></TD></TR><TR><TD WIDTH="8"></TD><TD><FONT POINT-SIZE="12"><B>Client-side C#</B></FONT></TD><TD WIDTH="8"></TD></TR></TABLE>>;
+    style="rounded,filled"; fillcolor="#F8FAFC"; color="#E2E8F0";
+    fontname="Helvetica"; fontcolor="#475569"; margin=14; labeljust=l; penwidth=1.0;
+    AwaitForeach [label="await foreach (var chunk in handle.Chunks(ct))"];
+    ProgressApi  [label="ProgressBody body = ev.BodyAs<ProgressBody>()"];
+  }
+
+  Client -> M1 [style=invis];
+  M1 -> Runtime [label="C → R"];
+  Runtime -> M2 [style=invis];
+  M2 -> Client [label="R → C"];
+  M2 -> M3a [style=invis];
+  M3a -> Client [label="R → C"];
+  M3a -> M3b [style=invis];
+  M3b -> Client [label="R → C"];
+  M3b -> M3c [style=invis];
+  M3c -> Client [label="R → C"];
+  M3c -> M3d [style=invis];
+  M3d -> Client [label="R → C"];
+  M3d -> M4 [style=invis];
+  M4 -> Client [label="R → C"];
+
+  M3b -> AwaitForeach [style=dashed, color="#F472B6", fontcolor="#DB2777", constraint=false];
+  M3d -> AwaitForeach [style=dashed, color="#F472B6", fontcolor="#DB2777", constraint=false];
+  M3a -> ProgressApi  [style=dashed, color="#F472B6", fontcolor="#DB2777", constraint=false];
+  M3c -> ProgressApi  [style=dashed, color="#F472B6", fontcolor="#DB2777", constraint=false];
+}

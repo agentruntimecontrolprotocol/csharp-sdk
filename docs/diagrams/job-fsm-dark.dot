@@ -1,0 +1,27 @@
+// ARCP job FSM (dark)
+digraph JobFsm {
+  rankdir=TB; bgcolor="transparent"; compound=true; fontname="Helvetica";
+  splines=ortho; nodesep=0.32; ranksep=0.55; pad="0.35,0.25";
+  node [shape=ellipse, style="filled", fillcolor="#334155", color="#475569",
+        fontname="Helvetica", fontsize=11, fontcolor="#F1F5F9", penwidth=1.0];
+  edge [fontname="Helvetica", fontsize=9, fontcolor="#94A3B8", color="#64748B",
+        penwidth=1.1, arrowsize=0.75, arrowhead=vee];
+
+  Pending [label=<<FONT POINT-SIZE="12"><B>Pending</B></FONT>>,
+           fillcolor="#3B82F6", color="#2563EB", fontcolor="white", penwidth=1.4];
+  Running [label="Running"];
+  Success [label=<<FONT POINT-SIZE="12"><B>Success</B></FONT>>,
+           fillcolor="#F59E0B", color="#D97706", fontcolor="white", penwidth=1.4];
+  Error     [label="Error", penwidth=1.4];
+  Cancelled [label="Cancelled", penwidth=1.4];
+  TimedOut  [label="TimedOut", penwidth=1.4];
+
+  Pending -> Running [label="job.accepted"];
+  Running -> Success   [label="job.result"];
+  Running -> Error     [label="job.error\\ncode ∈ {INVALID_REQUEST, PERMISSION_DENIED,\\nLEASE_EXPIRED, BUDGET_EXHAUSTED, ...}"];
+  Running -> Cancelled [label="job.cancel → CANCELLED"];
+  Running -> TimedOut  [label="lease.timeout → TIMEOUT"];
+
+  Running -> Running [label="job.subscribe → job.subscribed", style=dashed, color="#F472B6", fontcolor="#F472B6", constraint=false];
+  Running -> Running [label="job.unsubscribe (no state change)", style=dashed, color="#F472B6", fontcolor="#F472B6", constraint=false];
+}

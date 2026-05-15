@@ -1,0 +1,31 @@
+// ARCP session FSM (dark)
+digraph SessionFsm {
+  rankdir=TB; bgcolor="transparent"; compound=true; fontname="Helvetica";
+  splines=ortho; nodesep=0.32; ranksep=0.55; pad="0.35,0.25";
+  node [shape=ellipse, style="filled", fillcolor="#334155", color="#475569",
+        fontname="Helvetica", fontsize=11, fontcolor="#F1F5F9", penwidth=1.0];
+  edge [fontname="Helvetica", fontsize=9, fontcolor="#94A3B8", color="#64748B",
+        penwidth=1.1, arrowsize=0.75, arrowhead=vee];
+
+  Connecting [label=<<FONT POINT-SIZE="12"><B>Connecting</B></FONT>>,
+              fillcolor="#3B82F6", color="#2563EB", fontcolor="white", penwidth=1.4];
+  Hello     [label="Hello"];
+  Welcome   [label="Welcome"];
+  Active    [label="Active"];
+  Resuming  [label="Resuming"];
+  Closing   [label="Closing"];
+  Closed    [label=<<FONT POINT-SIZE="12"><B>Closed</B></FONT>>,
+             fillcolor="#F59E0B", color="#D97706", fontcolor="white", penwidth=1.4];
+
+  Connecting -> Hello   [label="open + session.hello"];
+  Hello      -> Welcome [label="session.welcome"];
+  Welcome    -> Active  [label="ready"];
+  Active     -> Active  [label="session.ping / session.pong", style=dashed, color="#F472B6", fontcolor="#F472B6", constraint=false];
+  Active     -> Active  [label="session.ack", style=dashed, color="#F472B6", fontcolor="#F472B6", constraint=false];
+  Active     -> Closing [label="session.bye"];
+  Active     -> Resuming[label="transport drop"];
+  Resuming   -> Active  [label="resume session.hello"];
+  Resuming   -> Closed  [label="RESUME_WINDOW_EXPIRED"];
+  Active     -> Closed  [label="HEARTBEAT_LOST"];
+  Closing    -> Closed  [label="close"];
+}

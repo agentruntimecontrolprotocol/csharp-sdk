@@ -1,13 +1,19 @@
 # Changelog
 
-All notable changes to this project are documented in this file.
+All notable changes to this project are documented in this file. The format follows [Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.1.0/) and the project follows semantic versioning.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+## [1.0.0] - 2026-05-14
 
-## [0.1.0] - 2026-05-10
+Initial release. Reference implementation of ARCP v1.1.
 
 ### Added
 
-- Initial reference SDK release aligned with ARCP protocol v1.0 (see README status).
-
+- `Arcp.Core` — envelope, message records, error taxonomy (15 codes), IDs, `MemoryTransport`/`WebSocketTransport`/`StdioTransport`, `EventLog`, capability negotiation, bearer auth, `ActivitySource` diagnostics.
+- `Arcp.Client` — `ArcpClient` with hello/welcome, job submission, subscription, list_jobs, ack, and result streaming.
+- `Arcp.Runtime` — `ArcpServer`, `JobManager`, `LeaseManager`, `SessionState`, `SubscriptionManager`, `BudgetLedger`, heartbeat watchdog, lease-expiry watchdog.
+- `Arcp.AspNetCore` — `IEndpointRouteBuilder.MapArcp("/arcp")` over Kestrel WebSockets.
+- `Arcp.Otel` — `ITransport.WithTracing()` with W3C `traceparent` propagation via the `x-vendor.opentelemetry.tracecontext` envelope extension.
+- `Arcp.Hosting` — `IServiceCollection.AddArcpRuntime()` for non-ASP.NET worker processes.
+- `Arcp.Cli` — `arcp serve` / `arcp submit` / `arcp version`.
+- 20 runnable samples covering every v1.0 + v1.1 feature.
+- 41 tests across UnitTests, IntegrationTests, ConformanceTests, and AspNetCore.Tests.
