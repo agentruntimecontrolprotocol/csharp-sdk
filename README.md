@@ -2,7 +2,7 @@
 
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](./LICENSE)
 [![.NET](https://img.shields.io/badge/.NET-10.0-512BD4.svg)](#)
-[![ARCP](https://img.shields.io/badge/arcp-v1.1-orange.svg)](../spec/docs/draft-arcp-02.1.md)
+[![ARCP](https://img.shields.io/badge/arcp-v1.1-orange.svg)](../spec/docs/draft-arcp-1.1.md)
 
 Reference C# / .NET 10 implementation of ARCP v1.1, the Agent Runtime Control Protocol — a transport-agnostic wire protocol for submitting, observing, and controlling long-running AI agent jobs.
 
@@ -115,4 +115,4 @@ dotnet build
 dotnet test
 ```
 
-Spec text lives in [`../spec/docs/draft-arcp-02.1.md`](../spec/docs/draft-arcp-02.1.md). The C#-specific plan that drove this implementation is at [`planning/v1.1/`](./planning/v1.1/).
+Spec text lives in [`../spec/docs/draft-arcp-1.1.md`](../spec/docs/draft-arcp-1.1.md). The C#-specific plan
