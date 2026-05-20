@@ -23,7 +23,7 @@ public sealed class EnvelopeJsonConverter : JsonConverter<Envelope>
     private sealed class EnvelopeFields
     {
         public string? Type;
-        public string? Arcp = "1";
+        public string? Arcp = "1.1";
         public string? Id;
         public string? SessionId;
         public string? TraceId;
@@ -48,7 +48,7 @@ public sealed class EnvelopeJsonConverter : JsonConverter<Envelope>
 
         return new Envelope
         {
-            Arcp = fields.Arcp ?? "1",
+            Arcp = fields.Arcp ?? "1.1",
             Id = fields.Id ?? "msg_" + Ulid.NewUlid(),
             Type = fields.Type!,
             SessionId = fields.SessionId,
@@ -99,8 +99,8 @@ public sealed class EnvelopeJsonConverter : JsonConverter<Envelope>
     {
         if (string.IsNullOrEmpty(fields.Type))
             throw new Errors.InvalidRequestException("Envelope missing required 'type' field (spec §5.1).");
-        if (fields.Arcp is not null && fields.Arcp != "1")
-            throw new Errors.InvalidRequestException($"Unsupported ARCP envelope version: '{fields.Arcp}' (spec §5.1; expected '1').");
+        if (fields.Arcp is not null && fields.Arcp != "1.1")
+            throw new Errors.InvalidRequestException($"Unsupported ARCP envelope version: '{fields.Arcp}' (spec §5.1; expected '1.1').");
     }
 
     private object? DeserializePayload(EnvelopeFields fields, JsonSerializerOptions options)

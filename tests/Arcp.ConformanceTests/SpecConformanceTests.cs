@@ -29,17 +29,17 @@ public class SpecConformanceTests
         return (server, client);
     }
 
-    [ConformanceFact("§5.1", "envelope MUST carry arcp=\"1\"")]
-    public void Envelope_arcp_field_is_1()
+    [ConformanceFact("§5.1", "envelope MUST carry arcp=\"1.1\"")]
+    public void Envelope_arcp_field_is_1_1()
     {
         var env = new Envelope { Type = MessageTypeNames.SessionBye };
-        env.Arcp.Should().Be("1");
+        env.Arcp.Should().Be("1.1");
     }
 
     [ConformanceFact("§5.1", "implementations MUST ignore unknown top-level envelope fields")]
     public void Envelope_ignores_unknown_fields()
     {
-        const string Json = "{\"arcp\":\"1\",\"id\":\"x\",\"type\":\"session.bye\",\"payload\":{},\"vendor_extra\":1}";
+        const string Json = "{\"arcp\":\"1.1\",\"id\":\"x\",\"type\":\"session.bye\",\"payload\":{},\"vendor_extra\":1}";
         ArcpJson.Deserialize(Json).Extensions.Should().ContainKey("vendor_extra");
     }
 

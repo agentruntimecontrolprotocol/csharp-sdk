@@ -10,7 +10,7 @@ Status legend: Implemented ✅ · Partial 🚧 · Not implemented ⛔.
 | ---- | ----------- | ------ | ----- |
 | §4.1 | WebSocket text frames, `/arcp` path | ✅ | `WebSocketTransport`, `Arcp.AspNetCore.MapArcp` |
 | §4.2 | stdio newline-delimited JSON | ✅ | `StdioTransport` |
-| §5.1 | Envelope: `arcp="1"`, `id`, `type`, optional `session_id`/`trace_id`/`job_id`/`event_seq`, `payload` | ✅ | `Envelope`, `EnvelopeJsonConverter` |
+| §5.1 | Envelope: `arcp="1.1"`, `id`, `type`, optional `session_id`/`trace_id`/`job_id`/`event_seq`, `payload` | ✅ | `Envelope`, `EnvelopeJsonConverter` |
 | §5.1 | Unknown top-level fields MUST be ignored | ✅ | `Envelope.Extensions` |
 
 ## Sessions

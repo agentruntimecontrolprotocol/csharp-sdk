@@ -27,7 +27,7 @@ Every message is a JSON object envelope:
 
 ```json
 {
-  "arcp": "1",
+  "arcp": "1.1",
   "id": "msg_01J...",
   "type": "job.submit",
   "session_id": "sess_01J...",

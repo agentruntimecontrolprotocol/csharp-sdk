@@ -10,9 +10,9 @@ namespace Arcp.Core.Wire;
 /// and a payload object whose shape depends on <see cref="Type"/>.</summary>
 public sealed record Envelope
 {
-    /// <summary>Protocol version. Always <c>"1"</c> in ARCP v1.x.</summary>
+    /// <summary>Protocol version. Always <c>"1.1"</c> in ARCP v1.1.</summary>
     [JsonPropertyName("arcp")]
-    public string Arcp { get; init; } = "1";
+    public string Arcp { get; init; } = "1.1";
 
     /// <summary>Unique message identifier (ULID).</summary>
     [JsonPropertyName("id")]
