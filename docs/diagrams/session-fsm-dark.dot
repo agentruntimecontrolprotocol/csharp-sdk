@@ -1,10 +1,10 @@
 // ARCP session FSM (dark)
 digraph SessionFsm {
-  rankdir=TB; bgcolor="transparent"; compound=true; fontname="Helvetica";
-  splines=ortho; nodesep=0.32; ranksep=0.55; pad="0.35,0.25";
-  node [shape=ellipse, style="filled", fillcolor="#334155", color="#475569",
-        fontname="Helvetica", fontsize=11, fontcolor="#F1F5F9", penwidth=1.0];
-  edge [fontname="Helvetica", fontsize=9, fontcolor="#94A3B8", color="#64748B",
+  rankdir=TB; bgcolor="transparent"; compound=true; fontname="TT Commons Pro Trial";
+  splines=spline; nodesep=0.32; ranksep=0.55; pad="0.35,0.25";
+  node [shape=box, style="rounded,filled", fillcolor="#334155", color="#475569",
+        fontname="TT Commons Pro Trial", fontsize=11, fontcolor="#F1F5F9", penwidth=1.0];
+  edge [fontname="TT Commons Pro Trial", fontsize=9, fontcolor="#94A3B8", color="#64748B",
         penwidth=1.1, arrowsize=0.75, arrowhead=vee];
 
   Connecting [label=<<FONT POINT-SIZE="12"><B>Connecting</B></FONT>>,
