@@ -115,4 +115,4 @@ dotnet build
 dotnet test
 ```
 
-Spec text lives in [`../spec/docs/draft-arcp-1.1.md`](../spec/docs/draft-arcp-1.1.md). The C#-specific plan
+Spec text lives in [the ARCP spec](https://github.com/agentruntimecontrolprotocol/spec/blob/main/docs/draft-arcp-1.1.md). The C#-specific plan
