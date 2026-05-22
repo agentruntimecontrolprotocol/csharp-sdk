@@ -75,19 +75,27 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-nuget-
 
+      # Restore, build, and pack iterate src/ directly rather than using
+      # ARCP.slnx — the solution file has case-sensitivity mismatches that
+      # cause MSB3202 on Linux even though they resolve fine on macOS.
       - name: Restore
-        run: dotnet restore ARCP.slnx
+        run: |
+          for project in src/*/; do
+            dotnet restore "$project"
+          done
 
       - name: Build
-        run: >
-          dotnet build ARCP.slnx
-          --configuration Release
-          --no-restore
-          -p:Version=${{ steps.version.outputs.version }}
+        run: |
+          for project in src/*/; do
+            dotnet build "$project" \
+              --configuration Release \
+              --no-restore \
+              -p:Version=${{ steps.version.outputs.version }}
+          done
 
       - name: Pack
-        # Pack each library project under src/ individually so that all eight
-        # packages (Arcp, Arcp.Core, Arcp.Client, Arcp.Runtime, Arcp.AspNetCore,
+        # Pack each library project under src/ so that all eight packages
+        # (Arcp, Arcp.Core, Arcp.Client, Arcp.Runtime, Arcp.AspNetCore,
         # Arcp.Otel, Arcp.Hosting, Arcp.Cli) land in the artifacts folder.
         # --no-build reuses the binaries already produced by the Build step.
         run: |
