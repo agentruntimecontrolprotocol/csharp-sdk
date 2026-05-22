@@ -15,5 +15,5 @@ Initial release. Reference implementation of ARCP v1.1.
 - `Arcp.Otel` — `ITransport.WithTracing()` with W3C `traceparent` propagation via the `x-vendor.opentelemetry.tracecontext` envelope extension.
 - `Arcp.Hosting` — `IServiceCollection.AddArcpRuntime()` for non-ASP.NET worker processes.
 - `Arcp.Cli` — `arcp serve` / `arcp submit` / `arcp version`.
-- 20 runnable samples covering every v1.0 + v1.1 feature.
-- 41 tests across UnitTests, IntegrationTests, ConformanceTests, and AspNetCore.Tests.
+- 20 runnable samples covering the full ARCP v1.1 feature surface.
+- 60 tests across UnitTests, IntegrationTests, ConformanceTests, and AspNetCore.Tests.

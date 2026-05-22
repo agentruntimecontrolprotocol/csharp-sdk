@@ -81,7 +81,7 @@ src/
   Arcp.Otel/           ITransport.WithTracing()
   Arcp.Hosting/        IServiceCollection.AddArcpRuntime()
   Arcp.Cli/            arcp serve / submit
-samples/               20 runnable demos covering v1.0 core + v1.1 features
+samples/               20 runnable demos covering the full ARCP v1.1 feature surface
 tests/
   Arcp.UnitTests/        envelope, parsers, event log
   Arcp.IntegrationTests/ end-to-end flows over MemoryTransport

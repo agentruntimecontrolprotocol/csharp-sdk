@@ -76,23 +76,29 @@ jobs:
             ${{ runner.os }}-nuget-
 
       - name: Restore
-        run: dotnet restore src/ARCP/ARCP.csproj
+        run: dotnet restore ARCP.slnx
 
       - name: Build
         run: >
-          dotnet build src/ARCP/ARCP.csproj
+          dotnet build ARCP.slnx
           --configuration Release
           --no-restore
           -p:Version=${{ steps.version.outputs.version }}
 
       - name: Pack
-        run: >
-          dotnet pack src/ARCP/ARCP.csproj
-          --configuration Release
-          --no-build
-          --output ${{ github.workspace }}/artifacts
-          -p:Version=${{ steps.version.outputs.version }}
-          -p:ContinuousIntegrationBuild=true
+        # Pack each library project under src/ individually so that all eight
+        # packages (Arcp, Arcp.Core, Arcp.Client, Arcp.Runtime, Arcp.AspNetCore,
+        # Arcp.Otel, Arcp.Hosting, Arcp.Cli) land in the artifacts folder.
+        # --no-build reuses the binaries already produced by the Build step.
+        run: |
+          for project in src/*/; do
+            dotnet pack "$project" \
+              --configuration Release \
+              --no-build \
+              --output "${{ github.workspace }}/artifacts" \
+              -p:Version=${{ steps.version.outputs.version }} \
+              -p:ContinuousIntegrationBuild=true
+          done
 
       - name: Upload packages
         uses: actions/upload-artifact@v4
