@@ -65,17 +65,17 @@ jobs:
             ${{ runner.os }}-nuget-
 
       - name: Restore
-        run: dotnet restore ARCP.sln
+        run: dotnet restore ARCP.slnx
 
       - name: Format check
-        run: dotnet format ARCP.sln --verify-no-changes --no-restore
+        run: dotnet format ARCP.slnx --verify-no-changes --no-restore
 
       - name: Build
-        run: dotnet build ARCP.sln --configuration Release --no-restore
+        run: dotnet build ARCP.slnx --configuration Release --no-restore
 
       - name: Test
         run: >
-          dotnet test tests/ARCP.UnitTests/ARCP.UnitTests.csproj
+          dotnet test tests/Arcp.UnitTests/Arcp.UnitTests.csproj
           --configuration Release
           --no-build
           --verbosity normal
