@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Arcp.AspNetCore;
 using Arcp.Client;
+using Arcp.Core.Caps;
 using Arcp.Core.Messages;
 using Arcp.Core.Transport;
 using Arcp.Runtime;
@@ -55,6 +56,7 @@ public class MapArcpTests
             Client = new ClientInfo { Name = "ws-test", Version = "1.0.0" },
         });
         arcpClient.Runtime!.Name.Should().Be("test");
+        arcpClient.EffectiveFeatures.Should().NotContain(FeatureFlags.ProvisionedCredentials);
         var handle = await arcpClient.SubmitAsync("echo");
         var result = await handle.Result.WaitAsync(TimeSpan.FromSeconds(5));
         result.Success.Should().BeTrue();

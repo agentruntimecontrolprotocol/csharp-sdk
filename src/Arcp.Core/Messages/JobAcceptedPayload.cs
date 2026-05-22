@@ -26,4 +26,6 @@ public sealed record JobAcceptedPayload
     [JsonPropertyName("trace_id")] public string? TraceId { get; init; }
 
     [JsonPropertyName("parent_job_id")] public string? ParentJobId { get; init; }
+
+    [JsonPropertyName("credentials")] public IReadOnlyList<ProvisionedCredential>? Credentials { get; init; }
 }

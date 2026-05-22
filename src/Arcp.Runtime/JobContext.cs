@@ -12,6 +12,7 @@ using Arcp.Core.Ids;
 using Arcp.Core.Leases;
 using Arcp.Core.Messages;
 using Arcp.Core.Wire;
+using Arcp.Runtime.Credentials;
 using Microsoft.Extensions.Logging;
 
 namespace Arcp.Runtime;
@@ -21,10 +22,12 @@ namespace Arcp.Runtime;
 public sealed class JobContext
 {
     private readonly Job _job;
+    private readonly CredentialManager? _credentials;
 
-    internal JobContext(Job job, ILogger logger)
+    internal JobContext(Job job, ILogger logger, CredentialManager? credentials = null)
     {
         _job = job;
+        _credentials = credentials;
         Logger = logger;
     }
 
@@ -39,6 +42,9 @@ public sealed class JobContext
     public LeaseConstraints? LeaseConstraints => _job.LeaseConstraints;
 
     public IReadOnlyDictionary<string, decimal> Budget => _job.BudgetLedger.Remaining;
+
+    public IReadOnlyList<ProvisionedCredential> Credentials =>
+        CredentialRedaction.StripValues(_job.Credentials);
 
     public TraceId? TraceId => _job.TraceId;
 
@@ -56,6 +62,16 @@ public sealed class JobContext
 
     public ValueTask StatusAsync(string phase, string? message = null, CancellationToken cancellationToken = default) =>
         _job.EmitEventAsync(EventKinds.Status, new StatusBody { Phase = phase, Message = message }, cancellationToken);
+
+    public ValueTask RotateCredentialAsync(
+        string credentialId,
+        ProvisionedCredential next,
+        CancellationToken cancellationToken = default)
+    {
+        if (_credentials is null)
+            throw new InvalidRequestException("Credential rotation requires a configured credential provisioner.");
+        return _credentials.RotateAsync(_job, credentialId, next, cancellationToken);
+    }
 
     public ValueTask ToolCallAsync(string tool, string callId, object? args, CancellationToken cancellationToken = default) =>
         _job.EmitEventAsync(EventKinds.ToolCall, new ToolCallBody

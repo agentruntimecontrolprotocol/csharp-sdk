@@ -218,6 +218,51 @@ Arcp.Core.Messages.JobCancelPayload.<Clone>$() -> Arcp.Core.Messages.JobCancelPa
 Arcp.Core.Messages.JobCancelPayload.Equals(Arcp.Core.Messages.JobCancelPayload? other) -> bool
 Arcp.Core.Messages.JobCancelPayload.JobCancelPayload() -> void
 Arcp.Core.Messages.JobCancelPayload.JobId.get -> string!
+Arcp.Core.Messages.CredentialConstraints
+Arcp.Core.Messages.CredentialConstraints.<Clone>$() -> Arcp.Core.Messages.CredentialConstraints!
+Arcp.Core.Messages.CredentialConstraints.CostBudget.get -> System.Collections.Generic.IReadOnlyList<string!>?
+Arcp.Core.Messages.CredentialConstraints.CostBudget.init -> void
+Arcp.Core.Messages.CredentialConstraints.CredentialConstraints() -> void
+Arcp.Core.Messages.CredentialConstraints.Equals(Arcp.Core.Messages.CredentialConstraints? other) -> bool
+Arcp.Core.Messages.CredentialConstraints.ExpiresAt.get -> System.DateTimeOffset?
+Arcp.Core.Messages.CredentialConstraints.ExpiresAt.init -> void
+Arcp.Core.Messages.CredentialConstraints.ModelUse.get -> System.Collections.Generic.IReadOnlyList<string!>?
+Arcp.Core.Messages.CredentialConstraints.ModelUse.init -> void
+Arcp.Core.Messages.JobAcceptedPayload.Credentials.get -> System.Collections.Generic.IReadOnlyList<Arcp.Core.Messages.ProvisionedCredential!>?
+Arcp.Core.Messages.JobAcceptedPayload.Credentials.init -> void
+Arcp.Core.Messages.JobSubscribedPayload.Credentials.get -> System.Collections.Generic.IReadOnlyList<Arcp.Core.Messages.ProvisionedCredential!>?
+Arcp.Core.Messages.JobSubscribedPayload.Credentials.init -> void
+Arcp.Core.Messages.ProvisionedCredential
+Arcp.Core.Messages.ProvisionedCredential.<Clone>$() -> Arcp.Core.Messages.ProvisionedCredential!
+Arcp.Core.Messages.ProvisionedCredential.Constraints.get -> Arcp.Core.Messages.CredentialConstraints?
+Arcp.Core.Messages.ProvisionedCredential.Constraints.init -> void
+Arcp.Core.Messages.ProvisionedCredential.Endpoint.get -> string!
+Arcp.Core.Messages.ProvisionedCredential.Endpoint.init -> void
+Arcp.Core.Messages.ProvisionedCredential.Equals(Arcp.Core.Messages.ProvisionedCredential? other) -> bool
+Arcp.Core.Messages.ProvisionedCredential.Id.get -> string!
+Arcp.Core.Messages.ProvisionedCredential.Id.init -> void
+Arcp.Core.Messages.ProvisionedCredential.Profile.get -> string?
+Arcp.Core.Messages.ProvisionedCredential.Profile.init -> void
+Arcp.Core.Messages.ProvisionedCredential.ProvisionedCredential() -> void
+Arcp.Core.Messages.ProvisionedCredential.Scheme.get -> string!
+Arcp.Core.Messages.ProvisionedCredential.Scheme.init -> void
+Arcp.Core.Messages.ProvisionedCredential.Value.get -> string!
+Arcp.Core.Messages.ProvisionedCredential.Value.init -> void
+Arcp.Core.Messages.StatusBody.CredentialId.get -> string?
+Arcp.Core.Messages.StatusBody.CredentialId.init -> void
+Arcp.Core.Messages.StatusBody.CredentialValue.get -> string?
+Arcp.Core.Messages.StatusBody.CredentialValue.init -> void
+Arcp.Core.Messages.StatusPhases
+override Arcp.Core.Messages.CredentialConstraints.Equals(object? obj) -> bool
+override Arcp.Core.Messages.CredentialConstraints.GetHashCode() -> int
+override Arcp.Core.Messages.CredentialConstraints.ToString() -> string!
+override Arcp.Core.Messages.ProvisionedCredential.Equals(object? obj) -> bool
+override Arcp.Core.Messages.ProvisionedCredential.GetHashCode() -> int
+override Arcp.Core.Messages.ProvisionedCredential.ToString() -> string!
+static Arcp.Core.Messages.CredentialConstraints.operator !=(Arcp.Core.Messages.CredentialConstraints? left, Arcp.Core.Messages.CredentialConstraints? right) -> bool
+static Arcp.Core.Messages.CredentialConstraints.operator ==(Arcp.Core.Messages.CredentialConstraints? left, Arcp.Core.Messages.CredentialConstraints? right) -> bool
+static Arcp.Core.Messages.ProvisionedCredential.operator !=(Arcp.Core.Messages.ProvisionedCredential? left, Arcp.Core.Messages.ProvisionedCredential? right) -> bool
+static Arcp.Core.Messages.ProvisionedCredential.operator ==(Arcp.Core.Messages.ProvisionedCredential? left, Arcp.Core.Messages.ProvisionedCredential? right) -> bool
 Arcp.Core.Messages.JobCancelPayload.JobId.init -> void
 Arcp.Core.Messages.JobCancelPayload.Reason.get -> string?
 Arcp.Core.Messages.JobCancelPayload.Reason.init -> void
@@ -608,7 +653,9 @@ const Arcp.Core.Caps.FeatureFlags.CostBudget = "cost.budget" -> string!
 const Arcp.Core.Caps.FeatureFlags.Heartbeat = "heartbeat" -> string!
 const Arcp.Core.Caps.FeatureFlags.LeaseExpiresAt = "lease_expires_at" -> string!
 const Arcp.Core.Caps.FeatureFlags.ListJobs = "list_jobs" -> string!
+const Arcp.Core.Caps.FeatureFlags.ModelUse = "model.use" -> string!
 const Arcp.Core.Caps.FeatureFlags.Progress = "progress" -> string!
+const Arcp.Core.Caps.FeatureFlags.ProvisionedCredentials = "provisioned_credentials" -> string!
 const Arcp.Core.Caps.FeatureFlags.ResultChunk = "result_chunk" -> string!
 const Arcp.Core.Caps.FeatureFlags.Subscribe = "subscribe" -> string!
 const Arcp.Core.Errors.ErrorCode.AgentNotAvailable = "AGENT_NOT_AVAILABLE" -> string!
@@ -630,6 +677,7 @@ const Arcp.Core.Leases.LeaseNamespaces.AgentDelegate = "agent.delegate" -> strin
 const Arcp.Core.Leases.LeaseNamespaces.CostBudget = "cost.budget" -> string!
 const Arcp.Core.Leases.LeaseNamespaces.FsRead = "fs.read" -> string!
 const Arcp.Core.Leases.LeaseNamespaces.FsWrite = "fs.write" -> string!
+const Arcp.Core.Leases.LeaseNamespaces.ModelUse = "model.use" -> string!
 const Arcp.Core.Leases.LeaseNamespaces.NetFetch = "net.fetch" -> string!
 const Arcp.Core.Leases.LeaseNamespaces.ToolCall = "tool.call" -> string!
 const Arcp.Core.Messages.EventKinds.ArtifactRef = "artifact_ref" -> string!
@@ -661,6 +709,7 @@ const Arcp.Core.Messages.MessageTypeNames.SessionPing = "session.ping" -> string
 const Arcp.Core.Messages.MessageTypeNames.SessionPong = "session.pong" -> string!
 const Arcp.Core.Messages.MessageTypeNames.SessionResume = "session.resume" -> string!
 const Arcp.Core.Messages.MessageTypeNames.SessionWelcome = "session.welcome" -> string!
+const Arcp.Core.Messages.StatusPhases.CredentialRotated = "credential_rotated" -> string!
 const Arcp.Core.Tracing.ArcpDiagnostics.RuntimeSourceName = "Arcp.Runtime" -> string!
 const Arcp.Core.Tracing.ArcpDiagnostics.TransportSourceName = "Arcp.Transport" -> string!
 const Arcp.Core.Tracing.TraceAttributes.Agent = "arcp.agent" -> string!

@@ -12,7 +12,7 @@ public sealed partial class ArcpClient
 {
     public async Task<JobHandle> SubmitAsync(string agent, object? input = null, Lease? leaseRequest = null,
         LeaseConstraints? leaseConstraints = null, string? idempotencyKey = null,
-        int? maxRuntimeSec = null, CancellationToken cancellationToken = default)
+        int? maxRuntimeSec = null, string? parentJobId = null, CancellationToken cancellationToken = default)
     {
         var handle = new JobHandle(this);
         _pendingSubmits.Enqueue(handle);
@@ -28,6 +28,7 @@ public sealed partial class ArcpClient
                 LeaseConstraints = leaseConstraints,
                 IdempotencyKey = idempotencyKey,
                 MaxRuntimeSec = maxRuntimeSec,
+                ParentJobId = parentJobId,
             },
         }, cancellationToken).ConfigureAwait(false);
         await handle.Accepted.WaitAsync(cancellationToken).ConfigureAwait(false);

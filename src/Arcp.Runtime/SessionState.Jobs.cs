@@ -17,30 +17,32 @@ public sealed partial class SessionState
     {
         Func<Envelope, CancellationToken, ValueTask> emit = (e, ct) => EmitJobEnvelopeAsync(e, ct);
 
-        Job job;
-        JobAcceptedPayload accepted;
         try
         {
-            job = _server.JobManager.Submit(submit, SessionId, Principal?.Subject, emit, _cts.Token, out accepted);
+            var submission = await _server.JobManager
+                .SubmitAsync(submit, SessionId, Principal?.Subject, emit, _cts.Token, cancellationToken)
+                .ConfigureAwait(false);
+            var job = submission.Job;
+            var accepted = submission.Accepted;
+
+            await SendAsync(new Envelope
+            {
+                Type = MessageTypeNames.JobAccepted,
+                SessionId = SessionId.Value,
+                JobId = job.JobId.Value,
+                TraceId = job.TraceId?.Value,
+                Payload = accepted,
+            }, cancellationToken).ConfigureAwait(false);
+
+            // Resolve agent and run.
+            var resolved = _server.AgentRegistry.Resolve(job.Agent).Agent;
+            _ = Task.Run(() => _server.JobManager.RunAsync(job, resolved, emit, _cts.Token), _cts.Token);
         }
         catch (ArcpException ex)
         {
             await SendSessionErrorAsync(ex, cancellationToken).ConfigureAwait(false);
             return;
         }
-
-        await SendAsync(new Envelope
-        {
-            Type = MessageTypeNames.JobAccepted,
-            SessionId = SessionId.Value,
-            JobId = job.JobId.Value,
-            TraceId = job.TraceId?.Value,
-            Payload = accepted,
-        }, cancellationToken).ConfigureAwait(false);
-
-        // Resolve agent and run.
-        var resolved = _server.AgentRegistry.Resolve(job.Agent).Agent;
-        _ = Task.Run(() => _server.JobManager.RunAsync(job, resolved, emit, _cts.Token), _cts.Token);
     }
 
     private ValueTask SendSessionErrorAsync(ArcpException ex, CancellationToken cancellationToken) =>
@@ -87,6 +89,9 @@ public sealed partial class SessionState
                 TraceId = job.TraceId?.Value,
                 SubscribedFrom = EventLog.HighWatermark,
                 Replayed = sub.History,
+                Credentials = string.Equals(Principal?.Subject, job.SubmitterPrincipal, StringComparison.Ordinal)
+                    ? job.Credentials
+                    : null,
             },
         }, cancellationToken).ConfigureAwait(false);
 

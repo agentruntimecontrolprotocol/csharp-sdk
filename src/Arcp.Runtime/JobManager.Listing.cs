@@ -51,6 +51,7 @@ public sealed partial class JobManager
 
     private static JobListEntry ToListEntry(Job j) => new()
     {
+        // Spec §14: list_jobs is an introspection surface and never carries credential secrets.
         JobId = j.JobId.Value,
         Agent = j.Agent.ToString(),
         Status = MapStatus(j.Status),

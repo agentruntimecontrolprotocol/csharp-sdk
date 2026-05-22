@@ -28,4 +28,6 @@ public sealed record JobSubscribedPayload
     [JsonPropertyName("subscribed_from")] public long? SubscribedFrom { get; init; }
 
     [JsonPropertyName("replayed")] public bool Replayed { get; init; }
+
+    [JsonPropertyName("credentials")] public IReadOnlyList<ProvisionedCredential>? Credentials { get; init; }
 }

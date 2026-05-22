@@ -49,11 +49,13 @@ public static class FeatureFlags
     public const string Progress = "progress";
     public const string ResultChunk = "result_chunk";
     public const string AgentVersions = "agent_versions";
+    public const string ModelUse = "model.use";
+    public const string ProvisionedCredentials = "provisioned_credentials";
 
     public static readonly FrozenSet<string> All = new HashSet<string>
     {
         Heartbeat, Ack, ListJobs, Subscribe, LeaseExpiresAt, CostBudget,
-        Progress, ResultChunk, AgentVersions,
+        Progress, ResultChunk, AgentVersions, ModelUse, ProvisionedCredentials,
     }.ToFrozenSet();
 }
 

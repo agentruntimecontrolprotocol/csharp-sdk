@@ -130,6 +130,38 @@ public class SpecConformanceTests
         a.Amount.Should().Be(5.00m);
     }
 
+    [ConformanceFact("§9.7", "model.use authorizes model identifiers by lease pattern")]
+    public void ModelUse_authorizes_model_ids()
+    {
+        var manager = new Arcp.Runtime.Leases.LeaseManager();
+        var lease = new Lease(new System.Collections.Generic.Dictionary<string, System.Collections.Generic.IReadOnlyList<string>>
+        {
+            [LeaseNamespaces.ModelUse] = new[] { "tier-fast/*" },
+        });
+
+        var act = () => manager.AuthorizeModelUse(lease, null, "tier-fast/gpt-4o-mini");
+
+        act.Should().NotThrow();
+    }
+
+    [ConformanceFact("§9.8", "provisioned_credentials wire shape includes id, scheme, value, endpoint, constraints")]
+    public void ProvisionedCredential_wire_shape_exists()
+    {
+        var credential = new ProvisionedCredential
+        {
+            Id = "cred_1",
+            Value = "secret",
+            Endpoint = "https://example.invalid",
+            Constraints = new CredentialConstraints
+            {
+                ModelUse = new[] { "tier-fast/*" },
+            },
+        };
+
+        credential.Scheme.Should().Be("bearer");
+        credential.Constraints!.ModelUse.Should().Equal("tier-fast/*");
+    }
+
     [ConformanceFact("§12", "all 15 canonical error codes are defined")]
     public void ErrorTaxonomy_has_15_canonical_codes()
     {

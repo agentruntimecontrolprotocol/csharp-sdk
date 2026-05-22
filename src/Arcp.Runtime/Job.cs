@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
@@ -12,6 +13,7 @@ using Arcp.Core.Leases;
 using Arcp.Core.Messages;
 using Arcp.Core.Wire;
 using Arcp.Runtime.Budget;
+using Arcp.Runtime.Credentials;
 
 namespace Arcp.Runtime;
 
@@ -20,6 +22,8 @@ namespace Arcp.Runtime;
 public sealed class Job
 {
     private long _nextChunkSeq;
+    private readonly object _credentialGate = new();
+    private readonly List<IssuedCredential> _credentials = [];
 
     public JobId JobId { get; }
 
@@ -57,6 +61,17 @@ public sealed class Job
 
     public bool InlineResultEmitted { get; private set; }
 
+    public IReadOnlyList<ProvisionedCredential> Credentials
+    {
+        get
+        {
+            lock (_credentialGate)
+            {
+                return _credentials.Select(c => c.Wire).ToArray();
+            }
+        }
+    }
+
     private readonly Func<Envelope, CancellationToken, ValueTask> _emit;
     private readonly TimeProvider _time;
 
@@ -86,6 +101,32 @@ public sealed class Job
     public void MarkRunning() => Status = JobStatus.Running;
 
     public void MarkTerminal(JobStatus terminal) => Status = terminal;
+
+    internal void SetCredentials(IReadOnlyList<IssuedCredential> credentials)
+    {
+        lock (_credentialGate)
+        {
+            _credentials.Clear();
+            _credentials.AddRange(credentials);
+        }
+    }
+
+    internal IssuedCredential? ReplaceCredential(string credentialId, IssuedCredential next)
+    {
+        lock (_credentialGate)
+        {
+            var index = _credentials.FindIndex(c => string.Equals(c.Wire.Id, credentialId, StringComparison.Ordinal));
+            if (index < 0)
+            {
+                _credentials.Add(next);
+                return null;
+            }
+
+            var old = _credentials[index];
+            _credentials[index] = next;
+            return old;
+        }
+    }
 
     /// <summary>Build the next <c>job.event</c> envelope and dispatch.</summary>
     public async ValueTask EmitEventAsync(string kind, object body, CancellationToken cancellationToken)

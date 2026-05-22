@@ -16,6 +16,7 @@ var lease = new Lease(new Dictionary<string, IReadOnlyList<string>>
     ["net.fetch"]  = new[] { "https://api.example.com/*" },
     ["tool.call"]  = new[] { "search.*", "fetch.*" },
     ["cost.budget"]= new[] { "USD:5.00" },
+    ["model.use"]  = new[] { "tier-fast/*" },
 });
 ```
 
@@ -29,6 +30,7 @@ var lease = new Lease(new Dictionary<string, IReadOnlyList<string>>
 | `tool.call`      | tool-name glob      | Calling registered tools.          |
 | `agent.delegate` | agent-name glob     | Delegation.                        |
 | `cost.budget`    | `currency:decimal`  | Cumulative cost ceiling. (§9.6)    |
+| `model.use`      | model-id glob       | Allowed upstream model set. (§9.7) |
 
 Use the `LeaseNamespaces` static class for the namespace string constants.
 
@@ -50,6 +52,22 @@ catch (PermissionDeniedException ex)
 
 Child leases MUST be a subset of the parent's. The `LeaseManager.AssertSubset` method validates capability namespaces, expires_at bounds, and per-currency budget ceilings in one pass.
 
+For `model.use`, every child model pattern must be covered by a parent pattern:
+
+```csharp
+var parent = new Lease(new Dictionary<string, IReadOnlyList<string>>
+{
+    [LeaseNamespaces.ModelUse] = new[] { "tier-fast/*" },
+});
+var child = new Lease(new Dictionary<string, IReadOnlyList<string>>
+{
+    [LeaseNamespaces.ModelUse] = new[] { "tier-fast/gpt-4o-mini" },
+});
+leaseManager.AssertSubset(parent, child);
+```
+
+Use `LeaseManager.AuthorizeModelUse(ctx.Lease, ctx.LeaseConstraints, modelId)` when the runtime is in the path of a model invocation. A miss raises `PermissionDeniedException` with `PERMISSION_DENIED`.
+
 ## Time-bounded leases (§9.5) and budget (§9.6)
 
-See [`15-budget.md`](./15-budget.md) and the runtime watchdog described in [`04-runtime.md`](./04-runtime.md).
+See [`15-budget.md`](./15-budget.md), [`19-credentials.md`](./19-credentials.md), and the runtime watchdog described in [`04-runtime.md`](./04-runtime.md).

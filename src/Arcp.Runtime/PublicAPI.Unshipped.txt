@@ -149,3 +149,59 @@ Arcp.Runtime.Subscriptions.SubscriptionManager.Subscribe(Arcp.Core.Ids.JobId job
 Arcp.Runtime.Subscriptions.SubscriptionManager.SubscribersOf(Arcp.Core.Ids.JobId jobId) -> System.Collections.Generic.IReadOnlyCollection<Arcp.Core.Ids.SessionId>!
 Arcp.Runtime.Subscriptions.SubscriptionManager.SubscriptionManager() -> void
 Arcp.Runtime.Subscriptions.SubscriptionManager.Unsubscribe(Arcp.Core.Ids.JobId jobId, Arcp.Core.Ids.SessionId sessionId) -> void
+Arcp.Runtime.ArcpServer.CredentialManager.get -> Arcp.Runtime.Credentials.CredentialManager?
+Arcp.Runtime.ArcpServerOptions.CredentialProvisioner.get -> Arcp.Runtime.Credentials.ICredentialProvisioner?
+Arcp.Runtime.ArcpServerOptions.CredentialProvisioner.init -> void
+Arcp.Runtime.ArcpServerOptions.CredentialStore.get -> Arcp.Runtime.Credentials.ICredentialStore!
+Arcp.Runtime.ArcpServerOptions.CredentialStore.init -> void
+Arcp.Runtime.Credentials.CredentialIssueContext
+Arcp.Runtime.Credentials.CredentialIssueContext.<Clone>$() -> Arcp.Runtime.Credentials.CredentialIssueContext!
+Arcp.Runtime.Credentials.CredentialIssueContext.CredentialIssueContext(Arcp.Core.Ids.JobId JobId, Arcp.Core.Ids.SessionId SessionId, string? SubmitterPrincipal, string? ParentJobId, System.Collections.Generic.IReadOnlyDictionary<string!, decimal>? RemainingBudget) -> void
+Arcp.Runtime.Credentials.CredentialIssueContext.Deconstruct(out Arcp.Core.Ids.JobId JobId, out Arcp.Core.Ids.SessionId SessionId, out string? SubmitterPrincipal, out string? ParentJobId, out System.Collections.Generic.IReadOnlyDictionary<string!, decimal>? RemainingBudget) -> void
+Arcp.Runtime.Credentials.CredentialIssueContext.Equals(Arcp.Runtime.Credentials.CredentialIssueContext? other) -> bool
+Arcp.Runtime.Credentials.CredentialIssueContext.JobId.get -> Arcp.Core.Ids.JobId
+Arcp.Runtime.Credentials.CredentialIssueContext.JobId.init -> void
+Arcp.Runtime.Credentials.CredentialIssueContext.ParentJobId.get -> string?
+Arcp.Runtime.Credentials.CredentialIssueContext.ParentJobId.init -> void
+Arcp.Runtime.Credentials.CredentialIssueContext.RemainingBudget.get -> System.Collections.Generic.IReadOnlyDictionary<string!, decimal>?
+Arcp.Runtime.Credentials.CredentialIssueContext.RemainingBudget.init -> void
+Arcp.Runtime.Credentials.CredentialIssueContext.SessionId.get -> Arcp.Core.Ids.SessionId
+Arcp.Runtime.Credentials.CredentialIssueContext.SessionId.init -> void
+Arcp.Runtime.Credentials.CredentialIssueContext.SubmitterPrincipal.get -> string?
+Arcp.Runtime.Credentials.CredentialIssueContext.SubmitterPrincipal.init -> void
+Arcp.Runtime.Credentials.CredentialManager
+Arcp.Runtime.Credentials.CredentialManager.CredentialManager(Arcp.Runtime.Credentials.ICredentialProvisioner! provisioner, Arcp.Runtime.Credentials.ICredentialStore! store, Microsoft.Extensions.Logging.ILogger! logger, System.TimeProvider! time) -> void
+Arcp.Runtime.Credentials.CredentialManager.IssueForJobAsync(Arcp.Runtime.Job! job, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask<System.Collections.Generic.IReadOnlyList<Arcp.Core.Messages.ProvisionedCredential!>!>
+Arcp.Runtime.Credentials.CredentialManager.RedactFor(System.Collections.Generic.IReadOnlyList<Arcp.Core.Messages.ProvisionedCredential!>! credentials, bool isSubmitter) -> System.Collections.Generic.IReadOnlyList<Arcp.Core.Messages.ProvisionedCredential!>!
+Arcp.Runtime.Credentials.CredentialManager.RevokeAllForJobAsync(Arcp.Core.Ids.JobId jobId, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+Arcp.Runtime.Credentials.CredentialManager.RotateAsync(Arcp.Runtime.Job! job, string! credentialId, Arcp.Core.Messages.ProvisionedCredential! next, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask
+Arcp.Runtime.Credentials.ICredentialProvisioner
+Arcp.Runtime.Credentials.ICredentialProvisioner.IssueAsync(Arcp.Core.Leases.Lease! lease, Arcp.Core.Leases.LeaseConstraints? constraints, Arcp.Runtime.Credentials.CredentialIssueContext! context, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask<System.Collections.Generic.IReadOnlyList<Arcp.Core.Messages.ProvisionedCredential!>!>
+Arcp.Runtime.Credentials.ICredentialProvisioner.RevokeAsync(string! credentialId, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask
+Arcp.Runtime.Credentials.ICredentialStore
+Arcp.Runtime.Credentials.ICredentialStore.AddAsync(Arcp.Core.Ids.JobId jobId, System.Collections.Generic.IReadOnlyList<string!>! credentialIds, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask
+Arcp.Runtime.Credentials.ICredentialStore.ListAllAsync(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask<System.Collections.Generic.IReadOnlyDictionary<Arcp.Core.Ids.JobId, System.Collections.Generic.IReadOnlyList<string!>!>!>
+Arcp.Runtime.Credentials.ICredentialStore.ListAsync(Arcp.Core.Ids.JobId jobId, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask<System.Collections.Generic.IReadOnlyList<string!>!>
+Arcp.Runtime.Credentials.ICredentialStore.RemoveAsync(Arcp.Core.Ids.JobId jobId, string! credentialId, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask
+Arcp.Runtime.Credentials.InMemoryCredentialProvisioner
+Arcp.Runtime.Credentials.InMemoryCredentialProvisioner.InMemoryCredentialProvisioner() -> void
+Arcp.Runtime.Credentials.InMemoryCredentialProvisioner.IssueAsync(Arcp.Core.Leases.Lease! lease, Arcp.Core.Leases.LeaseConstraints? constraints, Arcp.Runtime.Credentials.CredentialIssueContext! context, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask<System.Collections.Generic.IReadOnlyList<Arcp.Core.Messages.ProvisionedCredential!>!>
+Arcp.Runtime.Credentials.InMemoryCredentialProvisioner.RevokeAsync(string! credentialId, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask
+Arcp.Runtime.Credentials.InMemoryCredentialProvisioner.RevokedIds.get -> System.Collections.Generic.IReadOnlyCollection<string!>!
+Arcp.Runtime.Credentials.InMemoryCredentialStore
+Arcp.Runtime.Credentials.InMemoryCredentialStore.AddAsync(Arcp.Core.Ids.JobId jobId, System.Collections.Generic.IReadOnlyList<string!>! credentialIds, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask
+Arcp.Runtime.Credentials.InMemoryCredentialStore.InMemoryCredentialStore() -> void
+Arcp.Runtime.Credentials.InMemoryCredentialStore.ListAllAsync(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask<System.Collections.Generic.IReadOnlyDictionary<Arcp.Core.Ids.JobId, System.Collections.Generic.IReadOnlyList<string!>!>!>
+Arcp.Runtime.Credentials.InMemoryCredentialStore.ListAsync(Arcp.Core.Ids.JobId jobId, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask<System.Collections.Generic.IReadOnlyList<string!>!>
+Arcp.Runtime.Credentials.InMemoryCredentialStore.RemoveAsync(Arcp.Core.Ids.JobId jobId, string! credentialId, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.ValueTask
+Arcp.Runtime.Job.Credentials.get -> System.Collections.Generic.IReadOnlyList<Arcp.Core.Messages.ProvisionedCredential!>!
+Arcp.Runtime.JobContext.Credentials.get -> System.Collections.Generic.IReadOnlyList<Arcp.Core.Messages.ProvisionedCredential!>!
+Arcp.Runtime.JobContext.RotateCredentialAsync(string! credentialId, Arcp.Core.Messages.ProvisionedCredential! next, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask
+Arcp.Runtime.JobManager.JobManager(Arcp.Runtime.Agents.AgentRegistry! agents, Arcp.Runtime.Leases.LeaseManager! leases, System.TimeProvider! time, Microsoft.Extensions.Logging.ILoggerFactory! loggers, Arcp.Runtime.Credentials.CredentialManager? credentials = null) -> void
+Arcp.Runtime.JobManager.SubmitAsync(Arcp.Core.Messages.JobSubmitPayload! submit, Arcp.Core.Ids.SessionId sessionId, string? submitterPrincipal, System.Func<Arcp.Core.Wire.Envelope!, System.Threading.CancellationToken, System.Threading.Tasks.ValueTask>! emit, System.Threading.CancellationToken parentCancellation, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<(Arcp.Runtime.Job! Job, Arcp.Core.Messages.JobAcceptedPayload! Accepted)>!
+Arcp.Runtime.Leases.LeaseManager.AuthorizeModelUse(Arcp.Core.Leases.Lease! lease, Arcp.Core.Leases.LeaseConstraints? constraints, string! modelId) -> void
+override Arcp.Runtime.Credentials.CredentialIssueContext.Equals(object? obj) -> bool
+override Arcp.Runtime.Credentials.CredentialIssueContext.GetHashCode() -> int
+override Arcp.Runtime.Credentials.CredentialIssueContext.ToString() -> string!
+static Arcp.Runtime.Credentials.CredentialIssueContext.operator !=(Arcp.Runtime.Credentials.CredentialIssueContext? left, Arcp.Runtime.Credentials.CredentialIssueContext? right) -> bool
+static Arcp.Runtime.Credentials.CredentialIssueContext.operator ==(Arcp.Runtime.Credentials.CredentialIssueContext? left, Arcp.Runtime.Credentials.CredentialIssueContext? right) -> bool

@@ -13,7 +13,7 @@ Arcp.Client.ArcpClient.ListJobsAsync(Arcp.Core.Messages.JobListFilter? filter = 
 Arcp.Client.ArcpClient.ResumeToken.get -> string?
 Arcp.Client.ArcpClient.Runtime.get -> Arcp.Core.Messages.RuntimeInfo?
 Arcp.Client.ArcpClient.SessionId.get -> Arcp.Core.Ids.SessionId
-Arcp.Client.ArcpClient.SubmitAsync(string! agent, object? input = null, Arcp.Core.Leases.Lease? leaseRequest = null, Arcp.Core.Leases.LeaseConstraints? leaseConstraints = null, string? idempotencyKey = null, int? maxRuntimeSec = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Arcp.Client.JobHandle!>!
+Arcp.Client.ArcpClient.SubmitAsync(string! agent, object? input = null, Arcp.Core.Leases.Lease? leaseRequest = null, Arcp.Core.Leases.LeaseConstraints? leaseConstraints = null, string? idempotencyKey = null, int? maxRuntimeSec = null, string? parentJobId = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Arcp.Client.JobHandle!>!
 Arcp.Client.ArcpClient.SubscribeAsync(Arcp.Core.Ids.JobId jobId, bool history = false, long? fromEventSeq = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Arcp.Client.JobSubscription!>!
 Arcp.Client.ArcpClient.UnsubscribeAsync(Arcp.Core.Ids.JobId jobId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
 Arcp.Client.ArcpClientOptions

@@ -13,6 +13,7 @@
     <Project Path="samples/LeaseViolation/LeaseViolation.csproj" />
     <Project Path="samples/ListJobs/ListJobs.csproj" />
     <Project Path="samples/Progress/Progress.csproj" />
+    <Project Path="samples/ProvisionedCredential/ProvisionedCredential.csproj" />
     <Project Path="samples/ResultChunk/ResultChunk.csproj" />
     <Project Path="samples/Resume/Resume.csproj" />
     <Project Path="samples/Stdio/Stdio.csproj" />

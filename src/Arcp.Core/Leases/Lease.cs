@@ -72,10 +72,11 @@ public static class LeaseNamespaces
     public const string ToolCall = "tool.call";
     public const string AgentDelegate = "agent.delegate";
     public const string CostBudget = "cost.budget";
+    public const string ModelUse = "model.use";
 
     public static readonly FrozenSet<string> All = new HashSet<string>
     {
-        FsRead, FsWrite, NetFetch, ToolCall, AgentDelegate, CostBudget,
+        FsRead, FsWrite, NetFetch, ToolCall, AgentDelegate, CostBudget, ModelUse,
     }.ToFrozenSet();
 }
 

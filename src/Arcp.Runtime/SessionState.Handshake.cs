@@ -52,7 +52,7 @@ public sealed partial class SessionState
 
     private void NegotiateFeatures(SessionHelloPayload hello)
     {
-        EffectiveFeatures = FeatureSet.Intersect(hello.Capabilities.Features, _options.Features);
+        EffectiveFeatures = FeatureSet.Intersect(hello.Capabilities.Features, _server.AdvertisedFeatures);
         _heartbeatNegotiated = FeatureSet.Has(EffectiveFeatures, FeatureFlags.Heartbeat);
         _ackNegotiated = FeatureSet.Has(EffectiveFeatures, FeatureFlags.Ack);
     }
@@ -70,7 +70,7 @@ public sealed partial class SessionState
             Capabilities = new Capabilities
             {
                 Encodings = _options.Encodings ?? Array.Empty<string>(),
-                Features = _options.Features,
+                Features = _server.AdvertisedFeatures,
                 Agents = _server.AgentRegistry.ToInventory(),
             },
         },

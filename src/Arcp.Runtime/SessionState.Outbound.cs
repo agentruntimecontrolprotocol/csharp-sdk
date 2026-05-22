@@ -6,6 +6,7 @@ using Arcp.Core.Ids;
 using Arcp.Core.Messages;
 using Arcp.Core.Transport;
 using Arcp.Core.Wire;
+using Arcp.Runtime.Credentials;
 using Microsoft.Extensions.Logging;
 
 namespace Arcp.Runtime;
@@ -94,9 +95,23 @@ public sealed partial class SessionState
     internal void EmitToSubscriber(Envelope env, CancellationToken cancellationToken)
     {
         // Re-stamp for the subscriber's session_id and event_seq.
-        var rekeyed = env with { SessionId = SessionId.Value };
+        var rekeyed = RedactCredentialSecretsForSubscriber(env) with { SessionId = SessionId.Value };
         var stamped = EventLog.Append(rekeyed);
         _outbound.Writer.TryWrite(stamped);
+    }
+
+    private Envelope RedactCredentialSecretsForSubscriber(Envelope env)
+    {
+        if (env.Payload is not JobEventPayload payload || env.JobId is not { } jobId)
+            return env;
+        if (!JobId.TryParse(jobId, null, out var parsed) ||
+            !_server.JobManager.TryGet(parsed, out var job) ||
+            string.Equals(Principal?.Subject, job?.SubmitterPrincipal, StringComparison.Ordinal))
+        {
+            return env;
+        }
+
+        return env with { Payload = CredentialRedaction.RedactCredentialRotation(payload) };
     }
 
     private async ValueTask EmitEventAsync(Envelope env, CancellationToken cancellationToken)

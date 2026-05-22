@@ -36,8 +36,10 @@ The runtime MAY emit `cost.budget.remaining` metrics on material decrements so c
 
 When any counter goes ≤ 0, the next authority-bearing operation produces `BUDGET_EXHAUSTED`. The preferred surface is a `tool_result.error` so the agent can decide whether to continue with non-cost-bearing work. The runtime escalates to `job.error` only when exhaustion is fatal.
 
+When a `CredentialProvisioner` enforces budget upstream through a provisioned credential, the upstream remains authoritative. Provisioners should throw `BudgetExhaustedException` directly; the runtime also maps HTTP 402 from a provisioner path to `BUDGET_EXHAUSTED` at the ARCP boundary.
+
 ## Budget on delegation
 
 A child lease's `cost.budget` MUST NOT exceed the parent's remaining budget in any currency (spec §9.4 addition). `LeaseManager.AssertSubset` enforces this.
 
-See [`samples/CostBudget/`](../samples/CostBudget/).
+See [`samples/CostBudget/`](../samples/CostBudget/) and [`samples/ProvisionedCredential/`](../samples/ProvisionedCredential/).

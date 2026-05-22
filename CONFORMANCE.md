@@ -60,6 +60,8 @@ Status legend: Implemented ✅ · Partial 🚧 · Not implemented ⛔.
 | §9.4 | Subset validation for delegation | ✅ | `LeaseManager.AssertSubset` |
 | §9.5 | `lease_constraints.expires_at` UTC + future-only; watchdog emits `LEASE_EXPIRED` | ✅ | `LeaseManager.Authorize`, `JobManager.RunLeaseWatchdog` |
 | §9.6 | `cost.budget` per-currency counters; `cost.*` metrics decrement | ✅ | `BudgetLedger`, `Job.EmitMetricAsync` |
+| §9.7 | `model.use` capability enforces allowed model set; miss produces `PERMISSION_DENIED` | ✅ | `LeaseNamespaces.ModelUse`, `LeaseManager.AuthorizeModelUse` |
+| §9.8 | `provisioned_credentials` issued at submit, revoked on terminal, redacted from non-submitters | ✅ | `CredentialManager`, `JobAcceptedPayload.Credentials` |
 
 ## Delegation, tracing, errors
 
@@ -72,9 +74,9 @@ Status legend: Implemented ✅ · Partial 🚧 · Not implemented ⛔.
 
 ## Test cross-reference
 
-- Unit: [`tests/Arcp.UnitTests/`](./tests/Arcp.UnitTests/) — 22 facts.
-- End-to-end: [`tests/Arcp.IntegrationTests/`](./tests/Arcp.IntegrationTests/) — 6 facts.
-- Conformance: [`tests/Arcp.ConformanceTests/`](./tests/Arcp.ConformanceTests/) — 12 facts.
+- Unit: [`tests/Arcp.UnitTests/`](./tests/Arcp.UnitTests/) — 33 facts.
+- End-to-end: [`tests/Arcp.IntegrationTests/`](./tests/Arcp.IntegrationTests/) — 12 facts.
+- Conformance: [`tests/Arcp.ConformanceTests/`](./tests/Arcp.ConformanceTests/) — 14 facts.
 - AspNetCore: [`tests/Arcp.AspNetCore.Tests/`](./tests/Arcp.AspNetCore.Tests/) — 1 fact.
 
-Run `dotnet test ARCP.slnx` to execute all 41.
+Run `dotnet test ARCP.slnx` to execute all 60.

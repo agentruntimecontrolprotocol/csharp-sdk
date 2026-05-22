@@ -14,4 +14,8 @@ public sealed record StatusBody
     [JsonPropertyName("phase")] public required string Phase { get; init; }
 
     [JsonPropertyName("message")] public string? Message { get; init; }
+
+    [JsonPropertyName("credential_id")] public string? CredentialId { get; init; }
+
+    [JsonPropertyName("credential_value")] public string? CredentialValue { get; init; }
 }

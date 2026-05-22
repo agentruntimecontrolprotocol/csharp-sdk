@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
 using System.Collections.Generic;
 using Arcp.Core.Auth;
-using Arcp.Core.Caps;
 using Arcp.Runtime.Authorization;
+using Arcp.Runtime.Credentials;
 
 namespace Arcp.Runtime;
 
@@ -13,7 +13,7 @@ public sealed class ArcpServerOptions
 
     public IBearerVerifier? Auth { get; init; }
 
-    public IReadOnlyList<string>? Features { get; init; } = FeatureSet.AllFeatures;
+    public IReadOnlyList<string>? Features { get; init; }
 
     public IReadOnlyList<string>? Encodings { get; init; } = new[] { "json" };
 
@@ -26,4 +26,8 @@ public sealed class ArcpServerOptions
     public IJobAuthorizationPolicy AuthorizationPolicy { get; init; } = new SamePrincipalPolicy();
 
     public TimeProvider TimeProvider { get; init; } = TimeProvider.System;
+
+    public ICredentialProvisioner? CredentialProvisioner { get; init; }
+
+    public ICredentialStore CredentialStore { get; init; } = new InMemoryCredentialStore();
 }

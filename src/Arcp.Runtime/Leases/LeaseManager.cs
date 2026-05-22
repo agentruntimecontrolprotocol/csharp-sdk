@@ -39,6 +39,15 @@ public sealed class LeaseManager
             }
         }
 
+        if (effective.Capabilities.TryGetValue(LeaseNamespaces.ModelUse, out var modelPatterns))
+        {
+            foreach (var pattern in modelPatterns)
+            {
+                if (string.IsNullOrWhiteSpace(pattern))
+                    throw new InvalidRequestException("model.use lease patterns MUST be non-empty strings (spec §9.7).");
+            }
+        }
+
         return effective;
     }
 
@@ -58,11 +67,13 @@ public sealed class LeaseManager
                 continue;
             }
 
-            foreach (var pat in kv.Value)
+            if (kv.Key == LeaseNamespaces.ModelUse)
             {
-                if (!parentPatterns.Any(pp => GlobMatch(pat, pp)))
-                    throw new LeaseSubsetViolationException($"Child pattern '{pat}' is not within parent for '{kv.Key}'");
+                CheckPatternSubset(kv.Key, kv.Value, parentPatterns);
+                continue;
             }
+
+            CheckPatternSubset(kv.Key, kv.Value, parentPatterns);
         }
 
         // Lease expiration subsetting (spec §9.4 addendum).
@@ -74,6 +85,18 @@ public sealed class LeaseManager
                     throw new LeaseSubsetViolationException("Child lease_constraints.expires_at MUST NOT exceed parent's (spec §9.4)");
             }
             // No child constraints → child implicitly inherits parent expiry. (spec §9.4)
+        }
+    }
+
+    private static void CheckPatternSubset(string namespaceName, IReadOnlyList<string> childPatterns,
+        IReadOnlyList<string> parentPatterns)
+    {
+        foreach (var pat in childPatterns)
+        {
+            if (string.IsNullOrWhiteSpace(pat))
+                throw new InvalidRequestException($"Child pattern for '{namespaceName}' MUST be non-empty.");
+            if (!parentPatterns.Any(pp => GlobMatch(pat, pp)))
+                throw new LeaseSubsetViolationException($"Child pattern '{pat}' is not within parent for '{namespaceName}'");
         }
     }
 
@@ -115,6 +138,10 @@ public sealed class LeaseManager
         }
         throw new PermissionDeniedException($"'{pattern}' is not authorized by lease for '{namespaceName}'");
     }
+
+    /// <summary>Authorize a model identifier against the <c>model.use</c> lease namespace.</summary>
+    public void AuthorizeModelUse(Lease lease, LeaseConstraints? constraints, string modelId) =>
+        AuthorizeOperation(lease, constraints, LeaseNamespaces.ModelUse, modelId);
 
     internal static bool GlobMatch(string input, string pattern)
     {

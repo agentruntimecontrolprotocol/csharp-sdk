@@ -14,6 +14,7 @@ using Arcp.Core.Messages;
 using Arcp.Core.Wire;
 using Arcp.Runtime.Agents;
 using Arcp.Runtime.Authorization;
+using Arcp.Runtime.Credentials;
 using Arcp.Runtime.Leases;
 using Microsoft.Extensions.Logging;
 
@@ -29,13 +30,25 @@ public sealed partial class JobManager
     private readonly LeaseManager _leases;
     private readonly TimeProvider _time;
     private readonly ILoggerFactory _loggers;
+    private readonly CredentialManager? _credentials;
 
-    public JobManager(AgentRegistry agents, LeaseManager leases, TimeProvider time, ILoggerFactory loggers)
+    public JobManager(
+        AgentRegistry agents,
+        LeaseManager leases,
+        TimeProvider time,
+        ILoggerFactory loggers,
+        CredentialManager? credentials = null)
     {
         _agents = agents;
         _leases = leases;
         _time = time;
         _loggers = loggers;
+        _credentials = credentials;
+    }
+
+    public JobManager(AgentRegistry agents, LeaseManager leases, TimeProvider time, ILoggerFactory loggers)
+        : this(agents, leases, time, loggers, null)
+    {
     }
 
     public IEnumerable<Job> Jobs => _jobs.Values;
@@ -49,9 +62,13 @@ public sealed partial class JobManager
 
     /// <summary>Submit a job. The caller (SessionState) hands in the envelope; this method returns
     /// the <see cref="Job"/> to run asynchronously plus the <c>job.accepted</c> payload.</summary>
-    public Job Submit(JobSubmitPayload submit, SessionId sessionId, string? submitterPrincipal,
-                       Func<Envelope, CancellationToken, ValueTask> emit, CancellationToken parentCancellation,
-                       out JobAcceptedPayload accepted)
+    public async Task<(Job Job, JobAcceptedPayload Accepted)> SubmitAsync(
+        JobSubmitPayload submit,
+        SessionId sessionId,
+        string? submitterPrincipal,
+        Func<Envelope, CancellationToken, ValueTask> emit,
+        CancellationToken parentCancellation,
+        CancellationToken cancellationToken = default)
     {
         // Idempotency check (spec §7.2).
         if (!string.IsNullOrEmpty(submit.IdempotencyKey))
@@ -59,8 +76,7 @@ public sealed partial class JobManager
             var key = $"{submitterPrincipal ?? "*"}|{submit.IdempotencyKey}";
             if (_idempotency.TryGetValue(key, out var existingId) && _jobs.TryGetValue(existingId, out var existing))
             {
-                accepted = BuildAccepted(existing);
-                return existing;
+                return (existing, BuildAccepted(existing));
             }
         }
 
@@ -69,6 +85,10 @@ public sealed partial class JobManager
         var (resolved, _) = _agents.Resolve(requested);
 
         var lease = _leases.Authorize(submit.LeaseRequest, submit.LeaseConstraints);
+        if (submit.ParentJobId is not null)
+        {
+            AssertChildLeaseIsSubset(submit.ParentJobId, lease, submit.LeaseConstraints);
+        }
 
         var jobId = JobId.New();
         var traceId = TraceId.New();
@@ -76,32 +96,73 @@ public sealed partial class JobManager
             jobId, sessionId, resolved, lease, submit.LeaseConstraints,
             submit.Input, submit.IdempotencyKey, traceId, submit.ParentJobId, submitterPrincipal,
             _time.GetUtcNow(), emit, _time, parentCancellation);
+        if (_credentials is not null)
+        {
+            await _credentials.IssueForJobAsync(job, cancellationToken).ConfigureAwait(false);
+        }
+
         _jobs[jobId] = job;
         if (!string.IsNullOrEmpty(submit.IdempotencyKey))
         {
             _idempotency.TryAdd($"{submitterPrincipal ?? "*"}|{submit.IdempotencyKey}", jobId);
         }
 
-        accepted = BuildAccepted(job);
-        return job;
+        return (job, BuildAccepted(job));
     }
 
-    private static JobAcceptedPayload BuildAccepted(Job job) => new()
+    public Job Submit(
+        JobSubmitPayload submit,
+        SessionId sessionId,
+        string? submitterPrincipal,
+        Func<Envelope, CancellationToken, ValueTask> emit,
+        CancellationToken parentCancellation,
+        out JobAcceptedPayload accepted)
     {
-        JobId = job.JobId.Value,
-        Agent = job.Agent.ToString(),
-        Lease = job.Lease,
-        LeaseConstraints = job.LeaseConstraints,
-        Budget = job.BudgetLedger.IsActive ? job.BudgetLedger.Initial : null,
-        AcceptedAt = job.CreatedAt,
-        TraceId = job.TraceId?.Value,
-        ParentJobId = job.ParentJobId,
-    };
+        if (_credentials is not null)
+            throw new InvalidOperationException("Use SubmitAsync when credential provisioning is configured.");
+
+        var result = SubmitAsync(
+            submit,
+            sessionId,
+            submitterPrincipal,
+            emit,
+            parentCancellation,
+            CancellationToken.None).GetAwaiter().GetResult();
+        accepted = result.Accepted;
+        return result.Job;
+    }
+
+    private void AssertChildLeaseIsSubset(string parentJobId, Lease child, LeaseConstraints? childConstraints)
+    {
+        if (!JobId.TryParse(parentJobId, null, out var parsed))
+            throw new InvalidRequestException("parent_job_id is not a valid job_id");
+        if (!_jobs.TryGetValue(parsed, out var parent))
+            throw new JobNotFoundException($"parent job {parentJobId} not found");
+
+        _leases.AssertSubset(parent.Lease, child, parent.BudgetLedger.Remaining, parent.LeaseConstraints, childConstraints);
+    }
+
+    private static JobAcceptedPayload BuildAccepted(Job job)
+    {
+        var credentials = job.Credentials;
+        return new JobAcceptedPayload
+        {
+            JobId = job.JobId.Value,
+            Agent = job.Agent.ToString(),
+            Lease = job.Lease,
+            LeaseConstraints = job.LeaseConstraints,
+            Budget = job.BudgetLedger.IsActive ? job.BudgetLedger.Initial : null,
+            AcceptedAt = job.CreatedAt,
+            TraceId = job.TraceId?.Value,
+            ParentJobId = job.ParentJobId,
+            Credentials = credentials.Count == 0 ? null : credentials,
+        };
+    }
 
     public async Task RunAsync(Job job, IAgent agent, Func<Envelope, CancellationToken, ValueTask> emit, CancellationToken cancellationToken)
     {
         job.MarkRunning();
-        var ctx = new JobContext(job, _loggers.CreateLogger($"Arcp.Job.{job.JobId.Value}"));
+        var ctx = new JobContext(job, _loggers.CreateLogger($"Arcp.Job.{job.JobId.Value}"), _credentials);
         var watchdog = StartLeaseWatchdog(job, emit, cancellationToken);
 
         try
@@ -145,6 +206,13 @@ public sealed partial class JobManager
         }
         finally
         {
+            if (job.Status is JobStatus.Success or JobStatus.Error or JobStatus.Cancelled or JobStatus.TimedOut &&
+                _credentials is not null)
+            {
+                await _credentials.RevokeAllForJobAsync(job.JobId, CancellationToken.None).ConfigureAwait(false);
+                job.SetCredentials([]);
+            }
+
             await AwaitWatchdogAsync(watchdog).ConfigureAwait(false);
         }
     }

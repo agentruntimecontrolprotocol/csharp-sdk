@@ -32,7 +32,7 @@ public class EnvelopeTests
     [Fact]
     public void Envelope_preserves_unknown_top_level_fields()
     {
-        const string Json = "{\"arcp\":\"1\",\"id\":\"msg_x\",\"type\":\"session.bye\",\"payload\":{},\"x_extra\":42}";
+        const string Json = "{\"arcp\":\"1.1\",\"id\":\"msg_x\",\"type\":\"session.bye\",\"payload\":{},\"x_extra\":42}";
         var env = ArcpJson.Deserialize(Json);
         env.Extensions.Should().NotBeNull();
         env.Extensions!.Should().ContainKey("x_extra");
