@@ -28,7 +28,7 @@ concurrency:
   cancel-in-progress: false
 
 permissions:
-  contents: read
+  contents: write  # needed to create GitHub Releases
 
 jobs:
   publish:
@@ -127,3 +127,16 @@ jobs:
           --source https://api.nuget.org/v3/index.json
           --api-key "$NUGET_API_KEY"
           --skip-duplicate
+
+      - name: Create GitHub Release
+        # Only create a release when triggered by a tag push (not workflow_dispatch).
+        # --generate-notes auto-populates the body from merged PRs / commits since
+        # the previous tag.  --skip-duplicate-check is not needed; gh release create
+        # fails if the release already exists, which is the correct behaviour.
+        if: github.event_name == 'push'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: >
+          gh release create "v${{ steps.version.outputs.version }}"
+          --title "v${{ steps.version.outputs.version }}"
+          --generate-notes
