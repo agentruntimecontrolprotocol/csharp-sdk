@@ -22,7 +22,7 @@ manifest that Claude Code uses to discover and invoke the skill.
 
 ```
 AI assistant
-    │  MCP tool call: research(topic=…)
+    │  MCP tool call: research(topic=...)
     ▼
 HandleResearchToolCall()          ← MCP adapter
     │  SubmitAsync("research", { topic })

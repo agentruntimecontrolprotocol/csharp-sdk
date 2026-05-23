@@ -27,7 +27,7 @@ server.RegisterAgent("research", async (ctx, rct) =>
 
     await ctx.LogAsync("info", $"searching knowledge base for: {topic}", rct);
     await Task.Delay(80, rct);
-    await ctx.LogAsync("info", "synthesising results…", rct);
+    await ctx.LogAsync("info", "synthesising results...", rct);
     await Task.Delay(40, rct);
 
     return new { summary = $"Research on '{topic}': 3 key findings identified." };

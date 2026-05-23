@@ -93,7 +93,7 @@ server.RegisterAgent("strict", async (ctx, ct) =>
     if (!ctx.Lease.Contains(LeaseNamespaces.FsRead))
         throw new PermissionDeniedException("fs.read required");
 
-    // …
+    // ...
     return result;
 });
 ```

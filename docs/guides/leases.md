@@ -55,7 +55,7 @@ server.RegisterAgent("file-writer", async (ctx, ct) =>
             new ToolError { Code = ex.Code, Message = ex.Message }, ct);
         return null;
     }
-    // perform the write …
+    // perform the write ...
     return new { wrote = "/workspace/src/output.cs" };
 });
 ```

@@ -31,7 +31,7 @@ Write on the send side by populating `Extensions` before calling
 `ITransport.SendAsync`:
 
 ```csharp
-var env = new Envelope { /* … */ };
+var env = new Envelope { /* ... */ };
 env.Extensions["x-vendor.acme.priority"] = JsonSerializer.SerializeToElement("high");
 await transport.SendAsync(env, ct);
 ```
@@ -53,7 +53,7 @@ await foreach (var ev in handle.Events(ct))
     if (ev.Kind == "x-vendor.acme.thumbnail")
     {
         var url = ev.Body.GetProperty("url").GetString();
-        // …
+        // ...
     }
 }
 ```

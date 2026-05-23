@@ -24,16 +24,16 @@ type — the body shape depends on the kind (spec §8.1).
 ```csharp
 server.RegisterAgent("researcher", async (ctx, ct) =>
 {
-    await ctx.StatusAsync("starting", "Fetching data…", ct);
+    await ctx.StatusAsync("starting", "Fetching data...", ct);
 
     await ctx.ToolCallAsync("fetch", callId: "c1",
         args: new { url = "https://api.example.com/data" }, ct);
-    var data = /* … */ "";
+    var data = /* ... */ "";
     await ctx.ToolResultAsync("c1", result: data, ct);
 
     await ctx.ProgressAsync(current: 1, total: 3, message: "fetched", ct);
 
-    await ctx.LogAsync("info", "Processing …", ct);
+    await ctx.LogAsync("info", "Processing ...", ct);
     await ctx.MetricAsync("cost.inference", 0.012m, unit: "USD", ct);
 
     await ctx.ArtifactRefAsync(

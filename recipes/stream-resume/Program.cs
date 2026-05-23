@@ -74,7 +74,7 @@ await foreach (var chunk in obs1Handle.Chunks())
 // Capture the ResumeToken before the connection closes — it lets observer-2
 // authenticate with the same identity and access the session's EventLog.
 var savedToken = obs1.ResumeToken;
-Console.WriteLine($"obs1 disconnecting — ResumeToken: {savedToken?[..Math.Min(12, savedToken?.Length ?? 0)]}…");
+Console.WriteLine($"obs1 disconnecting — ResumeToken: {savedToken?[..Math.Min(12, savedToken?.Length ?? 0)]}...");
 await obs1.DisposeAsync();
 
 // ── wait for the writer to finish ─────────────────────────────────────────────
