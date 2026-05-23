@@ -1,7 +1,9 @@
 # Arcp.Cli
 
-`Arcp.Cli` installs the `arcp` global tool — a command-line interface for
-serving agents and submitting jobs without writing any application code.
+`Arcp.Cli` installs the `arcp` global tool — a thin command-line wrapper
+that runs a demo `echo` runtime and submits jobs against one. It is
+intended for ad-hoc testing and reproductions, not as a generic
+agent host.
 
 ```sh
 dotnet tool install --global Arcp.Cli
@@ -11,74 +13,66 @@ dotnet tool install --global Arcp.Cli
 
 ### `arcp serve`
 
-Start an ARCP server that loads agents from a plugin assembly:
+Start an ARCP runtime that registers a single built-in `echo` agent and
+listens for WebSocket upgrades on `/arcp`:
 
 ```sh
-arcp serve --assembly MyAgents.dll \
-           --address http://127.0.0.1:7777/arcp \
-           --token   tok-dev
+arcp serve --host 127.0.0.1 --port 7777 --token tok-dev
 ```
 
-The server registers every type in the assembly that implements `IAgent` and
-accepts incoming connections on the given address.
+| Flag              | Default     |
+| ----------------- | ----------- |
+| `--host <host>`   | `127.0.0.1` |
+| `--port <port>`   | `7777`      |
+| `--token <token>` | `tok-demo`  |
+
+`/healthz` is exposed alongside the ARCP endpoint for liveness probes.
 
 ### `arcp submit`
 
-Submit a job to a running server and stream the results to stdout:
+Submit one job to a running runtime and print the terminal status:
 
 ```sh
-arcp submit --address http://127.0.0.1:7777/arcp \
-            --token   tok-dev \
-            --agent   echo \
-            --input   '{"message":"hello"}'
+arcp submit --url ws://127.0.0.1:7777/arcp \
+            --token tok-dev \
+            --agent echo \
+            --input '{"message":"hello"}'
 ```
 
-Log events are printed as they arrive. The exit code reflects the job
-terminal state (see Exit codes below).
+| Flag              | Default                    |
+| ----------------- | -------------------------- |
+| `--url <ws-url>`  | `ws://127.0.0.1:7777/arcp` |
+| `--token <token>` | `tok-demo`                 |
+| `--agent <name>`  | `echo`                     |
+| `--input <json>`  | `{}`                       |
 
 ### `arcp version`
 
-Print the tool version and the ARCP wire version it speaks:
+Print the protocol version the CLI speaks:
 
 ```sh
 arcp version
-# arcp 1.1.4 (wire arcp/1.1)
-```
-
-## Stdio mode
-
-`arcp submit` can proxy stdin/stdout as a stdio transport when you pass
-`--stdio` instead of `--address`. This lets shell scripts call agents as
-subprocesses:
-
-```sh
-echo '{"message":"hello"}' | arcp submit --stdio --agent echo
+# arcp 1.1
 ```
 
 ## Exit codes
 
-| Code | Meaning                              |
-| ---- | ------------------------------------ |
-| `0`  | Job completed successfully.          |
-| `1`  | Job failed (`INTERNAL_ERROR`, etc.). |
-| `2`  | Usage error (bad flags, parse error).|
-| `3`  | Connection / authentication failure. |
+| Code | Meaning                                        |
+| ---- | ---------------------------------------------- |
+| `0`  | Command succeeded (`submit` requires success). |
+| `1`  | Submit terminated with a non-success status.   |
+| `2`  | Unknown subcommand.                            |
 
-## Configuration file
+## Hosting real agents
 
-Place an `arcp.json` in the working directory to avoid repeating flags:
-
-```json
-{
-  "address": "http://127.0.0.1:7777/arcp",
-  "token":   "tok-dev"
-}
-```
-
-Command-line flags take precedence over `arcp.json`.
+The CLI does not load external assemblies, support stdio, or accept a
+config file. To host real agents, write a small host program against
+`Arcp.Runtime` (and `Arcp.AspNetCore` for WebSocket transport). See
+[Getting started](../getting-started.md) and the
+[samples](../../samples/).
 
 ## Related
 
-- [CLI reference](../cli.md) — full flag reference and examples.
-- [Transports — stdio](../transports.md#stdio) — stdio transport details.
+- [CLI reference](../cli.md) — top-level CLI documentation.
+- [Arcp.Runtime](./Arcp.Runtime.md) — embed `ArcpServer` in your own host.
 - [Getting started](../getting-started.md) — first-run walkthrough.

@@ -117,7 +117,9 @@ Neither peer may use a feature outside the negotiated set.
 | `list_jobs`          | §6.6   | `session.list_jobs` / `session.jobs`. |
 | `subscribe`          | §7.6   | Cross-session job observation. |
 | `agent_versions`     | §7.5   | `name@version` pinning. |
-| `progress`           | §8.2.1 | `progress` job-event kind. |
-| `result_chunk`       | §8.4   | Streamed multi-chunk results. |
-| `lease_expires_at`   | §9.5   | Time-bounded lease constraints. |
-| `cost.budget`        | §9.6   | Per-currency cost ceilings. |
+| `progress`               | §8.2.1 | `progress` job-event kind. |
+| `result_chunk`           | §8.4   | Streamed multi-chunk results. |
+| `lease_expires_at`       | §9.5   | Time-bounded lease constraints. |
+| `cost.budget`            | §9.6   | Per-currency cost ceilings. |
+| `model.use`              | §9.7   | `model.use` lease constraint. |
+| `provisioned_credentials`| §9.8   | Runtime-issued short-lived credentials. |

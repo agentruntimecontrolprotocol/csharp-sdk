@@ -1,7 +1,8 @@
 # CLI
 
 `Arcp.Cli` ships an `arcp` executable. It is a thin operational tool
-for running runtimes, submitting jobs, and inspecting the SDK version.
+for running a demo runtime, submitting one-off jobs, and printing the
+SDK version.
 
 ## Install
 
@@ -17,28 +18,27 @@ dotnet add package Arcp.Cli
 
 ## `arcp serve`
 
-Start a runtime that hosts a single named echo agent over WebSocket or
-stdio. Most production deployments embed `ArcpServer` programmatically;
-`serve` is for ad-hoc testing and reproductions.
+Start a runtime that hosts a single `echo` agent over WebSocket. Most
+production deployments embed `ArcpServer` programmatically; `serve` is
+for ad-hoc testing and reproductions.
 
 ```sh
 arcp serve \
   --host 127.0.0.1 \
   --port 7777 \
-  --token tok \
-  --principal me@example.com
+  --token tok
 ```
 
 Flags:
 
-| Flag                        | Default     | Notes |
-| --------------------------- | ----------- | ----- |
-| `--transport <ws\|stdio>`   | `ws`        | `stdio` makes this a subprocess runtime. |
-| `--host <host>`             | `127.0.0.1` | Bind address for WebSocket. |
-| `--port <port>`             | `7777`      | Bind port for WebSocket. |
-| `--path <path>`             | `/arcp`     | URL path for the WebSocket upgrade. |
-| `--token <token>`           | —           | Required. Static bearer accepted by the verifier. |
-| `--principal <id>`          | —           | Principal returned when the token verifies. |
+| Flag              | Default     | Notes |
+| ----------------- | ----------- | ----- |
+| `--host <host>`   | `127.0.0.1` | Bind address for WebSocket. |
+| `--port <port>`   | `7777`      | Bind port for WebSocket. |
+| `--token <token>` | `tok-demo`  | Static bearer accepted by the verifier. |
+
+The runtime accepts WebSocket upgrades at the path `/arcp` and exposes
+`/healthz` for liveness probes.
 
 ## `arcp submit`
 
@@ -49,66 +49,41 @@ and CI.
 arcp submit \
   --url ws://127.0.0.1:7777/arcp \
   --token tok \
-  --agent my-agent \
-  --input '{"hi":1}' \
-  --idempotency-key run-2026-W19
+  --agent echo \
+  --input '{"hi":1}'
 ```
 
 Flags:
 
-| Flag                      | Notes |
-| ------------------------- | ----- |
-| `--url <ws-url>`          | Runtime URL. |
-| `--token <token>`         | Bearer token. |
-| `--agent <name[@ver]>`    | Registered agent name, optionally pinned to a version. |
-| `--input <json>`          | Inline JSON payload. |
-| `--input-file <path>`     | Read payload from a file (mutually exclusive with `--input`). |
-| `--idempotency-key <key>` | Optional deduplication key (spec §7.2). |
-| `--max-runtime-sec <n>`   | Hard wall-clock timeout for the job. |
-| `--lease <json>`          | Lease object as JSON (spec §9). |
-| `--trace-id <hex>`        | 32-hex W3C trace ID to propagate. |
+| Flag              | Default                    | Notes |
+| ----------------- | -------------------------- | ----- |
+| `--url <ws-url>`  | `ws://127.0.0.1:7777/arcp` | Runtime URL. |
+| `--token <token>` | `tok-demo`                 | Bearer token. |
+| `--agent <name>`  | `echo`                     | Registered agent name. |
+| `--input <json>`  | `{}`                       | Inline JSON payload. |
 
-Stdout receives the final `job.result` payload as JSON. Events are
-streamed to stderr in human-readable form (`[seq] kind message`).
+Stdout receives `connected:` and `accepted:` status lines plus the
+final `result: status=...` line.
 
 ## `arcp version`
 
-Print the SDK and wire-format versions:
+Print the protocol version:
 
 ```sh
 arcp version
-# Arcp.Cli 1.0.0 (wire 1.1)
+# arcp 1.1
 ```
 
 ## Exit codes
 
 | Code | Meaning |
 | ---- | ------- |
-| `0`  | Job completed with `final_status: "success"`. |
-| `1`  | Runtime/server error (auth failure, bind failure, unknown agent). |
-| `2`  | Job terminated with `error`, `cancelled`, or `timed_out`. |
-| `64` | Bad CLI arguments. |
+| `0`  | Command succeeded (`submit` requires `final_status: "success"`). |
+| `1`  | Submit terminated with a non-success status. |
+| `2`  | Unknown subcommand. |
 
-## stdio mode
-
-`--transport stdio` makes `arcp serve` read envelopes from stdin and
-write them to stdout, turning the process into a child-agent runtime.
-The parent is the ARCP client. Pipe agent logs to stderr or silence
-them — any non-envelope byte on stdout corrupts the channel.
-
-```csharp
-// Parent process in C#:
-using var proc = Process.Start(new ProcessStartInfo
-{
-    FileName  = "arcp",
-    Arguments = "serve --transport stdio --token tok --principal me",
-    RedirectStandardInput  = true,
-    RedirectStandardOutput = true,
-    UseShellExecute = false,
-});
-var transport = new StdioTransport(
-    proc!.StandardOutput.BaseStream,
-    proc.StandardInput.BaseStream);
-```
-
-See [Transports — stdio](./transports.md#stdio) for the full pattern.
+For richer flags (idempotency keys, stdio transport, lease constraints,
+trace IDs, file-based input), drive `ArcpClient` directly from a small
+host program — the CLI is intentionally minimal. See
+[Recipes](./recipes.md) and the [samples](../samples/) for end-to-end
+examples.

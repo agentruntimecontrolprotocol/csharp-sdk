@@ -23,9 +23,12 @@ _ = server.AcceptAsync(serverTransport.WithTracing(), ct);
 await using var client = await ArcpClient.ConnectAsync(
     clientTransport.WithTracing(), options, ct);
 
-// ASP.NET Core — wrap per connection via TransportFilter:
-app.MapArcp(server, o => { o.TransportFilter = t => t.WithTracing(); });
 ```
+
+When hosting via `Arcp.AspNetCore`, wrap the transport before passing
+it to `ArcpClient.ConnectAsync` (client side) or before calling
+`AcceptAsync` from your own loop (server side). The `MapArcp` endpoint
+does not currently expose a per-connection filter hook.
 
 ## Register with the OTel SDK
 
@@ -77,12 +80,14 @@ For each envelope the wrapper:
 
 ## Propagating trace IDs to child jobs
 
+`SubmitAsync` does not accept a `traceId` argument — trace context flows
+through `Activity.Current`. Open an activity from `ArcpDiagnostics.Runtime`
+before submitting the child so the `TracingTransport` injects the parent's
+trace context onto every outgoing envelope:
+
 ```csharp
-// Inside an orchestrator agent, pass the parent's trace ID when delegating:
-var child = await childClient.SubmitAsync(
-    "research",
-    traceId: ctx.TraceId,  // <-- propagates the distributed trace root
-    leaseRequest: childLease);
+using var activity = ArcpDiagnostics.Runtime.StartActivity("delegate.research");
+var child = await childClient.SubmitAsync("research", leaseRequest: childLease);
 ```
 
 See [Delegation guide](../guides/delegation.md) for the full orchestrator
@@ -92,6 +97,5 @@ complete OTel walkthrough.
 ## Related
 
 - [Observability guide](../guides/observability.md) — full setup and attribute reference.
-- [Arcp.AspNetCore](./Arcp.AspNetCore.md) — per-connection `TransportFilter` wiring.
 - [Vendor extensions](../guides/vendor-extensions.md) — `x-vendor.opentelemetry.tracecontext` key.
 - [Troubleshooting — spans not appearing](../troubleshooting.md#spans-not-appearing-in-the-backend).

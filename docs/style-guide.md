@@ -25,7 +25,7 @@ IntelliSense more correct and their stack traces more honest.
 
 ```xml
 <PropertyGroup>
-  <TargetFramework>net8.0</TargetFramework>
+  <TargetFramework>net10.0</TargetFramework>
   <LangVersion>latest</LangVersion>
   <Nullable>enable</Nullable>
   <ImplicitUsings>enable</ImplicitUsings>

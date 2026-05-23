@@ -73,26 +73,30 @@ For each envelope, the wrapper:
 
 ## Use with ASP.NET Core
 
-When hosting via `Arcp.AspNetCore`, call `WithTracing()` on the transport
-returned by `MapArcp`:
+`Arcp.AspNetCore` does not have a built-in transport hook. To
+instrument the server side, wrap the `ArcpServer.AcceptAsync` call
+yourself with a `WithTracing()`-wrapped transport, or call `WithTracing`
+on the client transport before passing it to `ArcpClient.ConnectAsync`:
 
 ```csharp
-app.MapArcp(server, o =>
-{
-    o.Path            = "/arcp";
-    o.TransportFilter = t => t.WithTracing();   // wrap each new connection
-});
+var transport = new WebSocketTransport(socket, ownsSocket: true).WithTracing();
+await using var client = await ArcpClient.ConnectAsync(transport, options);
 ```
 
 ## Propagating trace IDs to child jobs
 
+The runtime reads the ambient `Activity.Current` when emitting
+envelopes. Run a child submit inside an activity scope to inherit the
+parent's trace context:
+
 ```csharp
-// Pass the parent's trace ID when delegating:
-var child = await childClient.SubmitAsync("research", traceId: ctx.TraceId);
+using var activity = ArcpDiagnostics.Runtime.StartActivity("delegate.research");
+var child = await childClient.SubmitAsync("research", input: new { topic });
 ```
 
-This ensures the child's spans attach to the same distributed trace root.
-See [Delegation](./delegation.md) for the full pattern.
+`ctx.TraceId` is available as a read-only view of the parent's trace
+identifier when you need to log it. See [Delegation](./delegation.md)
+for the full pattern.
 
 ## Runnable example
 

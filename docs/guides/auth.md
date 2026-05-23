@@ -19,13 +19,15 @@ var server = new ArcpServer(new ArcpServerOptions
 });
 ```
 
-`StaticBearerVerifier` rejects any token not in its table and throws
-`UnauthenticatedException`.
+`StaticBearerVerifier.VerifyAsync` returns `null` for any token not in
+its table. The runtime turns a `null` principal into a `session.error`
+with code `UNAUTHENTICATED` and closes the transport.
 
 ## Custom verifier
 
 Implement `IBearerVerifier` for database lookups, JWT validation, or any
-other auth mechanism:
+other auth mechanism. Return `null` to reject; return an `AuthPrincipal`
+to accept:
 
 ```csharp
 public sealed class JwtBearerVerifier : IBearerVerifier
@@ -34,15 +36,20 @@ public sealed class JwtBearerVerifier : IBearerVerifier
 
     public JwtBearerVerifier(TokenValidationParameters p) => _params = p;
 
-    public ValueTask<AuthPrincipal> VerifyAsync(
-        string token,
+    public ValueTask<AuthPrincipal?> VerifyAsync(
+        string? token,
         CancellationToken ct = default)
     {
+        if (string.IsNullOrEmpty(token))
+            return ValueTask.FromResult<AuthPrincipal?>(null);
+
         var handler = new JwtSecurityTokenHandler();
         var claims  = handler.ValidateToken(token, _params, out _);
-        var email   = claims.FindFirstValue(ClaimTypes.Email)
-                      ?? throw new UnauthenticatedException("missing email claim");
-        return ValueTask.FromResult(new AuthPrincipal(email));
+        var email   = claims.FindFirstValue(ClaimTypes.Email);
+        if (email is null)
+            return ValueTask.FromResult<AuthPrincipal?>(null);
+
+        return ValueTask.FromResult<AuthPrincipal?>(new AuthPrincipal(email));
     }
 }
 ```
@@ -52,7 +59,8 @@ Register it:
 ```csharp
 var server = new ArcpServer(new ArcpServerOptions
 {
-    Auth = new JwtBearerVerifier(jwtParams),
+    Runtime = new RuntimeInfo { Name = "my-runtime", Version = "1.1.0" },
+    Auth    = new JwtBearerVerifier(jwtParams),
 });
 ```
 
@@ -74,28 +82,23 @@ If the token is absent or invalid, the runtime sends `session.error`
 
 ## No-auth deployments
 
-For internal same-process testing, pass `NullBearerVerifier.Instance`:
+For internal same-process testing, pass `AllowAnyBearerVerifier`, which
+accepts any non-empty token and reflects it as the principal subject:
 
 ```csharp
 new ArcpServerOptions
 {
-    Auth = NullBearerVerifier.Instance,   // accepts any token (or no token)
+    Auth = new AllowAnyBearerVerifier(),
 };
 ```
 
-Never use `NullBearerVerifier` in network-accessible deployments.
+Never use `AllowAnyBearerVerifier` in network-accessible deployments.
 
-## Principal in agent context
+## Principal and authorization
 
-The verified principal is available in every agent call:
-
-```csharp
-server.RegisterAgent("echo", (ctx, ct) =>
-{
-    Console.WriteLine($"called by {ctx.Principal.Id}");
-    return Task.FromResult<object?>(ctx.Input);
-});
-```
-
-`ctx.Principal.Id` is the string passed to `AuthPrincipal(id)` by the
-verifier.
+The verified `AuthPrincipal` is held on the session, not on
+`JobContext` — agents cannot read it directly. The runtime uses it to
+enforce `IJobAuthorizationPolicy` (default: `SamePrincipalPolicy`,
+which only lets a session observe its own jobs). To customize who can
+observe or cancel jobs, set `ArcpServerOptions.AuthorizationPolicy` to
+a custom implementation.

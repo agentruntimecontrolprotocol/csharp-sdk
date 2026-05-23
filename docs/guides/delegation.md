@@ -63,13 +63,16 @@ var child = await childClient.SubmitAsync("research", ..., cancellationToken: ct
 
 ## Trace propagation (§11)
 
-Child jobs SHOULD reuse the parent's `trace_id` so spans link in any OTel
-backend:
+Child jobs SHOULD reuse the parent's W3C trace context so spans link in
+any OTel backend. The SDK reads the ambient `Activity.Current` when
+emitting envelopes, so run the child submit inside an activity started
+from the parent's trace ID:
 
 ```csharp
-var child = await childClient.SubmitAsync(
-    "research",
-    traceId: ctx.TraceId);   // inherit parent trace
+using var activity = ArcpDiagnostics.Runtime.StartActivity("delegate.research");
+// Activity.Current now carries ctx.TraceId-derived context; child envelopes
+// inherit it via the OTel transport wrapper.
+var child = await childClient.SubmitAsync("research", input: new { topic });
 ```
 
 See [Observability](./observability.md) for the full trace setup.

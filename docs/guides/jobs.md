@@ -27,7 +27,7 @@ JobHandle handle = await client.SubmitAsync(
 `SubmitAsync` returns once `job.accepted` arrives. The handle is populated:
 
 ```csharp
-Console.WriteLine(handle.JobId);     // "job_01J…"
+Console.WriteLine(handle.JobId);     // "job_01J..."
 Console.WriteLine(handle.Agent);     // "code-refactor@2.0.0"
 Console.WriteLine(handle.TraceId);   // W3C trace ID
 // handle.Lease, handle.Budget also available
@@ -122,7 +122,7 @@ var lease = new Lease(new Dictionary<string, IReadOnlyList<string>>
 The agent reports spend via `metric` events:
 
 ```csharp
-await ctx.MetricAsync("cost.inference", 0.0234m, unit: "USD", ct);
+await ctx.MetricAsync("cost.inference", 0.0234, unit: "USD", cancellationToken: ct);
 ```
 
 When any counter reaches zero the next authority-bearing call returns

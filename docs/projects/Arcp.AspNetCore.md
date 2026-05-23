@@ -2,8 +2,7 @@
 
 `Arcp.AspNetCore` mounts an `ArcpServer` on Kestrel via a single
 `MapArcp()` extension on `IEndpointRouteBuilder`. It handles WebSocket
-upgrade, allowed-host validation, OTel transport wrapping, and lifetime
-wiring.
+upgrade, allowed-host validation, and lifetime wiring.
 
 ```sh
 dotnet add package Arcp.AspNetCore
@@ -35,13 +34,12 @@ app.MapArcp(server, o =>
 app.Run("http://127.0.0.1:7777");
 ```
 
-## MapArcpOptions
+## ArcpEndpointOptions
 
-| Property          | Default            | Purpose                                                      |
-| ----------------- | ------------------ | ------------------------------------------------------------ |
-| `Path`            | `"/arcp"`          | URL pattern registered with the endpoint router.            |
-| `AllowedHosts`    | `null` (allow all) | DNS-rebind defense — matched against `Request.Host.Host`.   |
-| `TransportFilter` | `t => t`           | Applied to each new transport; use for OTel wrapping.       |
+| Property       | Default            | Purpose                                                   |
+| -------------- | ------------------ | --------------------------------------------------------- |
+| `Path`         | `"/arcp"`          | URL pattern registered with the endpoint router.          |
+| `AllowedHosts` | `null` (allow all) | DNS-rebind defense — matched against `Request.Host.Host`. |
 
 ## DNS-rebind defense
 
@@ -64,23 +62,6 @@ prevent the two from racing, disable the ASP.NET Core ping:
 ```csharp
 app.UseWebSockets(new WebSocketOptions { KeepAliveInterval = Timeout.InfiniteTimeSpan });
 ```
-
-## OTel per-connection wrapping
-
-Use `TransportFilter` to attach OpenTelemetry instrumentation to every
-incoming connection without modifying the `ArcpServer` setup:
-
-```csharp
-using Arcp.Otel;
-
-app.MapArcp(server, o =>
-{
-    o.Path            = "/arcp";
-    o.TransportFilter = t => t.WithTracing();
-});
-```
-
-See [Arcp.Otel](./Arcp.Otel.md) for the full tracing setup.
 
 ## Multiple endpoints
 

@@ -71,7 +71,8 @@ Opt out of features on the client:
 ```csharp
 new ArcpClientOptions
 {
-    Features = new FeatureSet(["heartbeat", "ack"]),   // drop the rest
+    Client   = new ClientInfo { Name = "my-app", Version = "1.0.0" },
+    Features = new[] { FeatureFlags.Heartbeat, FeatureFlags.Ack },   // drop the rest
 };
 ```
 
@@ -80,7 +81,8 @@ Opt out on the server (applies to all sessions):
 ```csharp
 new ArcpServerOptions
 {
-    SupportedFeatures = new FeatureSet(["heartbeat", "ack"]),
+    Runtime  = new RuntimeInfo { Name = "my-runtime", Version = "1.1.0" },
+    Features = new[] { FeatureFlags.Heartbeat, FeatureFlags.Ack },
 };
 ```
 
@@ -140,21 +142,17 @@ submitted. A deployment-level `IJobAuthorizationPolicy` can widen this.
 
 ## Session close (§6.7)
 
-`DisposeAsync` sends `session.bye` before closing the transport:
+`DisposeAsync` sends `session.bye` (with reason `client_close`) before
+closing the transport:
 
 ```csharp
-await client.DisposeAsync();   // sends session.bye { reason: "normal" }
-```
-
-To send a custom reason:
-
-```csharp
-await client.CloseAsync(reason: "maintenance");
+await client.DisposeAsync();
 ```
 
 The runtime also sends `session.bye` before rejecting re-auth or on internal
-shutdown. Listen for it via `client.SessionClosed` if you need to act on
-runtime-initiated termination.
+shutdown. Once the transport reports closed, in-flight awaits on the
+client (`handle.Result`, `Chunks`, etc.) complete with the matching
+terminal envelope or fault with the underlying transport exception.
 
 ## Related guides
 

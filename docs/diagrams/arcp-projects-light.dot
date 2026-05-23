@@ -43,6 +43,7 @@ digraph ArcpProjects {
     AspNetCore  [label="Arcp.AspNetCore"];
     Otel        [label="Arcp.Otel"];
     Hosting     [label="Arcp.Hosting"];
+    Cli         [label="Arcp.Cli"];
   }
 
   subgraph cluster_samples {
@@ -52,7 +53,7 @@ digraph ArcpProjects {
     fontname="TT Commons Pro Trial"; fontcolor="#475569";
     margin=14; labeljust=l; penwidth=1.0;
 
-    Samples [label="20 samples", shape=box];
+    Samples [label="21 samples", shape=box];
   }
 
   subgraph cluster_tests {
@@ -78,6 +79,9 @@ digraph ArcpProjects {
   AspNetCore -> Core;
   Otel       -> Core;
   Hosting    -> Runtime;
+  Hosting    -> Core;
+  Cli        -> Arcp;
+  Cli        -> AspNetCore;
 
   Samples -> Client;
   Samples -> Runtime;

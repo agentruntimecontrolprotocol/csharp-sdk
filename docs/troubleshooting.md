@@ -79,7 +79,7 @@ The `session.pong` reply did not arrive within the timeout. Common causes:
 - The runtime and client clocks are skewed enough to affect the deadline.
 
 Set `KeepAliveInterval = Timeout.InfiniteTimeSpan` on
-`app.UseWebSockets(new WebSocketOptions { … })` to prevent TCP-level and
+`app.UseWebSockets(new WebSocketOptions { ... })` to prevent TCP-level and
 ARCP-level pings from racing.
 
 ---
@@ -96,7 +96,10 @@ ARCP-level pings from racing.
 
 ### `traceparent` is not propagated to child jobs
 
-Pass `traceId: ctx.TraceId` when calling `childClient.SubmitAsync`. See
+`SubmitAsync` has no `traceId` parameter — trace context flows through
+`Activity.Current`. Wrap the child submit in an activity started from
+`ArcpDiagnostics.Runtime` (or any source that produces the parent's
+trace ID). See
 [Observability — propagating trace IDs](./guides/observability.md).
 
 ---

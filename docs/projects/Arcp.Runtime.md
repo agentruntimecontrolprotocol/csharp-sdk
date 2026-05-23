@@ -27,14 +27,19 @@ var server = new ArcpServer(new ArcpServerOptions
 
 ### ArcpServerOptions
 
-| Property                  | Default                    | Purpose                                              |
-| ------------------------- | -------------------------- | ---------------------------------------------------- |
-| `Runtime`                 | required                   | Name / version sent in `session.welcome`.            |
-| `Auth`                    | `NullBearerVerifier`       | Token verification (see [Auth](../guides/auth.md)).  |
-| `HeartbeatIntervalSec`    | `30`                       | Advertised ping interval (spec §6.4).                |
-| `BackPressureThreshold`   | `1000`                     | Unacked event count before back-pressure signals.    |
-| `CredentialProvisioner`   | `null`                     | Issues short-lived credentials after lease sign-off. |
-| `CredentialStore`         | `null`                     | Durable store for revocation recovery on restart.    |
+| Property                | Default                  | Purpose                                              |
+| ----------------------- | ------------------------ | ---------------------------------------------------- |
+| `Runtime`               | required                 | Name / version sent in `session.welcome`.            |
+| `Auth`                  | `null` (rejects all)     | Token verification (see [Auth](../guides/auth.md)).  |
+| `Features`              | all v1.1 features        | Advertised feature flags (spec §6.2).                |
+| `Encodings`             | `["json"]`               | Advertised envelope encodings.                       |
+| `HeartbeatIntervalSec`  | `30`                     | Advertised ping interval (spec §6.4).                |
+| `ResumeWindowSec`       | `600`                    | Replay buffer window (spec §6.3).                    |
+| `BackPressureThreshold` | `1000`                   | Unacked event count before back-pressure signals.    |
+| `AuthorizationPolicy`   | `SamePrincipalPolicy`    | Decides who can observe/cancel jobs (spec §6.6).     |
+| `CredentialProvisioner` | `null`                   | Issues short-lived credentials after lease sign-off. |
+| `CredentialStore`       | `InMemoryCredentialStore`| Durable store for revocation recovery on restart.    |
+| `TimeProvider`          | `TimeProvider.System`    | Clock injection for tests.                           |
 
 ## Register agents
 
@@ -59,20 +64,31 @@ Func<JobContext, CancellationToken, Task<object?>> handler
 
 `JobContext` exposes:
 
-| Member                       | Description                                            |
-| ---------------------------- | ------------------------------------------------------ |
-| `ctx.Input`                  | Deserialized job input.                                |
-| `ctx.Lease`                  | Finalized lease for this job.                          |
-| `ctx.Principal`              | Authenticated identity (from `IBearerVerifier`).       |
-| `ctx.TraceId`                | W3C trace ID propagated from the client.               |
-| `ctx.Credentials`            | Provisioned credentials (value stripped).              |
-| `ctx.LogAsync(message, ct)`  | Emit a `log` event to the client.                      |
-| `ctx.EmitEventAsync(kind, body, ct)` | Emit any event kind (including `x-vendor.*`). |
-| `ctx.MetricAsync(currency, amount, ct)` | Debit a `cost.budget` counter.              |
-| `ctx.DelegateAsync(…)`       | Record a delegation in the job event stream.           |
-| `ctx.BeginResultStream(ct)`  | Enter streaming-results mode.                          |
-| `ctx.WriteChunkAsync(chunk, ct)` | Emit a `result_chunk` event.                     |
-| `ctx.RotateCredentialAsync(id, replacement, ct)` | Rotate a provisioned credential.   |
+| Member                                                   | Description                                                |
+| -------------------------------------------------------- | ---------------------------------------------------------- |
+| `ctx.JobId` / `ctx.SessionId` / `ctx.Agent`              | Identifiers for this dispatch.                             |
+| `ctx.Input`                                              | Deserialized job input (`JsonElement?`).                   |
+| `ctx.Lease` / `ctx.LeaseConstraints` / `ctx.Budget`      | Finalized lease and remaining cost budget.                 |
+| `ctx.TraceId`                                            | W3C trace ID propagated from the client.                   |
+| `ctx.Credentials`                                        | Provisioned credentials (value stripped).                  |
+| `ctx.Cancellation` / `ctx.Logger`                        | Standard cancellation + `ILogger` for the agent.           |
+| `ctx.LogAsync(level, message, ct)`                       | Emit a `log` event to the client.                          |
+| `ctx.ThoughtAsync(text, ct)`                             | Emit a `thought` event.                                    |
+| `ctx.StatusAsync(phase, message, ct)`                    | Emit a `status` event.                                     |
+| `ctx.ProgressAsync(current, total, units, message, ct)`  | Emit a `progress` event (spec §8.2.1).                     |
+| `ctx.ToolCallAsync(tool, callId, args, ct)`              | Emit a `tool_call` event.                                  |
+| `ctx.ToolResultAsync(callId, result, error, ct)`         | Emit a `tool_result` event.                                |
+| `ctx.MetricAsync(name, value, unit, dimensions, ct)`     | Emit a `metric` event (debits `cost.budget` when matched). |
+| `ctx.ArtifactRefAsync(uri, contentType, byteSize, sha256, ct)` | Emit an `artifact_ref` event.                        |
+| `ctx.DelegateAsync(childJobId, agent, input, ct)`        | Record a delegation in the job event stream.               |
+| `ctx.BeginResultStream()`                                | Allocate a `ResultId` for a streamed result (spec §8.4).   |
+| `ctx.WriteChunkAsync(resultId, text \| bytes, more, ct)` | Emit one `result_chunk`.                                   |
+| `ctx.EmitEventAsync(kind, body, ct)`                     | Emit any event kind (including `x-vendor.*`).              |
+| `ctx.RotateCredentialAsync(id, replacement, ct)`         | Rotate a provisioned credential.                           |
+
+The authenticated principal is held on the session, not on
+`JobContext`. Authorization decisions (who can observe or cancel a job)
+go through `ArcpServerOptions.AuthorizationPolicy`.
 
 ## Accept a session
 
@@ -111,4 +127,4 @@ Any other unhandled exception becomes `INTERNAL_ERROR`. See
 - [Leases guide](../guides/leases.md) — `LeaseManager`, `AssertSubset`.
 - [Delegation guide](../guides/delegation.md) — `ctx.DelegateAsync`.
 - [Arcp.AspNetCore](./Arcp.AspNetCore.md) — Kestrel hosting.
-- [Arcp.Hosting](./Arcp.Hosting.md) — `IHostedService` integration.
+- [Arcp.Hosting](./Arcp.Hosting.md) — DI registration helper.

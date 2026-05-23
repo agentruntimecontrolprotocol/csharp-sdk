@@ -34,13 +34,14 @@ After `ConnectAsync` completes the welcome payload is available:
 
 ## ArcpClientOptions
 
-| Property        | Default                   | Purpose                                   |
-| --------------- | ------------------------- | ----------------------------------------- |
-| `Client`        | required                  | Name / version sent in `session.hello`.   |
-| `Token`         | `null`                    | Bearer token for authentication.          |
-| `Features`      | `FeatureSet.AllFeatures`  | Feature flags to request.                 |
-| `ResumeToken`   | `null`                    | Set on reconnect to replay missed events. |
-| `LastEventSeq`  | `0`                       | Last sequence seen; pair with `ResumeToken`. |
+| Property       | Default                  | Purpose                                                       |
+| -------------- | ------------------------ | ------------------------------------------------------------- |
+| `Client`       | required                 | Name / version sent in `session.hello`.                       |
+| `Token`        | `null`                   | Bearer token for authentication.                              |
+| `AuthScheme`   | `"bearer"`               | `auth.scheme` sent on `session.hello`.                        |
+| `Features`     | `FeatureSet.AllFeatures` | Feature flags to request.                                     |
+| `Encodings`    | `["json"]`               | Envelope encodings to advertise.                              |
+| `TimeProvider` | `TimeProvider.System`    | Clock injection for tests.                                    |
 
 ## Submit a job
 
@@ -91,13 +92,14 @@ cancel (spec §7.6).
 
 | Method                                        | Spec   | Purpose                                           |
 | --------------------------------------------- | ------ | ------------------------------------------------- |
-| `ConnectAsync(transport, options, ct)`        | §6.1   | Open session, receive welcome.                    |
-| `SubmitAsync(agent, input, …)`                | §7.1   | Submit a job; returns `JobHandle`.                |
-| `AckAsync(lastProcessedSeq)`                  | §6.5   | Declare flow-control progress.                    |
-| `ListJobsAsync(filter?, limit?, cursor?)`     | §6.6   | Read-only job inventory with cursor pagination.   |
-| `SubscribeAsync(jobId, history?)`             | §7.6   | Attach to a job from another session.             |
-| `UnsubscribeAsync(jobId)`                     | §7.6   | Stop receiving fan-out events.                    |
-| `CloseAsync(ct)` / `DisposeAsync()`          | §6.3   | Send `session.goodbye`, drain, close transport.   |
+| `ConnectAsync(transport, options, ct)`                       | §6.1   | Open session, receive welcome.                  |
+| `SubmitAsync(agent, input, lease?, constraints?, idempotencyKey?, maxRuntimeSec?, parentJobId?, ct)` | §7.1 | Submit a job; returns `JobHandle`. |
+| `CancelJobAsync(jobId, reason?, ct)`                         | §7.4   | Cancel by `JobId`.                              |
+| `AckAsync(lastProcessedSeq, ct)`                             | §6.5   | Declare flow-control progress.                  |
+| `ListJobsAsync(filter?, limit?, cursor?, ct)`                | §6.6   | Read-only job inventory with cursor pagination. |
+| `SubscribeAsync(jobId, history?, ct)`                        | §7.6   | Attach to a job from another session.           |
+| `UnsubscribeAsync(jobId, ct)`                                | §7.6   | Stop receiving fan-out events.                  |
+| `DisposeAsync()`                                             | §6.7   | Send `session.bye`, close transport.            |
 
 ## JobHandle
 

@@ -1,9 +1,10 @@
 # Arcp.Hosting
 
-`Arcp.Hosting` integrates `ArcpServer` with the .NET Generic Host
-(`Microsoft.Extensions.Hosting`). It registers the server as an
-`IHostedService` so that `AcceptAsync` loops start and stop with the
-application lifetime.
+`Arcp.Hosting` is a small DI helper for registering an `ArcpServer`
+inside `Microsoft.Extensions.DependencyInjection`. It does not provide
+an `IHostedService`; transport acceptance is driven by the transport
+package you choose (`Arcp.AspNetCore` for HTTP/WebSocket, or your own
+loop calling `server.AcceptAsync` for stdio / TCP / custom).
 
 ```sh
 dotnet add package Arcp.Hosting
@@ -14,83 +15,56 @@ dotnet add package Arcp.Hosting
 ```csharp
 var builder = Host.CreateApplicationBuilder(args);
 
-builder.Services
-    .AddArcp(o =>
-    {
-        o.Runtime = new RuntimeInfo { Name = "my-runtime", Version = "1.1.0" };
-        o.Auth    = new StaticBearerVerifier(("tok-demo", new AuthPrincipal("alice")));
-        o.HeartbeatIntervalSec = 30;
-    })
-    .AddArcpAgent("echo", async (ctx, ct) => ctx.Input)
-    .AddArcpTransport<MyTransportFactory>();  // supplies ITransport per session
-```
-
-`AddArcp` registers `ArcpServer` as a singleton. `AddArcpAgent` calls
-`server.RegisterAgent` during `IHostedService.StartAsync`. `AddArcpTransport`
-binds the hosted transport loop.
-
-## IHostedService lifecycle
-
-```
-StartAsync  →  transport loop begins, AcceptAsync runs per incoming connection
-StopAsync   →  CancellationToken signalled, in-flight sessions drain gracefully
-```
-
-The hosted service respects `IHostApplicationLifetime.ApplicationStopping` so
-`SIGTERM` / Ctrl-C triggers a clean close (`session.goodbye` sent to all
-connected clients).
-
-## With ASP.NET Core
-
-When using `Arcp.AspNetCore`, the `MapArcp` endpoint handles session
-acceptance directly — you do **not** need `Arcp.Hosting` for the server loop.
-Use `Arcp.Hosting` when the transport is not HTTP (stdio, named pipe, custom
-TCP) or when you want a background worker that is not tied to Kestrel.
-
-```csharp
-// Worker service (non-HTTP):
-builder.Services
-    .AddHostedService<ArcpWorker>()   // custom IHostedService that calls AcceptAsync
-    .AddArcp(o => { /* … */ })
-    .AddArcpAgent("echo", …);
-```
-
-## Dependency injection in agents
-
-Because `ArcpServer` is a DI singleton, agent handlers can receive scoped
-services by declaring them in the `AddArcpAgent` overload that accepts an
-`IServiceProvider`:
-
-```csharp
-builder.Services.AddArcpAgent("invoice", async (ctx, sp, ct) =>
+builder.Services.AddArcpRuntime(o =>
 {
-    var db = sp.GetRequiredService<IInvoiceDb>();
-    var rows = await db.QueryAsync(ctx.Input.GetProperty("query").GetString(), ct);
-    return new { rows };
+    o.Runtime              = new RuntimeInfo { Name = "my-runtime", Version = "1.1.0" };
+    o.Auth                 = new StaticBearerVerifier(("tok-demo", new AuthPrincipal("alice")));
+    o.HeartbeatIntervalSec = 30;
 });
 ```
 
-A new `IServiceScope` is created for each job and disposed when the job
-reaches a terminal state.
+`AddArcpRuntime` registers `ArcpServer` as a singleton bound to
+`ArcpServerOptions` via the standard options pattern. Resolve the
+singleton wherever you need it:
 
-## Configuration via appsettings
-
-```json
-// appsettings.json
+```csharp
+public sealed class AgentRegistrar(ArcpServer server)
 {
-  "Arcp": {
-    "HeartbeatIntervalSec": 30,
-    "BackPressureThreshold": 500
-  }
+    public void Register()
+    {
+        server.RegisterAgent("echo", async (ctx, ct) => ctx.Input);
+    }
 }
 ```
 
+## With ASP.NET Core
+
+When the runtime is hosted over HTTP, combine `AddArcpRuntime` with
+`MapArcp` from `Arcp.AspNetCore`:
+
 ```csharp
-builder.Services.AddArcp(builder.Configuration.GetSection("Arcp"));
+var builder = WebApplication.CreateBuilder(args);
+builder.Services.AddArcpRuntime(o => { /* ... */ });
+
+var app = builder.Build();
+
+var server = app.Services.GetRequiredService<ArcpServer>();
+server.RegisterAgent("echo", async (ctx, ct) => ctx.Input);
+
+app.UseWebSockets();
+app.MapArcp(server);
+app.Run("http://127.0.0.1:7777");
 ```
+
+## Non-HTTP hosts
+
+For stdio, named pipes, or custom TCP, write a small `IHostedService`
+that creates the transport and calls `server.AcceptAsync(transport, ct)`
+in a loop. `AddArcpRuntime` gives you the singleton; the acceptance
+loop is yours.
 
 ## Related
 
 - [Arcp.Runtime](./Arcp.Runtime.md) — `ArcpServer` options reference.
-- [Arcp.AspNetCore](./Arcp.AspNetCore.md) — Kestrel / HTTP hosting.
+- [Arcp.AspNetCore](./Arcp.AspNetCore.md) — Kestrel / WebSocket hosting.
 - [Auth guide](../guides/auth.md) — bearer token verification.
