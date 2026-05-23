@@ -94,7 +94,7 @@ and [`samples/AspNetCore/`](../samples/AspNetCore/).
 
 ## Next steps
 
-- [Architecture](./architecture.md) — the project graph and how pieces fit together.
+- [Architecture](./architecture.md) — how the packages fit together.
 - [Transports](./transports.md) — WebSocket vs stdio vs in-memory.
 - [Sessions guide](./guides/sessions.md) — hello/welcome, feature negotiation, heartbeat.
 - [Jobs guide](./guides/jobs.md) — submit, observe, cancel, budget.

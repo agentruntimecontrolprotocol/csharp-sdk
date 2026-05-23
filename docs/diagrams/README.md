@@ -2,13 +2,6 @@
 
 Paired light/dark Graphviz diagrams for the ARCP C# SDK. Edit the `.dot` sources; render with `dot -Tsvg`.
 
-## Project graph
-
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="arcp-projects-dark.svg">
-  <img alt="ARCP C# project dependency graph" src="arcp-projects-light.svg">
-</picture>
-
 ## Session FSM
 
 <picture>

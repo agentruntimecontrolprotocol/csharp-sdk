@@ -2,11 +2,6 @@
 
 Reference docs for the [ARCP](https://github.com/agentruntimecontrolprotocol/spec/blob/main/docs/draft-arcp-1.1.md) C# / .NET 10 SDK. The [top-level README](../README.md) is the front door — these pages go deeper into each subsystem.
 
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="./diagrams/arcp-projects-dark.svg">
-  <img alt="ARCP C# SDK project graph" src="./diagrams/arcp-projects-light.svg">
-</picture>
-
 ## Start here
 
 - [Getting started](./getting-started.md) — install, build a runtime + client, run the example.
@@ -51,4 +46,4 @@ Reference docs for the [ARCP](https://github.com/agentruntimecontrolprotocol/spe
 
 ## Diagrams
 
-The hero diagram above is generated from Graphviz. The source files live in [`./diagrams/`](./diagrams/) — light/dark variants render through GitHub's `<picture>` element with `prefers-color-scheme`.
+Graphviz sources for the FSM and sequence diagrams used across these pages live in [`./diagrams/`](./diagrams/). Light/dark variants render through GitHub's `<picture>` element with `prefers-color-scheme`.

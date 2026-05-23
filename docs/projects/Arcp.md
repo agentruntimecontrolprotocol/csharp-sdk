@@ -46,7 +46,7 @@ Optional add-ons are **not** bundled and must be referenced explicitly:
 ## Related
 
 - [Getting started](../getting-started.md) — install and first run.
-- [Architecture](../architecture.md) — project dependency graph.
+- [Architecture](../architecture.md) — package roles and wire format.
 - [Arcp.Core](./Arcp.Core.md) — wire primitives detail.
 - [Arcp.Client](./Arcp.Client.md) — client API reference.
 - [Arcp.Runtime](./Arcp.Runtime.md) — server/runtime API reference.

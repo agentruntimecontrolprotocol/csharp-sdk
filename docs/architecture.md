@@ -1,10 +1,5 @@
 # Architecture
 
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="./diagrams/arcp-projects-dark.svg">
-  <img alt="ARCP C# SDK project graph" src="./diagrams/arcp-projects-light.svg">
-</picture>
-
 ## Project graph
 
 | Project           | Role |
