@@ -1,4 +1,4 @@
-// ARCP C# SDK — project dependency graph (light variant)
+// ARCP C# SDK — package dependency graph (light variant)
 digraph ArcpProjects {
   rankdir=LR;
   bgcolor="transparent";
@@ -26,52 +26,23 @@ digraph ArcpProjects {
     fontcolor="white", penwidth=1.4
   ];
 
-  subgraph cluster_src {
-    label=<<TABLE BORDER="0" CELLBORDER="0" CELLPADDING="0" CELLSPACING="0"><TR><TD COLSPAN="3" HEIGHT="8"></TD></TR><TR><TD WIDTH="8"></TD><TD><FONT POINT-SIZE="12"><B>src</B></FONT></TD><TD WIDTH="8"></TD></TR></TABLE>>;
-    style="rounded,filled";
-    fillcolor="#F1F5F9"; color="#E2E8F0";
-    fontname="TT Commons Pro Trial"; fontcolor="#475569";
-    margin=14; labeljust=l; penwidth=1.0;
-
-    Core [
-      label=<<FONT POINT-SIZE="12"><B>Arcp.Core</B></FONT>>,
-      fillcolor="#F59E0B", color="#D97706",
-      fontcolor="white", penwidth=1.4
-    ];
-    Client      [label="Arcp.Client"];
-    Runtime     [label="Arcp.Runtime"];
-    AspNetCore  [label="Arcp.AspNetCore"];
-    Otel        [label="Arcp.Otel"];
-    Hosting     [label="Arcp.Hosting"];
-    Cli         [label="Arcp.Cli"];
-  }
-
-  subgraph cluster_samples {
-    label=<<TABLE BORDER="0" CELLBORDER="0" CELLPADDING="0" CELLSPACING="0"><TR><TD COLSPAN="3" HEIGHT="8"></TD></TR><TR><TD WIDTH="8"></TD><TD><FONT POINT-SIZE="12"><B>samples</B></FONT></TD><TD WIDTH="8"></TD></TR></TABLE>>;
-    style="rounded,filled";
-    fillcolor="#F8FAFC"; color="#E2E8F0";
-    fontname="TT Commons Pro Trial"; fontcolor="#475569";
-    margin=14; labeljust=l; penwidth=1.0;
-
-    Samples [label="21 samples", shape=box];
-  }
-
-  subgraph cluster_tests {
-    label=<<TABLE BORDER="0" CELLBORDER="0" CELLPADDING="0" CELLSPACING="0"><TR><TD COLSPAN="3" HEIGHT="8"></TD></TR><TR><TD WIDTH="8"></TD><TD><FONT POINT-SIZE="12"><B>tests</B></FONT></TD><TD WIDTH="8"></TD></TR></TABLE>>;
-    style="rounded,filled";
-    fillcolor="#F8FAFC"; color="#E2E8F0";
-    fontname="TT Commons Pro Trial"; fontcolor="#475569";
-    margin=14; labeljust=l; penwidth=1.0;
-
-    Tests [label="Unit + Integration + Conformance + AspNetCore tests"];
-  }
+  Core [
+    label=<<FONT POINT-SIZE="12"><B>Arcp.Core</B></FONT>>,
+    fillcolor="#F59E0B", color="#D97706",
+    fontcolor="white", penwidth=1.4
+  ];
+  Client      [label="Arcp.Client"];
+  Runtime     [label="Arcp.Runtime"];
+  AspNetCore  [label="Arcp.AspNetCore"];
+  Otel        [label="Arcp.Otel"];
+  Hosting     [label="Arcp.Hosting"];
 
   // Primary spine — Arcp umbrella fans out to Client + Runtime.
   edge [color="#64748B", penwidth=1.2];
   Arcp -> Client;
   Arcp -> Runtime;
 
-  // Library deps: every src project routes through Core.
+  // Library deps: every package routes through Core.
   edge [color="#CBD5E1", penwidth=1.0];
   Client     -> Core;
   Runtime    -> Core;
@@ -80,10 +51,4 @@ digraph ArcpProjects {
   Otel       -> Core;
   Hosting    -> Runtime;
   Hosting    -> Core;
-  Cli        -> Arcp;
-  Cli        -> AspNetCore;
-
-  Samples -> Client;
-  Samples -> Runtime;
-  Tests   -> Core;
 }
