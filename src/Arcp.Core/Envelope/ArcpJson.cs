@@ -44,7 +44,7 @@ public static class ArcpJson
     /// <summary>Serialize utf8.</summary>
     public static byte[] SerializeUtf8(Envelope env) => JsonSerializer.SerializeToUtf8Bytes(env, Options);
 
-    /// <summary>To json element<t>.</summary>
+    /// <summary>Serialize a value into a <see cref="JsonElement"/> using ARCP wire options.</summary>
     public static JsonElement ToJsonElement<T>(T value) =>
         JsonSerializer.SerializeToElement(value, Options);
 }
