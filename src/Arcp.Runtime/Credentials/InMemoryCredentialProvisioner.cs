@@ -14,8 +14,10 @@ public sealed class InMemoryCredentialProvisioner : ICredentialProvisioner
 {
     private readonly ConcurrentBag<string> _revoked = [];
 
+    /// <summary>Gets the revoked ids.</summary>
     public IReadOnlyCollection<string> RevokedIds => _revoked.ToArray();
 
+    /// <summary>Issue (asynchronous).</summary>
     public ValueTask<IReadOnlyList<ProvisionedCredential>> IssueAsync(
         Lease lease,
         LeaseConstraints? constraints,
@@ -39,6 +41,7 @@ public sealed class InMemoryCredentialProvisioner : ICredentialProvisioner
         return ValueTask.FromResult<IReadOnlyList<ProvisionedCredential>>([credential]);
     }
 
+    /// <summary>Revoke (asynchronous).</summary>
     public ValueTask RevokeAsync(string credentialId, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();

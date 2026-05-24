@@ -3,6 +3,8 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography;
+using System.Text;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
@@ -14,6 +16,7 @@ using Arcp.Core.Messages;
 using Arcp.Core.Wire;
 using Arcp.Runtime.Agents;
 using Arcp.Runtime.Authorization;
+using Arcp.Runtime.Budget;
 using Arcp.Runtime.Credentials;
 using Arcp.Runtime.Leases;
 using Microsoft.Extensions.Logging;
@@ -25,34 +28,44 @@ namespace Arcp.Runtime;
 public sealed partial class JobManager
 {
     private readonly ConcurrentDictionary<JobId, Job> _jobs = new();
-    private readonly ConcurrentDictionary<string, JobId> _idempotency = new(StringComparer.Ordinal);
+    private readonly ConcurrentDictionary<string, IdempotencyRecord> _idempotency = new(StringComparer.Ordinal);
     private readonly AgentRegistry _agents;
     private readonly LeaseManager _leases;
     private readonly TimeProvider _time;
     private readonly ILoggerFactory _loggers;
     private readonly CredentialManager? _credentials;
+    private readonly int _idempotencyWindowSec;
 
+    /// <summary>Stored record for an idempotency key: original submission fingerprint plus issue time.</summary>
+    private sealed record IdempotencyRecord(JobId JobId, string Fingerprint, DateTimeOffset CreatedAt);
+
+    /// <summary>Initializes a new <see cref="JobManager"/>.</summary>
     public JobManager(
         AgentRegistry agents,
         LeaseManager leases,
         TimeProvider time,
         ILoggerFactory loggers,
-        CredentialManager? credentials = null)
+        CredentialManager? credentials = null,
+        int idempotencyWindowSec = 3600)
     {
         _agents = agents;
         _leases = leases;
         _time = time;
         _loggers = loggers;
         _credentials = credentials;
+        _idempotencyWindowSec = idempotencyWindowSec > 0 ? idempotencyWindowSec : 3600;
     }
 
+    /// <summary>Initializes a new <see cref="JobManager"/> without credential provisioning.</summary>
     public JobManager(AgentRegistry agents, LeaseManager leases, TimeProvider time, ILoggerFactory loggers)
         : this(agents, leases, time, loggers, null)
     {
     }
 
+    /// <summary>All jobs currently tracked, in arbitrary order.</summary>
     public IEnumerable<Job> Jobs => _jobs.Values;
 
+    /// <summary>Look up a job by id.</summary>
     public bool TryGet(JobId id, out Job? job)
     {
         var ok = _jobs.TryGetValue(id, out var j);
@@ -70,13 +83,32 @@ public sealed partial class JobManager
         CancellationToken parentCancellation,
         CancellationToken cancellationToken = default)
     {
-        // Idempotency check (spec §7.2).
+        // Idempotency check (spec §7.2). Fingerprint guards against replay with mismatched payload.
+        string? idemKey = null;
+        string? fingerprint = null;
         if (!string.IsNullOrEmpty(submit.IdempotencyKey))
         {
-            var key = $"{submitterPrincipal ?? "*"}|{submit.IdempotencyKey}";
-            if (_idempotency.TryGetValue(key, out var existingId) && _jobs.TryGetValue(existingId, out var existing))
+            idemKey = $"{submitterPrincipal ?? "*"}|{submit.IdempotencyKey}";
+            fingerprint = ComputeFingerprint(submit);
+            if (_idempotency.TryGetValue(idemKey, out var existingRecord))
             {
-                return (existing, BuildAccepted(existing));
+                var age = _time.GetUtcNow() - existingRecord.CreatedAt;
+                if (age.TotalSeconds <= _idempotencyWindowSec)
+                {
+                    if (!string.Equals(existingRecord.Fingerprint, fingerprint, StringComparison.Ordinal))
+                    {
+                        throw new DuplicateKeyException(
+                            $"Idempotency key '{submit.IdempotencyKey}' was previously used with a different payload");
+                    }
+                    if (_jobs.TryGetValue(existingRecord.JobId, out var existing))
+                    {
+                        return (existing, BuildAccepted(existing));
+                    }
+                }
+                else
+                {
+                    _idempotency.TryRemove(idemKey, out _);
+                }
             }
         }
 
@@ -95,6 +127,7 @@ public sealed partial class JobManager
         var job = new Job(
             jobId, sessionId, resolved, lease, submit.LeaseConstraints,
             submit.Input, submit.IdempotencyKey, traceId, submit.ParentJobId, submitterPrincipal,
+            submit.MaxRuntimeSec,
             _time.GetUtcNow(), emit, _time, parentCancellation);
         if (_credentials is not null)
         {
@@ -102,14 +135,15 @@ public sealed partial class JobManager
         }
 
         _jobs[jobId] = job;
-        if (!string.IsNullOrEmpty(submit.IdempotencyKey))
+        if (idemKey is not null && fingerprint is not null)
         {
-            _idempotency.TryAdd($"{submitterPrincipal ?? "*"}|{submit.IdempotencyKey}", jobId);
+            _idempotency[idemKey] = new IdempotencyRecord(jobId, fingerprint, _time.GetUtcNow());
         }
 
         return (job, BuildAccepted(job));
     }
 
+    /// <summary>Synchronous wrapper for <see cref="SubmitAsync"/> when no credential provisioning is configured.</summary>
     public Job Submit(
         JobSubmitPayload submit,
         SessionId sessionId,
@@ -159,27 +193,62 @@ public sealed partial class JobManager
         };
     }
 
+    /// <summary>Run a job. Owns the agent invocation, lease watchdog, runtime watchdog, and terminal emission.</summary>
     public async Task RunAsync(Job job, IAgent agent, Func<Envelope, CancellationToken, ValueTask> emit, CancellationToken cancellationToken)
     {
         job.MarkRunning();
         var ctx = new JobContext(job, _loggers.CreateLogger($"Arcp.Job.{job.JobId.Value}"), _credentials);
-        var watchdog = StartLeaseWatchdog(job, emit, cancellationToken);
+
+        // Watchdog cancellation source — cancelled in `finally` so the watchdog never outlives
+        // the job and never emits a late lease-expired event after the terminal result.
+        using var watchdogCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        var watchdog = StartLeaseWatchdog(job, emit, watchdogCts.Token);
+        var runtimeWatchdog = StartRuntimeWatchdog(job, watchdogCts.Token);
 
         try
         {
             var result = await agent.RunAsync(ctx, job.CancellationToken).ConfigureAwait(false);
-            await EmitSuccessResultAsync(job, result, emit, cancellationToken).ConfigureAwait(false);
-            job.MarkTerminal(JobStatus.Success);
+            // If a runtime-limit triggered cancellation, surface as TIMEOUT rather than CANCELLED.
+            if (job.RuntimeLimitExceeded)
+            {
+                await EmitTimeoutAsync(job, emit, cancellationToken).ConfigureAwait(false);
+                job.MarkTerminal(JobStatus.TimedOut);
+            }
+            else
+            {
+                await EmitSuccessResultAsync(job, result, emit, cancellationToken).ConfigureAwait(false);
+                job.MarkTerminal(JobStatus.Success);
+            }
         }
         catch (OperationCanceledException) when (job.CancellationToken.IsCancellationRequested)
         {
+            if (job.RuntimeLimitExceeded)
+            {
+                await EmitTimeoutAsync(job, emit, cancellationToken).ConfigureAwait(false);
+                job.MarkTerminal(JobStatus.TimedOut);
+            }
+            else
+            {
+                await EmitJobErrorAsync(job, emit, new JobErrorPayload
+                {
+                    FinalStatus = "cancelled",
+                    Code = ErrorCode.Cancelled,
+                    Message = "Job cancelled",
+                }, cancellationToken).ConfigureAwait(false);
+                job.MarkTerminal(JobStatus.Cancelled);
+            }
+        }
+        catch (BudgetExhaustedException ex)
+        {
             await EmitJobErrorAsync(job, emit, new JobErrorPayload
             {
-                FinalStatus = "cancelled",
-                Code = ErrorCode.Cancelled,
-                Message = "Job cancelled",
+                FinalStatus = "error",
+                Code = ErrorCode.BudgetExhausted,
+                Message = ex.Message,
+                Retryable = false,
+                Detail = ex.Detail,
             }, cancellationToken).ConfigureAwait(false);
-            job.MarkTerminal(JobStatus.Cancelled);
+            job.MarkTerminal(JobStatus.Error);
         }
         catch (ArcpException ex)
         {
@@ -213,7 +282,11 @@ public sealed partial class JobManager
                 job.SetCredentials([]);
             }
 
+            // Stop the lease + runtime watchdogs as soon as the job reaches any terminal state
+            // so neither can emit a late event or keep the run task alive.
+            try { watchdogCts.Cancel(); } catch (ObjectDisposedException) { /* race on dispose */ }
             await AwaitWatchdogAsync(watchdog).ConfigureAwait(false);
+            await AwaitWatchdogAsync(runtimeWatchdog).ConfigureAwait(false);
         }
     }
 
@@ -222,6 +295,12 @@ public sealed partial class JobManager
         // Spec §9.5.
         if (job.LeaseConstraints?.ExpiresAt is not { } expiresAt) return null;
         return RunLeaseWatchdog(job, expiresAt, emit, cancellationToken);
+    }
+
+    private Task? StartRuntimeWatchdog(Job job, CancellationToken cancellationToken)
+    {
+        if (job.MaxRuntimeSec is not { } limit || limit <= 0) return null;
+        return RunRuntimeWatchdog(job, TimeSpan.FromSeconds(limit), cancellationToken);
     }
 
     private static async Task AwaitWatchdogAsync(Task? watchdog)
@@ -262,6 +341,15 @@ public sealed partial class JobManager
     private static ValueTask EmitJobErrorAsync(Job job, Func<Envelope, CancellationToken, ValueTask> emit, JobErrorPayload payload, CancellationToken cancellationToken) =>
         emit(BuildEnvelope(job, MessageTypeNames.JobError, payload), cancellationToken);
 
+    private static ValueTask EmitTimeoutAsync(Job job, Func<Envelope, CancellationToken, ValueTask> emit, CancellationToken cancellationToken) =>
+        EmitJobErrorAsync(job, emit, new JobErrorPayload
+        {
+            FinalStatus = "timed_out",
+            Code = ErrorCode.Timeout,
+            Message = $"Job exceeded max_runtime_sec ({job.MaxRuntimeSec})",
+            Retryable = true,
+        }, cancellationToken);
+
     private static Envelope BuildEnvelope(Job job, string type, object payload) => new()
     {
         Type = type,
@@ -277,13 +365,17 @@ public sealed partial class JobManager
         {
             var now = _time.GetUtcNow();
             var delay = expiresAt - now;
-            while (delay > TimeSpan.Zero && !job.CancellationToken.IsCancellationRequested)
+            while (delay > TimeSpan.Zero &&
+                   !job.CancellationToken.IsCancellationRequested &&
+                   !cancellationToken.IsCancellationRequested &&
+                   !IsTerminal(job.Status))
             {
                 var step = delay > TimeSpan.FromSeconds(1) ? TimeSpan.FromSeconds(1) : delay;
                 await Task.Delay(step, _time, cancellationToken).ConfigureAwait(false);
                 now = _time.GetUtcNow();
                 delay = expiresAt - now;
             }
+            if (cancellationToken.IsCancellationRequested || IsTerminal(job.Status)) return;
             if (!job.CancellationToken.IsCancellationRequested)
             {
                 // Emit a tool_result.error then job.error per spec §13.4.
@@ -303,6 +395,24 @@ public sealed partial class JobManager
         catch (OperationCanceledException) { /* watchdog cancelled because job finished first */ }
     }
 
+    private async Task RunRuntimeWatchdog(Job job, TimeSpan limit, CancellationToken cancellationToken)
+    {
+        try
+        {
+            await Task.Delay(limit, _time, cancellationToken).ConfigureAwait(false);
+            if (cancellationToken.IsCancellationRequested) return;
+            if (IsTerminal(job.Status)) return;
+            // Mark the job so the run-loop knows to surface TIMEOUT not CANCELLED.
+            job.MarkRuntimeLimitExceeded();
+            job.CancellationSource.Cancel();
+        }
+        catch (OperationCanceledException) { /* watchdog cancelled because job finished first */ }
+    }
+
+    private static bool IsTerminal(JobStatus s) =>
+        s is JobStatus.Success or JobStatus.Error or JobStatus.Cancelled or JobStatus.TimedOut;
+
+    /// <summary>Cancel a running job. Only the original submitter may cancel; subscribers may not (spec §7.6).</summary>
     public bool Cancel(JobId jobId, string? requesterPrincipal, string? reason)
     {
         if (!_jobs.TryGetValue(jobId, out var job)) return false;
@@ -316,4 +426,19 @@ public sealed partial class JobManager
         return true;
     }
 
+    /// <summary>SHA-256 fingerprint of the submission fields that must match for an idempotent retry to be honored.</summary>
+    private static string ComputeFingerprint(JobSubmitPayload submit)
+    {
+        var canonical = new
+        {
+            agent = submit.Agent,
+            input = submit.Input?.ToString(),
+            lease_request = submit.LeaseRequest is null ? null : JsonSerializer.Serialize(submit.LeaseRequest, ArcpJson.Options),
+            lease_constraints = submit.LeaseConstraints is null ? null : JsonSerializer.Serialize(submit.LeaseConstraints, ArcpJson.Options),
+            parent_job_id = submit.ParentJobId,
+            max_runtime_sec = submit.MaxRuntimeSec,
+        };
+        var json = JsonSerializer.Serialize(canonical, ArcpJson.Options);
+        return Convert.ToHexStringLower(SHA256.HashData(Encoding.UTF8.GetBytes(json)));
+    }
 }

@@ -14,16 +14,20 @@ namespace Arcp.Core.Leases;
 [JsonConverter(typeof(LeaseJsonConverter))]
 public sealed record Lease
 {
+    /// <summary>Gets the capabilities.</summary>
     public IDictionary<string, IReadOnlyList<string>> Capabilities { get; init; }
         = new Dictionary<string, IReadOnlyList<string>>(StringComparer.Ordinal);
 
+    /// <summary>Initializes a new instance of the <see cref="Lease"/> class.</summary>
     public Lease() { }
 
+    /// <summary>Initializes a new instance of the <see cref="Lease"/> class.</summary>
     public Lease(IReadOnlyDictionary<string, IReadOnlyList<string>> capabilities)
     {
         Capabilities = capabilities.ToDictionary(kv => kv.Key, kv => kv.Value, StringComparer.Ordinal);
     }
 
+    /// <summary>Get.</summary>
     public IReadOnlyList<string> Get(string namespaceName) =>
         Capabilities.TryGetValue(namespaceName, out var v) ? v : Array.Empty<string>();
 }
@@ -66,14 +70,22 @@ internal sealed class LeaseJsonConverter : System.Text.Json.Serialization.JsonCo
 /// <summary>Reserved lease capability namespaces (spec §9.2).</summary>
 public static class LeaseNamespaces
 {
+    /// <summary>Gets the fs read.</summary>
     public const string FsRead = "fs.read";
+    /// <summary>Gets the fs write.</summary>
     public const string FsWrite = "fs.write";
+    /// <summary>Gets the net fetch.</summary>
     public const string NetFetch = "net.fetch";
+    /// <summary>Gets the tool call.</summary>
     public const string ToolCall = "tool.call";
+    /// <summary>Gets the agent delegate.</summary>
     public const string AgentDelegate = "agent.delegate";
+    /// <summary>Gets the cost budget.</summary>
     public const string CostBudget = "cost.budget";
+    /// <summary>Gets the model use.</summary>
     public const string ModelUse = "model.use";
 
+    /// <summary>Gets the all.</summary>
     public static readonly FrozenSet<string> All = new HashSet<string>
     {
         FsRead, FsWrite, NetFetch, ToolCall, AgentDelegate, CostBudget, ModelUse,
@@ -92,15 +104,18 @@ public sealed record LeaseConstraints
 /// <summary>A parsed <c>cost.budget</c> amount string of the form <c>currency:decimal</c> (spec §9.6).</summary>
 public readonly record struct BudgetAmount(string Currency, decimal Amount)
 {
+    /// <summary>Returns the string representation.</summary>
     public override string ToString() =>
         $"{Currency}:{Amount.ToString(CultureInfo.InvariantCulture)}";
 
+    /// <summary>Parses a string into an instance, throwing on invalid input.</summary>
     public static BudgetAmount Parse(string s)
     {
         if (TryParse(s, out var v)) return v;
         throw new FormatException($"Invalid budget amount: '{s}'");
     }
 
+    /// <summary>Attempts to parse a string into an instance, returning <c>false</c> on failure.</summary>
     public static bool TryParse(string? s, out BudgetAmount value)
     {
         value = default;

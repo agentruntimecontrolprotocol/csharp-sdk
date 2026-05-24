@@ -30,27 +30,37 @@ public sealed partial class ArcpClient : IAsyncDisposable
     private TaskCompletionSource<SessionWelcomePayload>? _welcomeTcs;
     private long _lastReceivedSeq;
     private Task? _readerLoop;
+    private bool _disposed;
 
+    /// <summary>Gets the session id.</summary>
     public SessionId SessionId { get; private set; }
 
+    /// <summary>Gets the effective features.</summary>
     public IReadOnlyList<string> EffectiveFeatures { get; private set; } = Array.Empty<string>();
 
+    /// <summary>Gets the resume token.</summary>
     public string? ResumeToken { get; private set; }
 
+    /// <summary>Gets the agents.</summary>
     public IReadOnlyList<AgentInventoryEntry> Agents { get; private set; } = Array.Empty<AgentInventoryEntry>();
 
+    /// <summary>Gets the runtime.</summary>
     public RuntimeInfo? Runtime { get; private set; }
 
+    /// <summary>Gets the heartbeat interval sec.</summary>
     public int? HeartbeatIntervalSec { get; private set; }
 
+    /// <summary>Gets the last received seq.</summary>
     public long LastReceivedSeq => Interlocked.Read(ref _lastReceivedSeq);
 
+    /// <summary>Initializes a new instance of the <see cref="ArcpClient"/> class.</summary>
     public ArcpClient(ITransport transport, ArcpClientOptions options)
     {
         _transport = transport;
         _options = options;
     }
 
+    /// <summary>Connect (asynchronous).</summary>
     public static async Task<ArcpClient> ConnectAsync(ITransport transport, ArcpClientOptions options, CancellationToken cancellationToken = default)
     {
         var client = new ArcpClient(transport, options);
@@ -58,6 +68,7 @@ public sealed partial class ArcpClient : IAsyncDisposable
         return client;
     }
 
+    /// <summary>Connect (asynchronous).</summary>
     public async Task ConnectAsync(CancellationToken cancellationToken = default)
     {
         _welcomeTcs = new TaskCompletionSource<SessionWelcomePayload>(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -85,8 +96,11 @@ public sealed partial class ArcpClient : IAsyncDisposable
         },
     };
 
+    /// <summary>Dispose (asynchronous).</summary>
     public async ValueTask DisposeAsync()
     {
+        if (_disposed) return;
+        _disposed = true;
         try
         {
             await _transport.SendAsync(new Envelope
@@ -100,7 +114,7 @@ public sealed partial class ArcpClient : IAsyncDisposable
         {
             // Transport may already be closed; suppress on dispose path.
         }
-        _cts.Cancel();
+        try { _cts.Cancel(); } catch (ObjectDisposedException) { /* already disposed */ }
         await _transport.DisposeAsync().ConfigureAwait(false);
         _cts.Dispose();
     }

@@ -17,8 +17,11 @@ namespace Arcp.AspNetCore;
 /// <summary>Options for <see cref="ArcpEndpointRouteBuilderExtensions.MapArcp"/>.</summary>
 public sealed class ArcpEndpointOptions
 {
+    /// <summary>Request path the ARCP WebSocket endpoint is mounted at. Defaults to <c>/arcp</c>.</summary>
     public string Path { get; set; } = "/arcp";
 
+    /// <summary>Optional allow-list of <c>Host</c> headers. When set, requests with other host
+    /// headers are rejected with 400 before any session work happens.</summary>
     public IReadOnlyList<string>? AllowedHosts { get; set; }
 }
 

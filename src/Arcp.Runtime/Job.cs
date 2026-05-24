@@ -24,43 +24,74 @@ public sealed class Job
     private long _nextChunkSeq;
     private readonly object _credentialGate = new();
     private readonly List<IssuedCredential> _credentials = [];
+    private readonly object _eventBufferGate = new();
+    private readonly List<Envelope> _eventBuffer = [];
+    private const int EventBufferCapacity = 1024;
 
+    /// <summary>Gets the job id.</summary>
     public JobId JobId { get; }
 
+    /// <summary>Gets the session id.</summary>
     public SessionId SessionId { get; }
 
+    /// <summary>Gets the agent.</summary>
     public AgentRef Agent { get; }
 
+    /// <summary>Gets the lease.</summary>
     public Lease Lease { get; }
 
+    /// <summary>Gets the lease constraints.</summary>
     public LeaseConstraints? LeaseConstraints { get; }
 
+    /// <summary>Gets the input.</summary>
     public JsonElement? Input { get; }
 
+    /// <summary>Gets the idempotency key.</summary>
     public string? IdempotencyKey { get; }
 
+    /// <summary>Gets the trace id.</summary>
     public TraceId? TraceId { get; }
 
+    /// <summary>Gets the parent job id.</summary>
     public string? ParentJobId { get; }
 
+    /// <summary>Gets the submitter principal.</summary>
     public string? SubmitterPrincipal { get; }
 
+    /// <summary>Gets the max runtime sec.</summary>
+    public int? MaxRuntimeSec { get; }
+
+    /// <summary>Gets the created at.</summary>
     public DateTimeOffset CreatedAt { get; }
 
+    /// <summary>Gets the budget ledger.</summary>
     public BudgetLedger BudgetLedger { get; } = new();
 
+    /// <summary>Gets the cancellation source.</summary>
     public CancellationTokenSource CancellationSource { get; }
 
+    /// <summary>Gets the cancellation token.</summary>
     public CancellationToken CancellationToken => CancellationSource.Token;
 
+    /// <summary>Gets the status.</summary>
     public JobStatus Status { get; private set; } = JobStatus.Pending;
 
+    /// <summary>Gets the streamed result id.</summary>
     public ResultId? StreamedResultId { get; private set; }
 
+    /// <summary>Gets the streamed result size.</summary>
     public long StreamedResultSize { get; private set; }
 
+    /// <summary>Gets the inline result emitted.</summary>
     public bool InlineResultEmitted { get; private set; }
 
+    /// <summary>Set by the runtime watchdog when <c>max_runtime_sec</c> is exceeded so the run-loop
+    /// can surface <c>TIMEOUT</c> instead of <c>CANCELLED</c>.</summary>
+    public bool RuntimeLimitExceeded { get; private set; }
+
+    internal void MarkRuntimeLimitExceeded() => RuntimeLimitExceeded = true;
+
+    /// <summary>Gets the credentials.</summary>
     public IReadOnlyList<ProvisionedCredential> Credentials
     {
         get
@@ -77,7 +108,7 @@ public sealed class Job
 
     internal Job(JobId jobId, SessionId sessionId, AgentRef agent, Lease lease, LeaseConstraints? constraints,
                JsonElement? input, string? idempotencyKey, TraceId? traceId, string? parentJobId,
-               string? submitterPrincipal, DateTimeOffset createdAt,
+               string? submitterPrincipal, int? maxRuntimeSec, DateTimeOffset createdAt,
                Func<Envelope, CancellationToken, ValueTask> emit, TimeProvider time,
                CancellationToken parentCancellation)
     {
@@ -91,6 +122,7 @@ public sealed class Job
         TraceId = traceId;
         ParentJobId = parentJobId;
         SubmitterPrincipal = submitterPrincipal;
+        MaxRuntimeSec = maxRuntimeSec;
         CreatedAt = createdAt;
         _emit = emit;
         _time = time;
@@ -98,8 +130,10 @@ public sealed class Job
         BudgetLedger.Initialize(lease);
     }
 
+    /// <summary>Mark running.</summary>
     public void MarkRunning() => Status = JobStatus.Running;
 
+    /// <summary>Mark terminal.</summary>
     public void MarkTerminal(JobStatus terminal) => Status = terminal;
 
     internal void SetCredentials(IReadOnlyList<IssuedCredential> credentials)
@@ -145,17 +179,49 @@ public sealed class Job
             TraceId = TraceId?.Value,
             Payload = payload,
         };
+        BufferEvent(env);
         await _emit(env, cancellationToken).ConfigureAwait(false);
     }
 
-    /// <summary>Apply the budget rule for <c>cost.*</c> metrics, then emit. May raise
-    /// <see cref="BudgetExhaustedException"/> via a follow-up <c>tool_result</c> error.</summary>
-    public async ValueTask EmitMetricAsync(MetricBody body, CancellationToken cancellationToken)
+    private void BufferEvent(Envelope env)
     {
-        BudgetLedger.ApplyMetric(body.Name, body.Value, body.Unit);
-        await EmitEventAsync(EventKinds.Metric, body, cancellationToken).ConfigureAwait(false);
+        // Spec §7.6: bounded per-job history so a later subscriber with `history: true`
+        // can receive prior events in order before live events. Bounded by EventBufferCapacity
+        // to keep server memory predictable.
+        lock (_eventBufferGate)
+        {
+            _eventBuffer.Add(env);
+            if (_eventBuffer.Count > EventBufferCapacity)
+            {
+                _eventBuffer.RemoveRange(0, _eventBuffer.Count - EventBufferCapacity);
+            }
+        }
     }
 
+    /// <summary>Snapshot of all events buffered for replay on a new subscription.</summary>
+    internal IReadOnlyList<Envelope> SnapshotEventHistory()
+    {
+        lock (_eventBufferGate)
+        {
+            return _eventBuffer.ToArray();
+        }
+    }
+
+    /// <summary>Apply the budget rule for <c>cost.*</c> metrics, then emit. If the metric exhausts
+    /// the matching budget counter (spec §9.6), the metric event is still emitted but a
+    /// <see cref="BudgetExhaustedException"/> is then thrown so the run-loop terminates the job
+    /// with <c>BUDGET_EXHAUSTED</c> (spec §12).</summary>
+    public async ValueTask EmitMetricAsync(MetricBody body, CancellationToken cancellationToken)
+    {
+        var charged = BudgetLedger.ApplyMetric(body.Name, body.Value, body.Unit);
+        await EmitEventAsync(EventKinds.Metric, body, cancellationToken).ConfigureAwait(false);
+        if (charged)
+        {
+            BudgetLedger.AssertNotExhausted();
+        }
+    }
+
+    /// <summary>Begin result stream.</summary>
     public ResultId BeginResultStream()
     {
         if (StreamedResultId is { } existing) return existing;
@@ -166,6 +232,7 @@ public sealed class Job
         return id;
     }
 
+    /// <summary>Write chunk (asynchronous).</summary>
     public async ValueTask WriteChunkAsync(ResultId resultId, string data, string encoding, bool more, CancellationToken cancellationToken)
     {
         if (StreamedResultId is null) StreamedResultId = resultId;
@@ -187,15 +254,23 @@ public sealed class Job
         await EmitEventAsync(EventKinds.ResultChunk, body, cancellationToken).ConfigureAwait(false);
     }
 
+    /// <summary>Mark inline result.</summary>
     public void MarkInlineResult() => InlineResultEmitted = true;
 }
 
+/// <summary>Gets the job status.</summary>
 public enum JobStatus
 {
+    /// <summary>Gets the pending.</summary>
     Pending,
+    /// <summary>Gets the running.</summary>
     Running,
+    /// <summary>Gets the success.</summary>
     Success,
+    /// <summary>Gets the error.</summary>
     Error,
+    /// <summary>Gets the cancelled.</summary>
     Cancelled,
+    /// <summary>Gets the timed out.</summary>
     TimedOut,
 }

@@ -31,16 +31,30 @@ public sealed partial class SessionState : IAsyncDisposable
     private bool _ackNegotiated;
     private DateTimeOffset _lastInboundAt;
 
+    /// <summary>Gets the session id.</summary>
     public SessionId SessionId { get; private set; } = SessionId.New();
 
+    /// <summary>Gets the resume token.</summary>
     public string ResumeToken { get; private set; } = MintResumeToken();
 
+    /// <summary>Gets the principal.</summary>
     public AuthPrincipal? Principal { get; private set; }
 
+    /// <summary>Gets the effective features.</summary>
     public IReadOnlyList<string> EffectiveFeatures { get; private set; } = Array.Empty<string>();
 
-    public EventLog EventLog { get; } = new();
+    /// <summary>Gets the event log.</summary>
+    public EventLog EventLog { get; private set; } = new();
 
+    /// <summary>Adopt the durable resumable state from a prior session of the same id. Called
+    /// when a client supplies a still-valid resume token (spec §6.3).</summary>
+    internal void AdoptResumableStateFrom(SessionState prior)
+    {
+        SessionId = prior.SessionId;
+        EventLog = prior.EventLog;
+    }
+
+    /// <summary>Gets the is closed.</summary>
     public bool IsClosed { get; private set; }
 
     internal SessionState(ITransport transport, ArcpServer server, ArcpServerOptions options, ILogger logger, CancellationToken cancellation)
@@ -59,6 +73,7 @@ public sealed partial class SessionState : IAsyncDisposable
         _lastInboundAt = options.TimeProvider.GetUtcNow();
     }
 
+    /// <summary>Run (asynchronous).</summary>
     public async Task RunAsync(CancellationToken cancellationToken = default)
     {
         using var linked = CancellationTokenSource.CreateLinkedTokenSource(_cts.Token, cancellationToken);
@@ -80,9 +95,11 @@ public sealed partial class SessionState : IAsyncDisposable
         }
     }
 
+    /// <summary>Send (asynchronous).</summary>
     public ValueTask SendAsync(Envelope env, CancellationToken cancellationToken = default) =>
         _outbound.Writer.WriteAsync(env, cancellationToken);
 
+    /// <summary>Close (asynchronous).</summary>
     public async ValueTask CloseAsync(string? reason = null, CancellationToken cancellationToken = default)
     {
         if (IsClosed) return;
@@ -112,6 +129,7 @@ public sealed partial class SessionState : IAsyncDisposable
         return "rt_" + Convert.ToHexString(bytes).ToLowerInvariant();
     }
 
+    /// <summary>Dispose (asynchronous).</summary>
     public async ValueTask DisposeAsync()
     {
         if (IsClosed) return;

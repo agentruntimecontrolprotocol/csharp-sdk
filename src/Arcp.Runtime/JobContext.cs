@@ -31,38 +31,53 @@ public sealed class JobContext
         Logger = logger;
     }
 
+    /// <summary>Gets the job id.</summary>
     public JobId JobId => _job.JobId;
 
+    /// <summary>Gets the session id.</summary>
     public SessionId SessionId => _job.SessionId;
 
+    /// <summary>Gets the agent.</summary>
     public AgentRef Agent => _job.Agent;
 
+    /// <summary>Gets the lease.</summary>
     public Lease Lease => _job.Lease;
 
+    /// <summary>Gets the lease constraints.</summary>
     public LeaseConstraints? LeaseConstraints => _job.LeaseConstraints;
 
+    /// <summary>Gets the budget.</summary>
     public IReadOnlyDictionary<string, decimal> Budget => _job.BudgetLedger.Remaining;
 
+    /// <summary>Gets the credentials.</summary>
     public IReadOnlyList<ProvisionedCredential> Credentials =>
         CredentialRedaction.StripValues(_job.Credentials);
 
+    /// <summary>Gets the trace id.</summary>
     public TraceId? TraceId => _job.TraceId;
 
+    /// <summary>Gets the input.</summary>
     public JsonElement? Input => _job.Input;
 
+    /// <summary>Gets the logger.</summary>
     public ILogger Logger { get; }
 
+    /// <summary>Gets the cancellation.</summary>
     public CancellationToken Cancellation => _job.CancellationToken;
 
+    /// <summary>Log (asynchronous).</summary>
     public ValueTask LogAsync(string level, string message, CancellationToken cancellationToken = default) =>
         _job.EmitEventAsync(EventKinds.Log, new LogBody { Level = level, Message = message }, cancellationToken);
 
+    /// <summary>Thought (asynchronous).</summary>
     public ValueTask ThoughtAsync(string text, CancellationToken cancellationToken = default) =>
         _job.EmitEventAsync(EventKinds.Thought, new ThoughtBody { Text = text }, cancellationToken);
 
+    /// <summary>Status (asynchronous).</summary>
     public ValueTask StatusAsync(string phase, string? message = null, CancellationToken cancellationToken = default) =>
         _job.EmitEventAsync(EventKinds.Status, new StatusBody { Phase = phase, Message = message }, cancellationToken);
 
+    /// <summary>Rotate credential (asynchronous).</summary>
     public ValueTask RotateCredentialAsync(
         string credentialId,
         ProvisionedCredential next,
@@ -73,6 +88,7 @@ public sealed class JobContext
         return _credentials.RotateAsync(_job, credentialId, next, cancellationToken);
     }
 
+    /// <summary>Tool call (asynchronous).</summary>
     public ValueTask ToolCallAsync(string tool, string callId, object? args, CancellationToken cancellationToken = default) =>
         _job.EmitEventAsync(EventKinds.ToolCall, new ToolCallBody
         {
@@ -81,6 +97,7 @@ public sealed class JobContext
             Args = args is null ? null : ArcpJson.ToJsonElement(args),
         }, cancellationToken);
 
+    /// <summary>Tool result (asynchronous).</summary>
     public ValueTask ToolResultAsync(string callId, object? result, ToolError? error = null, CancellationToken cancellationToken = default) =>
         _job.EmitEventAsync(EventKinds.ToolResult, new ToolResultBody
         {
@@ -89,9 +106,11 @@ public sealed class JobContext
             Error = error,
         }, cancellationToken);
 
+    /// <summary>Metric (asynchronous).</summary>
     public ValueTask MetricAsync(string name, double value, string? unit = null, IReadOnlyDictionary<string, string>? dimensions = null, CancellationToken cancellationToken = default) =>
         _job.EmitMetricAsync(new MetricBody { Name = name, Value = value, Unit = unit, Dimensions = dimensions }, cancellationToken);
 
+    /// <summary>Artifact ref (asynchronous).</summary>
     public ValueTask ArtifactRefAsync(string uri, string? contentType = null, long? byteSize = null, string? sha256 = null, CancellationToken cancellationToken = default) =>
         _job.EmitEventAsync(EventKinds.ArtifactRef, new ArtifactRefBody
         {
@@ -101,6 +120,7 @@ public sealed class JobContext
             Sha256 = sha256,
         }, cancellationToken);
 
+    /// <summary>Delegate (asynchronous).</summary>
     public ValueTask DelegateAsync(string childJobId, string agent, object? input, CancellationToken cancellationToken = default) =>
         _job.EmitEventAsync(EventKinds.Delegate, new DelegateBody
         {

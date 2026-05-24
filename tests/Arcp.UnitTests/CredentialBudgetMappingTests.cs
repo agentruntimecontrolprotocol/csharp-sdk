@@ -63,6 +63,7 @@ public class CredentialBudgetMappingTests
         TraceId.New(),
         null,
         "submitter",
+        null,
         System.DateTimeOffset.UtcNow,
         (_, _) => ValueTask.CompletedTask,
         TimeProvider.System,

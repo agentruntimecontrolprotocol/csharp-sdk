@@ -9,7 +9,9 @@ using Arcp.Core.Leases;
 
 namespace Arcp.Core.Messages;
 
+/// <summary>Gets the job unsubscribe payload.</summary>
 public sealed record JobUnsubscribePayload
 {
+    /// <summary>Gets the job id.</summary>
     [JsonPropertyName("job_id")] public required string JobId { get; init; }
 }

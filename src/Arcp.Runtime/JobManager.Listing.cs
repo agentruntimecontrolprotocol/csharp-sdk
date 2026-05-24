@@ -12,6 +12,7 @@ namespace Arcp.Runtime;
 
 public sealed partial class JobManager
 {
+    /// <summary>List.</summary>
     public IReadOnlyList<JobListEntry> List(string? requesterPrincipal, IJobAuthorizationPolicy policy,
         JobListFilter? filter, int? limit, string? cursor, out string? nextCursor)
     {

@@ -8,20 +8,35 @@ namespace Arcp.Core.Errors;
 /// deployment-specific codes round-trip on the wire.</summary>
 public static class ErrorCode
 {
+    /// <summary>Gets the permission denied.</summary>
     public const string PermissionDenied = "PERMISSION_DENIED";
+    /// <summary>Gets the lease subset violation.</summary>
     public const string LeaseSubsetViolation = "LEASE_SUBSET_VIOLATION";
+    /// <summary>Gets the job not found.</summary>
     public const string JobNotFound = "JOB_NOT_FOUND";
+    /// <summary>Gets the duplicate key.</summary>
     public const string DuplicateKey = "DUPLICATE_KEY";
+    /// <summary>Gets the agent not available.</summary>
     public const string AgentNotAvailable = "AGENT_NOT_AVAILABLE";
+    /// <summary>Gets the agent version not available.</summary>
     public const string AgentVersionNotAvailable = "AGENT_VERSION_NOT_AVAILABLE";
+    /// <summary>Gets the cancelled.</summary>
     public const string Cancelled = "CANCELLED";
+    /// <summary>Gets the timeout.</summary>
     public const string Timeout = "TIMEOUT";
+    /// <summary>Gets the resume window expired.</summary>
     public const string ResumeWindowExpired = "RESUME_WINDOW_EXPIRED";
+    /// <summary>Gets the heartbeat lost.</summary>
     public const string HeartbeatLost = "HEARTBEAT_LOST";
+    /// <summary>Gets the lease expired.</summary>
     public const string LeaseExpired = "LEASE_EXPIRED";
+    /// <summary>Gets the budget exhausted.</summary>
     public const string BudgetExhausted = "BUDGET_EXHAUSTED";
+    /// <summary>Gets the invalid request.</summary>
     public const string InvalidRequest = "INVALID_REQUEST";
+    /// <summary>Gets the unauthenticated.</summary>
     public const string Unauthenticated = "UNAUTHENTICATED";
+    /// <summary>Gets the internal error.</summary>
     public const string InternalError = "INTERNAL_ERROR";
 
     /// <summary>All 15 canonical v1.1 codes.</summary>

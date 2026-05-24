@@ -7,12 +7,14 @@ namespace Arcp.Runtime.Authorization;
 /// (spec §6.6, §7.6). Default: same-principal.</summary>
 public interface IJobAuthorizationPolicy
 {
+    /// <summary>Can observe.</summary>
     bool CanObserve(string? jobSubmitterPrincipal, AuthPrincipal? requestor);
 }
 
 /// <summary>Default policy: only the submitting principal may observe a job (spec §6.6, §7.6 default).</summary>
 public sealed class SamePrincipalPolicy : IJobAuthorizationPolicy
 {
+    /// <summary>Can observe.</summary>
     public bool CanObserve(string? jobSubmitterPrincipal, AuthPrincipal? requestor)
     {
         if (string.IsNullOrEmpty(jobSubmitterPrincipal)) return false;
@@ -24,5 +26,6 @@ public sealed class SamePrincipalPolicy : IJobAuthorizationPolicy
 /// <summary>Permissive policy: any authenticated principal may observe any job.</summary>
 public sealed class AllowAllPolicy : IJobAuthorizationPolicy
 {
+    /// <summary>Can observe.</summary>
     public bool CanObserve(string? jobSubmitterPrincipal, AuthPrincipal? requestor) => requestor is not null;
 }

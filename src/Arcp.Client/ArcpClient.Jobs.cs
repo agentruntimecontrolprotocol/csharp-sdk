@@ -10,31 +10,61 @@ namespace Arcp.Client;
 
 public sealed partial class ArcpClient
 {
+    /// <summary>Submit (asynchronous).</summary>
     public async Task<JobHandle> SubmitAsync(string agent, object? input = null, Lease? leaseRequest = null,
         LeaseConstraints? leaseConstraints = null, string? idempotencyKey = null,
         int? maxRuntimeSec = null, string? parentJobId = null, CancellationToken cancellationToken = default)
     {
         var handle = new JobHandle(this);
         _pendingSubmits.Enqueue(handle);
-        await _transport.SendAsync(new Envelope
+        var sent = false;
+        try
         {
-            Type = MessageTypeNames.JobSubmit,
-            SessionId = SessionId.Value,
-            Payload = new JobSubmitPayload
+            await _transport.SendAsync(new Envelope
             {
-                Agent = agent,
-                Input = input is null ? null : ArcpJson.ToJsonElement(input),
-                LeaseRequest = leaseRequest,
-                LeaseConstraints = leaseConstraints,
-                IdempotencyKey = idempotencyKey,
-                MaxRuntimeSec = maxRuntimeSec,
-                ParentJobId = parentJobId,
-            },
-        }, cancellationToken).ConfigureAwait(false);
-        await handle.Accepted.WaitAsync(cancellationToken).ConfigureAwait(false);
-        return handle;
+                Type = MessageTypeNames.JobSubmit,
+                SessionId = SessionId.Value,
+                Payload = new JobSubmitPayload
+                {
+                    Agent = agent,
+                    Input = input is null ? null : ArcpJson.ToJsonElement(input),
+                    LeaseRequest = leaseRequest,
+                    LeaseConstraints = leaseConstraints,
+                    IdempotencyKey = idempotencyKey,
+                    MaxRuntimeSec = maxRuntimeSec,
+                    ParentJobId = parentJobId,
+                },
+            }, cancellationToken).ConfigureAwait(false);
+            sent = true;
+            await handle.Accepted.WaitAsync(cancellationToken).ConfigureAwait(false);
+            return handle;
+        }
+        catch
+        {
+            // The pending queue is FIFO-correlated with job.accepted responses. If we never
+            // got an acceptance, evict our handle so the NEXT successful submit isn't bound
+            // to this stale slot.
+            RemovePendingSubmit(handle, sent);
+            throw;
+        }
     }
 
+    /// <summary>Evict a handle from the pending-submits queue. Walks the queue and re-enqueues
+    /// every other handle in order so FIFO correlation with <c>job.accepted</c> is preserved.</summary>
+    private void RemovePendingSubmit(JobHandle handle, bool ackPossiblyArrived)
+    {
+        // If we successfully sent and an acceptance may already be in flight, the dispatcher
+        // could have removed our handle via TryDequeue already; either way, drain+filter.
+        var keep = new System.Collections.Generic.List<JobHandle>();
+        while (_pendingSubmits.TryDequeue(out var h))
+        {
+            if (!ReferenceEquals(h, handle)) keep.Add(h);
+        }
+        foreach (var h in keep) _pendingSubmits.Enqueue(h);
+        _ = ackPossiblyArrived; // currently identical behavior; reserved for future correlation work
+    }
+
+    /// <summary>Cancel job (asynchronous).</summary>
     public async Task CancelJobAsync(JobId jobId, string? reason = null, CancellationToken cancellationToken = default)
     {
         await _transport.SendAsync(new Envelope
@@ -46,19 +76,28 @@ public sealed partial class ArcpClient
         }, cancellationToken).ConfigureAwait(false);
     }
 
+    /// <summary>List jobs (asynchronous).</summary>
     public async Task<SessionJobsPayload> ListJobsAsync(JobListFilter? filter = null, int? limit = null,
         string? cursor = null, CancellationToken cancellationToken = default)
     {
         var id = "msg_" + Ulid.NewUlid();
         var tcs = new TaskCompletionSource<SessionJobsPayload>(TaskCreationOptions.RunContinuationsAsynchronously);
         _listJobsRequests[id] = tcs;
-        await _transport.SendAsync(new Envelope
+        try
         {
-            Id = id,
-            Type = MessageTypeNames.SessionListJobs,
-            SessionId = SessionId.Value,
-            Payload = new SessionListJobsPayload { Filter = filter, Limit = limit, Cursor = cursor },
-        }, cancellationToken).ConfigureAwait(false);
-        return await tcs.Task.WaitAsync(cancellationToken).ConfigureAwait(false);
+            await _transport.SendAsync(new Envelope
+            {
+                Id = id,
+                Type = MessageTypeNames.SessionListJobs,
+                SessionId = SessionId.Value,
+                Payload = new SessionListJobsPayload { Filter = filter, Limit = limit, Cursor = cursor },
+            }, cancellationToken).ConfigureAwait(false);
+            return await tcs.Task.WaitAsync(cancellationToken).ConfigureAwait(false);
+        }
+        catch
+        {
+            _listJobsRequests.TryRemove(id, out _);
+            throw;
+        }
     }
 }

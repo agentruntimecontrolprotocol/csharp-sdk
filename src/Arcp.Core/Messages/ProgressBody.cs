@@ -9,16 +9,22 @@ using Arcp.Core.Leases;
 
 namespace Arcp.Core.Messages;
 
+/// <summary>Gets the progress body.</summary>
 public sealed record ProgressBody
 {
+    /// <summary>Gets the current.</summary>
     [JsonPropertyName("current")] public required long Current { get; init; }
 
+    /// <summary>Gets the total.</summary>
     [JsonPropertyName("total")] public long? Total { get; init; }
 
+    /// <summary>Gets the units.</summary>
     [JsonPropertyName("units")] public string? Units { get; init; }
 
+    /// <summary>Gets the message.</summary>
     [JsonPropertyName("message")] public string? Message { get; init; }
 
+    /// <summary>Validate.</summary>
     public ProgressBody Validate()
     {
         if (Current < 0)

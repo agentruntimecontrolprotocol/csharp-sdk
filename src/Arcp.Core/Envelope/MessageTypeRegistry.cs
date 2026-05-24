@@ -12,10 +12,13 @@ public sealed class MessageTypeRegistry
 {
     private readonly ConcurrentDictionary<string, Type> _map = new(StringComparer.Ordinal);
 
+    /// <summary>Gets the default.</summary>
     public static MessageTypeRegistry Default { get; } = CreateCoreCatalog();
 
+    /// <summary>Gets the entries.</summary>
     public IReadOnlyDictionary<string, Type> Entries => _map;
 
+    /// <summary>Register.</summary>
     public MessageTypeRegistry Register(string typeName, Type payloadType)
     {
         ArgumentNullException.ThrowIfNull(typeName);
@@ -24,6 +27,7 @@ public sealed class MessageTypeRegistry
         return this;
     }
 
+    /// <summary>Try get.</summary>
     public bool TryGet(string typeName, out Type? payloadType)
     {
         var ok = _map.TryGetValue(typeName, out var t);
@@ -31,6 +35,7 @@ public sealed class MessageTypeRegistry
         return ok;
     }
 
+    /// <summary>Create core catalog.</summary>
     public static MessageTypeRegistry CreateCoreCatalog()
     {
         var r = new MessageTypeRegistry();

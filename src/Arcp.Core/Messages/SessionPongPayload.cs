@@ -9,9 +9,12 @@ using Arcp.Core.Leases;
 
 namespace Arcp.Core.Messages;
 
+/// <summary>Gets the session pong payload.</summary>
 public sealed record SessionPongPayload
 {
+    /// <summary>Gets the ping nonce.</summary>
     [JsonPropertyName("ping_nonce")] public required string PingNonce { get; init; }
 
+    /// <summary>Gets the received at.</summary>
     [JsonPropertyName("received_at")] public required DateTimeOffset ReceivedAt { get; init; }
 }

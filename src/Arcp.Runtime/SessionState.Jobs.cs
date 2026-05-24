@@ -71,6 +71,14 @@ public sealed partial class SessionState
         if (!_options.AuthorizationPolicy.CanObserve(job.SubmitterPrincipal, Principal))
             throw new PermissionDeniedException("Subscriber not authorized to observe job");
 
+        // Snapshot prior events BEFORE subscribing so we can replay them, then attach the live
+        // subscription. Live events from the buffer's tail to "now" could double-fire; we filter
+        // by event-seq below when re-sending.
+        var history = sub.History
+            ? job.SnapshotEventHistory()
+            : Array.Empty<Envelope>();
+        var subscriberSeesOwnerSecrets = string.Equals(Principal?.Subject, job.SubmitterPrincipal, StringComparison.Ordinal);
+
         _server.Subscriptions.Subscribe(job.JobId, SessionId);
 
         await SendAsync(new Envelope
@@ -88,13 +96,27 @@ public sealed partial class SessionState
                 ParentJobId = job.ParentJobId,
                 TraceId = job.TraceId?.Value,
                 SubscribedFrom = EventLog.HighWatermark,
-                Replayed = sub.History,
-                Credentials = string.Equals(Principal?.Subject, job.SubmitterPrincipal, StringComparison.Ordinal)
-                    ? job.Credentials
-                    : null,
+                Replayed = sub.History && history.Count > 0,
+                Credentials = subscriberSeesOwnerSecrets ? job.Credentials : null,
             },
         }, cancellationToken).ConfigureAwait(false);
 
-        // Spec §7.6 history replay (not implemented across server-internal job buffer in this MVP).
+        // Spec §7.6: replay matching prior events, in original order, before live events arrive.
+        var fromSeq = sub.FromEventSeq;
+        foreach (var historic in history)
+        {
+            if (fromSeq is { } f && historic.EventSeq is { } seq && seq <= f) continue;
+            var rekeyed = (subscriberSeesOwnerSecrets ? historic : RedactForNonOwner(historic, job))
+                with
+            { SessionId = SessionId.Value };
+            var stamped = EventLog.Append(rekeyed);
+            await SendAsync(stamped, cancellationToken).ConfigureAwait(false);
+        }
+    }
+
+    private static Envelope RedactForNonOwner(Envelope env, Job job)
+    {
+        if (env.Payload is not JobEventPayload payload) return env;
+        return env with { Payload = Credentials.CredentialRedaction.RedactCredentialRotation(payload) };
     }
 }

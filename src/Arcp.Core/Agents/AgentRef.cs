@@ -13,6 +13,7 @@ public readonly record struct AgentRef : IParsable<AgentRef>
     /// <summary>Pinned version, or null when the agent reference is unversioned (resolves to default).</summary>
     public string? Version { get; }
 
+    /// <summary>Initializes a new instance of the <see cref="AgentRef"/> class.</summary>
     public AgentRef(string name, string? version = null)
     {
         if (string.IsNullOrEmpty(name) || !IsValidName(name))
@@ -23,14 +24,17 @@ public readonly record struct AgentRef : IParsable<AgentRef>
         Version = version;
     }
 
+    /// <summary>Returns the string representation.</summary>
     public override string ToString() => Version is null ? Name : $"{Name}@{Version}";
 
+    /// <summary>Parses a string into an instance, throwing on invalid input.</summary>
     public static AgentRef Parse(string s, IFormatProvider? provider = null)
     {
         if (TryParse(s, provider, out var r)) return r;
         throw new FormatException($"Invalid agent reference: '{s}'");
     }
 
+    /// <summary>Attempts to parse a string into an instance, returning <c>false</c> on failure.</summary>
     public static bool TryParse([NotNullWhen(true)] string? s, IFormatProvider? provider, out AgentRef result)
     {
         result = default;

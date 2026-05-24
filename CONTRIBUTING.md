@@ -94,6 +94,22 @@ Two layers must pass before a PR merges:
 CI runs both on every PR. A PR that changes which feature flags the SDK
 negotiates must also update the README feature matrix in the same change.
 
+### Code coverage
+
+Coverage is collected with Coverlet via the standard `--collect:"XPlat Code Coverage"`
+switch and merged across test projects. Reproduce the CI number locally with:
+
+```sh
+rm -rf TestResults
+dotnet test ARCP.slnx --collect:"XPlat Code Coverage" --results-directory TestResults
+python3 scripts/check-coverage.py --threshold 80 --results-dir TestResults
+```
+
+The CI gate enforces a minimum **80% line coverage** union across all four test
+projects. If `check-coverage.py` reports a number below the threshold, add tests
+before opening the PR — the script also prints the union percentage so you can
+see how much headroom there is.
+
 ## Coding standards
 
 Formatting, analyzers, and style are enforced as part of the build:

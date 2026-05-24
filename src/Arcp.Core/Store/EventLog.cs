@@ -18,17 +18,22 @@ public sealed class EventLog
     private long _nextSeq = 1;
     private long _lastAckedSeq;
 
+    /// <summary>Gets the capacity.</summary>
     public int Capacity { get; }
 
+    /// <summary>Initializes a new instance of the <see cref="EventLog"/> class.</summary>
     public EventLog(int capacity = 4096)
     {
         Capacity = capacity > 0 ? capacity : 4096;
     }
 
+    /// <summary>Gets the next seq.</summary>
     public long NextSeq => Interlocked.Read(ref _nextSeq);
 
+    /// <summary>Gets the last acked seq.</summary>
     public long LastAckedSeq => Interlocked.Read(ref _lastAckedSeq);
 
+    /// <summary>Gets the high watermark.</summary>
     public long HighWatermark
     {
         get { lock (_gate) return _events.Count == 0 ? 0 : _events[^1].EventSeq ?? 0; }
