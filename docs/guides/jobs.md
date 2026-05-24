@@ -58,7 +58,7 @@ await foreach (var ev in handle.Events(cancellationToken))
 var result = await handle.Result;
 // result.Success == true
 // result.FinalStatus == "success"
-// result.Output — the agent's return value deserialized
+// result.Result?.Result — the agent's return value deserialized
 ```
 
 ## Await result directly
