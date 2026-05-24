@@ -9,6 +9,7 @@ namespace Arcp.Runtime.Agents;
 /// <c>job.result.payload.result</c> when the agent does not stream a chunked result.</summary>
 public interface IAgent
 {
+    /// <summary>Run (asynchronous).</summary>
     Task<object?> RunAsync(JobContext context, CancellationToken cancellationToken);
 }
 
@@ -17,11 +18,13 @@ public sealed class DelegateAgent : IAgent
 {
     private readonly System.Func<JobContext, CancellationToken, Task<object?>> _impl;
 
+    /// <summary>Initializes a new instance of the <see cref="DelegateAgent"/> class.</summary>
     public DelegateAgent(System.Func<JobContext, CancellationToken, Task<object?>> impl)
     {
         _impl = impl;
     }
 
+    /// <summary>Run (asynchronous).</summary>
     public Task<object?> RunAsync(JobContext context, CancellationToken cancellationToken) =>
         _impl(context, cancellationToken);
 }

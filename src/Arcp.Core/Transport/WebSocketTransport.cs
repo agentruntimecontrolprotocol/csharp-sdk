@@ -20,12 +20,14 @@ public sealed class WebSocketTransport : ITransport
     private readonly SemaphoreSlim _sendLock = new(1, 1);
     private bool _closed;
 
+    /// <summary>Initializes a new instance of the <see cref="WebSocketTransport"/> class.</summary>
     public WebSocketTransport(WebSocket socket, bool ownsSocket = true)
     {
         _socket = socket;
         _ownsSocket = ownsSocket;
     }
 
+    /// <summary>Send (asynchronous).</summary>
     public async ValueTask SendAsync(Envelope envelope, CancellationToken cancellationToken = default)
     {
         if (_closed || _socket.State != WebSocketState.Open)
@@ -43,39 +45,63 @@ public sealed class WebSocketTransport : ITransport
         }
     }
 
+    /// <summary>Receive (asynchronous).</summary>
     public async IAsyncEnumerable<Envelope> ReceiveAsync([EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
         var buffer = ArrayPool<byte>.Shared.Rent(8192);
+        ArrayBufferWriter<byte>? writer = null;
         try
         {
             while (!_closed && _socket.State == WebSocketState.Open)
             {
-                using var ms = new MemoryStream();
-                ValueWebSocketReceiveResult result;
-                do
+                var first = await _socket.ReceiveAsync(buffer.AsMemory(), cancellationToken).ConfigureAwait(false);
+                if (first.MessageType == WebSocketMessageType.Close)
                 {
-                    result = await _socket.ReceiveAsync(buffer.AsMemory(), cancellationToken).ConfigureAwait(false);
-                    if (result.MessageType == WebSocketMessageType.Close)
-                    {
-                        _closed = true;
-                        break;
-                    }
-                    ms.Write(buffer, 0, result.Count);
+                    _closed = true;
+                    yield break;
                 }
-                while (!result.EndOfMessage);
-                if (_closed) yield break;
 
-                if (ms.Length == 0) continue;
-                Envelope env;
-                try
+                Envelope? env = null;
+                if (first.EndOfMessage)
                 {
-                    env = ArcpJson.Deserialize(ms.ToArray());
+                    // Fast path: full envelope is in the rented buffer. Deserialize directly.
+                    if (first.Count == 0) continue;
+                    env = TryDeserialize(buffer.AsSpan(0, first.Count));
                 }
-                catch (Exception ex) when (ex is Errors.ArcpException or System.Text.Json.JsonException)
+                else
                 {
-                    continue;
+                    // Slow path: message spans multiple frames. Stream into a pooled buffer
+                    // writer that grows as needed instead of allocating a new MemoryStream per call.
+                    writer ??= new ArrayBufferWriter<byte>(16384);
+                    writer.Clear();
+                    if (first.Count > 0)
+                    {
+                        buffer.AsSpan(0, first.Count).CopyTo(writer.GetSpan(first.Count));
+                        writer.Advance(first.Count);
+                    }
+
+                    var done = false;
+                    while (!done)
+                    {
+                        var frame = await _socket.ReceiveAsync(buffer.AsMemory(), cancellationToken).ConfigureAwait(false);
+                        if (frame.MessageType == WebSocketMessageType.Close)
+                        {
+                            _closed = true;
+                            yield break;
+                        }
+                        if (frame.Count > 0)
+                        {
+                            buffer.AsSpan(0, frame.Count).CopyTo(writer.GetSpan(frame.Count));
+                            writer.Advance(frame.Count);
+                        }
+                        done = frame.EndOfMessage;
+                    }
+
+                    if (writer.WrittenCount == 0) continue;
+                    env = TryDeserialize(writer.WrittenSpan);
                 }
-                yield return env;
+
+                if (env is not null) yield return env;
             }
         }
         finally
@@ -84,6 +110,23 @@ public sealed class WebSocketTransport : ITransport
         }
     }
 
+    private static Envelope? TryDeserialize(ReadOnlySpan<byte> utf8)
+    {
+        try
+        {
+            return ArcpJson.Deserialize(utf8);
+        }
+        catch (Errors.ArcpException)
+        {
+            return null;
+        }
+        catch (System.Text.Json.JsonException)
+        {
+            return null;
+        }
+    }
+
+    /// <summary>Close (asynchronous).</summary>
     public async ValueTask CloseAsync(string? reason = null, CancellationToken cancellationToken = default)
     {
         if (_closed) return;
@@ -99,6 +142,7 @@ public sealed class WebSocketTransport : ITransport
         catch (OperationCanceledException) { /* shutting down */ }
     }
 
+    /// <summary>Dispose (asynchronous).</summary>
     public async ValueTask DisposeAsync()
     {
         try { await CloseAsync().ConfigureAwait(false); } catch { /* ignore */ }

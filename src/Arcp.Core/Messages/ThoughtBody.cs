@@ -9,7 +9,9 @@ using Arcp.Core.Leases;
 
 namespace Arcp.Core.Messages;
 
+/// <summary>Gets the thought body.</summary>
 public sealed record ThoughtBody
 {
+    /// <summary>Gets the text.</summary>
     [JsonPropertyName("text")] public required string Text { get; init; }
 }

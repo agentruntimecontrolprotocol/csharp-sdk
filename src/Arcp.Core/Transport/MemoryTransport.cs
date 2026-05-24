@@ -23,6 +23,7 @@ public sealed class MemoryTransport : ITransport
         _inbound = inbound;
     }
 
+    /// <summary>Pair.</summary>
     public static (MemoryTransport Client, MemoryTransport Server) Pair()
     {
         var clientToServer = Channel.CreateUnbounded<Envelope>(new UnboundedChannelOptions
@@ -40,12 +41,14 @@ public sealed class MemoryTransport : ITransport
         return (client, server);
     }
 
+    /// <summary>Send (asynchronous).</summary>
     public ValueTask SendAsync(Envelope envelope, CancellationToken cancellationToken = default)
     {
         if (_closed) throw new InvalidOperationException("Transport is closed.");
         return _outbound.Writer.WriteAsync(envelope, cancellationToken);
     }
 
+    /// <summary>Receive (asynchronous).</summary>
     public async IAsyncEnumerable<Envelope> ReceiveAsync([EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
         while (await _inbound.Reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false))
@@ -57,6 +60,7 @@ public sealed class MemoryTransport : ITransport
         }
     }
 
+    /// <summary>Close (asynchronous).</summary>
     public ValueTask CloseAsync(string? reason = null, CancellationToken cancellationToken = default)
     {
         if (_closed) return ValueTask.CompletedTask;
@@ -65,6 +69,7 @@ public sealed class MemoryTransport : ITransport
         return ValueTask.CompletedTask;
     }
 
+    /// <summary>Dispose (asynchronous).</summary>
     public ValueTask DisposeAsync()
     {
         if (!_closed)

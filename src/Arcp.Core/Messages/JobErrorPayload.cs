@@ -9,15 +9,21 @@ using Arcp.Core.Leases;
 
 namespace Arcp.Core.Messages;
 
+/// <summary>Gets the job error payload.</summary>
 public sealed record JobErrorPayload
 {
+    /// <summary>Gets the final status.</summary>
     [JsonPropertyName("final_status")] public string FinalStatus { get; init; } = "error";
 
+    /// <summary>Gets the code.</summary>
     [JsonPropertyName("code")] public required string Code { get; init; }
 
+    /// <summary>Gets the message.</summary>
     [JsonPropertyName("message")] public required string Message { get; init; }
 
+    /// <summary>Gets the retryable.</summary>
     [JsonPropertyName("retryable")] public bool Retryable { get; init; }
 
+    /// <summary>Gets the detail.</summary>
     [JsonPropertyName("detail")] public string? Detail { get; init; }
 }

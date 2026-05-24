@@ -14,10 +14,13 @@ public sealed class BudgetLedger
     private readonly ConcurrentDictionary<string, decimal> _remaining = new(StringComparer.Ordinal);
     private readonly ConcurrentDictionary<string, decimal> _initial = new(StringComparer.Ordinal);
 
+    /// <summary>Gets the is active.</summary>
     public bool IsActive => !_remaining.IsEmpty;
 
+    /// <summary>Gets the remaining.</summary>
     public IReadOnlyDictionary<string, decimal> Remaining => _remaining.ToDictionary(kv => kv.Key, kv => kv.Value, StringComparer.Ordinal);
 
+    /// <summary>Gets the initial.</summary>
     public IReadOnlyDictionary<string, decimal> Initial => _initial.ToDictionary(kv => kv.Key, kv => kv.Value, StringComparer.Ordinal);
 
     /// <summary>Initialize counters from a lease's <c>cost.budget</c> patterns.</summary>

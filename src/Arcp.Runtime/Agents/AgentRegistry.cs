@@ -14,6 +14,7 @@ public sealed class AgentRegistry
 {
     private readonly ConcurrentDictionary<string, AgentEntry> _byName = new(StringComparer.Ordinal);
 
+    /// <summary>Register.</summary>
     public void Register(string name, IAgent agent)
     {
         if (!AgentRef.IsValidName(name)) throw new ArgumentException($"Invalid agent name '{name}'", nameof(name));
@@ -21,6 +22,7 @@ public sealed class AgentRegistry
         entry.SetUnversioned(agent);
     }
 
+    /// <summary>Register version.</summary>
     public void RegisterVersion(string name, string version, IAgent agent)
     {
         if (!AgentRef.IsValidName(name)) throw new ArgumentException($"Invalid agent name '{name}'", nameof(name));
@@ -29,6 +31,7 @@ public sealed class AgentRegistry
         entry.AddVersion(version, agent);
     }
 
+    /// <summary>Set default version.</summary>
     public void SetDefaultVersion(string name, string version)
     {
         if (!_byName.TryGetValue(name, out var entry))
@@ -36,6 +39,7 @@ public sealed class AgentRegistry
         entry.SetDefault(version);
     }
 
+    /// <summary>Resolve.</summary>
     public (AgentRef Resolved, IAgent Agent) Resolve(AgentRef requested)
     {
         if (!_byName.TryGetValue(requested.Name, out var entry))
@@ -57,6 +61,7 @@ public sealed class AgentRegistry
         throw new AgentNotAvailableException($"Agent '{requested.Name}' has no registered implementation");
     }
 
+    /// <summary>To inventory.</summary>
     public IReadOnlyList<AgentInventoryEntry> ToInventory() =>
         _byName.Values.Select(e => new AgentInventoryEntry
         {

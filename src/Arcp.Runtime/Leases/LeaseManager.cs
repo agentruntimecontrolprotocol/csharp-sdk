@@ -12,6 +12,7 @@ public sealed class LeaseManager
 {
     private readonly TimeProvider _time;
 
+    /// <summary>Initializes a new instance of the <see cref="LeaseManager"/> class.</summary>
     public LeaseManager(TimeProvider? time = null)
     {
         _time = time ?? TimeProvider.System;

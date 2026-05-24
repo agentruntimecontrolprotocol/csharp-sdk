@@ -9,9 +9,12 @@ using Arcp.Core.Leases;
 
 namespace Arcp.Core.Messages;
 
+/// <summary>Gets the log body.</summary>
 public sealed record LogBody
 {
+    /// <summary>Gets the level.</summary>
     [JsonPropertyName("level")] public required string Level { get; init; }
 
+    /// <summary>Gets the message.</summary>
     [JsonPropertyName("message")] public required string Message { get; init; }
 }

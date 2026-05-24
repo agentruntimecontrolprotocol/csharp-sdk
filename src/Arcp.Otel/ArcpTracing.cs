@@ -16,8 +16,10 @@ namespace Arcp.Otel;
 /// <see cref="ActivitySource"/> instrumentation (spec §11).</summary>
 public static class ArcpTracing
 {
+    /// <summary>Gets the otel extension name.</summary>
     public const string OtelExtensionName = "x-vendor.opentelemetry.tracecontext";
 
+    /// <summary>With tracing.</summary>
     public static ITransport WithTracing(this ITransport inner) => new TracingTransport(inner);
 
     private sealed class TracingTransport : ITransport

@@ -13,6 +13,7 @@ public sealed class SubscriptionManager
     private readonly ConcurrentDictionary<JobId, HashSet<SessionId>> _byJob = new();
     private readonly object _gate = new();
 
+    /// <summary>Subscribe.</summary>
     public void Subscribe(JobId jobId, SessionId sessionId)
     {
         lock (_gate)
@@ -26,6 +27,7 @@ public sealed class SubscriptionManager
         }
     }
 
+    /// <summary>Unsubscribe.</summary>
     public void Unsubscribe(JobId jobId, SessionId sessionId)
     {
         lock (_gate)
@@ -38,6 +40,7 @@ public sealed class SubscriptionManager
         }
     }
 
+    /// <summary>Subscribers of.</summary>
     public IReadOnlyCollection<SessionId> SubscribersOf(JobId jobId)
     {
         lock (_gate)
@@ -46,6 +49,7 @@ public sealed class SubscriptionManager
         }
     }
 
+    /// <summary>Remove session.</summary>
     public void RemoveSession(SessionId sessionId)
     {
         lock (_gate)

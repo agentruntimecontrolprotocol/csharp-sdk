@@ -22,6 +22,7 @@ public sealed partial class SessionState
         TryResumeSession(hello);
         NegotiateFeatures(hello);
         ResumeToken = MintResumeToken();
+        _server.RegisterResumeToken(this, ResumeToken);
 
         await SendAsync(BuildWelcome(), cancellationToken).ConfigureAwait(false);
         await ReplayBufferedEventsAsync(hello, cancellationToken).ConfigureAwait(false);
@@ -43,11 +44,21 @@ public sealed partial class SessionState
 
     private void TryResumeSession(SessionHelloPayload hello)
     {
-        // spec §6.3: if resume_token matches, keep the session_id.
-        if (!string.IsNullOrEmpty(hello.ResumeToken) && _server.TryResume(hello.ResumeToken, out var resumed))
+        // spec §6.3: if resume_token matches, keep the session_id and inherit the prior
+        // session's durable state so replay can serve gap-free events.
+        if (string.IsNullOrEmpty(hello.ResumeToken)) return;
+
+        if (_server.TryResume(hello.ResumeToken, out var resumed))
         {
-            SessionId = resumed!.SessionId;
+            var previousLiveId = SessionId;
+            AdoptResumableStateFrom(resumed!);
+            _server.OnSessionAdoptedResumedId(previousLiveId, this);
+            return;
         }
+
+        // Token presented but unknown or expired (spec §6.3 / §12 RESUME_WINDOW_EXPIRED).
+        throw new ResumeWindowExpiredException(
+            "Resume token unknown or outside ResumeWindowSec");
     }
 
     private void NegotiateFeatures(SessionHelloPayload hello)

@@ -36,20 +36,28 @@ public sealed class JobHandle : IAsyncDisposable
         });
     }
 
+    /// <summary>Gets the job id.</summary>
     public JobId JobId { get; internal set; }
 
+    /// <summary>Gets the agent.</summary>
     public string Agent { get; internal set; } = string.Empty;
 
+    /// <summary>Gets the lease.</summary>
     public Lease? Lease { get; internal set; }
 
+    /// <summary>Gets the lease constraints.</summary>
     public LeaseConstraints? LeaseConstraints { get; internal set; }
 
+    /// <summary>Gets the budget.</summary>
     public IReadOnlyDictionary<string, decimal>? Budget { get; internal set; }
 
+    /// <summary>Gets the trace id.</summary>
     public TraceId? TraceId { get; internal set; }
 
+    /// <summary>Gets the accepted.</summary>
     public Task<JobAcceptedPayload> Accepted => _accepted.Task;
 
+    /// <summary>Gets the result.</summary>
     public Task<JobResult> Result => _terminal.Task;
 
     internal void OnAccepted(JobAcceptedPayload payload)
@@ -77,6 +85,7 @@ public sealed class JobHandle : IAsyncDisposable
         _events.Writer.TryComplete();
     }
 
+    /// <summary>Events.</summary>
     public async IAsyncEnumerable<JobEvent> Events([EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
         await foreach (var env in _events.Reader.ReadAllAsync(cancellationToken).ConfigureAwait(false))
@@ -97,11 +106,13 @@ public sealed class JobHandle : IAsyncDisposable
         }
     }
 
+    /// <summary>Cancel (asynchronous).</summary>
     public async Task CancelAsync(string? reason = null, CancellationToken cancellationToken = default)
     {
         await _client.CancelJobAsync(JobId, reason, cancellationToken).ConfigureAwait(false);
     }
 
+    /// <summary>Dispose (asynchronous).</summary>
     public ValueTask DisposeAsync()
     {
         _events.Writer.TryComplete();
@@ -112,8 +123,10 @@ public sealed class JobHandle : IAsyncDisposable
 /// <summary>The terminal outcome of a job, exposing either <c>job.result</c> or <c>job.error</c>.</summary>
 public sealed record JobResult(bool Success, JobResultPayload? Result, JobErrorPayload? Error)
 {
+    /// <summary>Gets the final status.</summary>
     public string FinalStatus => Success ? (Result?.FinalStatus ?? "success") : (Error?.FinalStatus ?? "error");
 
+    /// <summary>Ensure success.</summary>
     public void EnsureSuccess()
     {
         if (Success) return;
@@ -125,15 +138,21 @@ public sealed record JobResult(bool Success, JobResultPayload? Result, JobErrorP
 /// <summary>One decoded <c>result_chunk</c> event (spec §8.4).</summary>
 public sealed record ResultChunk(ResultChunkBody Body)
 {
+    /// <summary>Gets the result id.</summary>
     public ResultId ResultId => new(Body.ResultId);
 
+    /// <summary>Gets the chunk seq.</summary>
     public long ChunkSeq => Body.ChunkSeq;
 
+    /// <summary>Gets the more.</summary>
     public bool More => Body.More;
 
+    /// <summary>Gets the encoding.</summary>
     public string Encoding => Body.Encoding;
 
+    /// <summary>Gets the decoded bytes.</summary>
     public byte[] DecodedBytes => Body.Encoding == "base64" ? Convert.FromBase64String(Body.Data) : System.Text.Encoding.UTF8.GetBytes(Body.Data);
 
+    /// <summary>Gets the decoded string.</summary>
     public string DecodedString => Body.Encoding == "utf8" ? Body.Data : System.Text.Encoding.UTF8.GetString(Convert.FromBase64String(Body.Data));
 }

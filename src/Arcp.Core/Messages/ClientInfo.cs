@@ -9,9 +9,12 @@ using Arcp.Core.Leases;
 
 namespace Arcp.Core.Messages;
 
+/// <summary>Gets the client info.</summary>
 public sealed record ClientInfo
 {
+    /// <summary>Gets the name.</summary>
     [JsonPropertyName("name")] public required string Name { get; init; }
 
+    /// <summary>Gets the version.</summary>
     [JsonPropertyName("version")] public required string Version { get; init; }
 }

@@ -19,6 +19,7 @@ public sealed class StdioTransport : ITransport
     private readonly SemaphoreSlim _sendLock = new(1, 1);
     private bool _closed;
 
+    /// <summary>Initializes a new instance of the <see cref="StdioTransport"/> class.</summary>
     public StdioTransport(Stream input, Stream output)
     {
         _input = new StreamReader(input, Encoding.UTF8, detectEncodingFromByteOrderMarks: false, bufferSize: 4096, leaveOpen: true);
@@ -29,9 +30,11 @@ public sealed class StdioTransport : ITransport
         };
     }
 
+    /// <summary>From console.</summary>
     public static StdioTransport FromConsole() =>
         new(Console.OpenStandardInput(), Console.OpenStandardOutput());
 
+    /// <summary>Send (asynchronous).</summary>
     public async ValueTask SendAsync(Envelope envelope, CancellationToken cancellationToken = default)
     {
         if (_closed) throw new InvalidOperationException("Transport is closed.");
@@ -48,6 +51,7 @@ public sealed class StdioTransport : ITransport
         }
     }
 
+    /// <summary>Receive (asynchronous).</summary>
     public async IAsyncEnumerable<Envelope> ReceiveAsync([EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
         while (!_closed)
@@ -74,12 +78,14 @@ public sealed class StdioTransport : ITransport
         }
     }
 
+    /// <summary>Close (asynchronous).</summary>
     public ValueTask CloseAsync(string? reason = null, CancellationToken cancellationToken = default)
     {
         _closed = true;
         return ValueTask.CompletedTask;
     }
 
+    /// <summary>Dispose (asynchronous).</summary>
     public ValueTask DisposeAsync()
     {
         _closed = true;

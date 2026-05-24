@@ -13,8 +13,10 @@ public sealed class EnvelopeJsonConverter : JsonConverter<Envelope>
 {
     private readonly MessageTypeRegistry _registry;
 
+    /// <summary>Initializes a new instance of the <see cref="EnvelopeJsonConverter"/> class.</summary>
     public EnvelopeJsonConverter() : this(MessageTypeRegistry.Default) { }
 
+    /// <summary>Initializes a new instance of the <see cref="EnvelopeJsonConverter"/> class.</summary>
     public EnvelopeJsonConverter(MessageTypeRegistry registry)
     {
         _registry = registry;
@@ -36,6 +38,7 @@ public sealed class EnvelopeJsonConverter : JsonConverter<Envelope>
         public Dictionary<string, JsonElement>? Extensions;
     }
 
+    /// <summary>Read.</summary>
     public override Envelope Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
         if (reader.TokenType != JsonTokenType.StartObject)
@@ -112,6 +115,7 @@ public sealed class EnvelopeJsonConverter : JsonConverter<Envelope>
         return pe;
     }
 
+    /// <summary>Write.</summary>
     public override void Write(Utf8JsonWriter writer, Envelope value, JsonSerializerOptions options)
     {
         writer.WriteStartObject();

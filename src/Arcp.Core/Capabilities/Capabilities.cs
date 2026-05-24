@@ -10,6 +10,7 @@ namespace Arcp.Core.Caps;
 /// <summary>Capabilities exchanged on <c>session.hello</c> and <c>session.welcome</c> (spec §6.2).</summary>
 public sealed record Capabilities
 {
+    /// <summary>Gets the encodings.</summary>
     [JsonPropertyName("encodings")]
     public IReadOnlyList<string> Encodings { get; init; } = new[] { "json" };
 
@@ -27,12 +28,15 @@ public sealed record Capabilities
 /// <summary>An agent inventory entry: name plus available versions and a default (spec §6.2 / §7.5).</summary>
 public sealed record AgentInventoryEntry
 {
+    /// <summary>Gets the name.</summary>
     [JsonPropertyName("name")]
     public required string Name { get; init; }
 
+    /// <summary>Gets the versions.</summary>
     [JsonPropertyName("versions")]
     public IReadOnlyList<string>? Versions { get; init; }
 
+    /// <summary>Gets the default.</summary>
     [JsonPropertyName("default")]
     public string? Default { get; init; }
 }
@@ -40,18 +44,30 @@ public sealed record AgentInventoryEntry
 /// <summary>Canonical v1.1 feature flag names (spec §6.2 + IANA §15).</summary>
 public static class FeatureFlags
 {
+    /// <summary>Gets the heartbeat.</summary>
     public const string Heartbeat = "heartbeat";
+    /// <summary>Gets the ack.</summary>
     public const string Ack = "ack";
+    /// <summary>Gets the list jobs.</summary>
     public const string ListJobs = "list_jobs";
+    /// <summary>Gets the subscribe.</summary>
     public const string Subscribe = "subscribe";
+    /// <summary>Gets the lease expires at.</summary>
     public const string LeaseExpiresAt = "lease_expires_at";
+    /// <summary>Gets the cost budget.</summary>
     public const string CostBudget = "cost.budget";
+    /// <summary>Gets the progress.</summary>
     public const string Progress = "progress";
+    /// <summary>Gets the result chunk.</summary>
     public const string ResultChunk = "result_chunk";
+    /// <summary>Gets the agent versions.</summary>
     public const string AgentVersions = "agent_versions";
+    /// <summary>Gets the model use.</summary>
     public const string ModelUse = "model.use";
+    /// <summary>Gets the provisioned credentials.</summary>
     public const string ProvisionedCredentials = "provisioned_credentials";
 
+    /// <summary>Gets the all.</summary>
     public static readonly FrozenSet<string> All = new HashSet<string>
     {
         Heartbeat, Ack, ListJobs, Subscribe, LeaseExpiresAt, CostBudget,
@@ -70,6 +86,7 @@ public static class FeatureSet
         return a.Where(setB.Contains).Distinct(StringComparer.Ordinal).ToArray();
     }
 
+    /// <summary>Has.</summary>
     public static bool Has(IReadOnlyList<string>? features, string flag) =>
         features is not null && features.Contains(flag, StringComparer.Ordinal);
 

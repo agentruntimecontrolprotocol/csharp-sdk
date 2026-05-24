@@ -13,6 +13,7 @@ public sealed record AuthPrincipal(string Subject, IReadOnlyDictionary<string, s
 /// on <c>session.hello</c>; bad tokens surface as <c>UNAUTHENTICATED</c>.</summary>
 public interface IBearerVerifier
 {
+    /// <summary>Verify (asynchronous).</summary>
     ValueTask<AuthPrincipal?> VerifyAsync(string? token, CancellationToken cancellationToken = default);
 }
 
@@ -21,11 +22,13 @@ public sealed class StaticBearerVerifier : IBearerVerifier
 {
     private readonly IReadOnlyDictionary<string, AuthPrincipal> _table;
 
+    /// <summary>Initializes a new instance of the <see cref="StaticBearerVerifier"/> class.</summary>
     public StaticBearerVerifier(IReadOnlyDictionary<string, AuthPrincipal> table)
     {
         _table = table;
     }
 
+    /// <summary>Initializes a new instance of the <see cref="StaticBearerVerifier"/> class.</summary>
     public StaticBearerVerifier(params (string Token, AuthPrincipal Principal)[] entries)
     {
         var dict = new Dictionary<string, AuthPrincipal>(StringComparer.Ordinal);
@@ -33,6 +36,7 @@ public sealed class StaticBearerVerifier : IBearerVerifier
         _table = dict;
     }
 
+    /// <summary>Verify (asynchronous).</summary>
     public ValueTask<AuthPrincipal?> VerifyAsync(string? token, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrEmpty(token)) return ValueTask.FromResult<AuthPrincipal?>(null);
@@ -43,6 +47,7 @@ public sealed class StaticBearerVerifier : IBearerVerifier
 /// <summary>A verifier that accepts any non-empty token and reflects it as the principal subject.</summary>
 public sealed class AllowAnyBearerVerifier : IBearerVerifier
 {
+    /// <summary>Verify (asynchronous).</summary>
     public ValueTask<AuthPrincipal?> VerifyAsync(string? token, CancellationToken cancellationToken = default) =>
         ValueTask.FromResult<AuthPrincipal?>(string.IsNullOrEmpty(token) ? null : new AuthPrincipal(token));
 }

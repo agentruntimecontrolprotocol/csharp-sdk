@@ -22,18 +22,23 @@ public sealed record Envelope
     [JsonPropertyName("type")]
     public required string Type { get; init; }
 
+    /// <summary>Gets the session id.</summary>
     [JsonPropertyName("session_id")]
     public string? SessionId { get; init; }
 
+    /// <summary>Gets the trace id.</summary>
     [JsonPropertyName("trace_id")]
     public string? TraceId { get; init; }
 
+    /// <summary>Gets the span id.</summary>
     [JsonPropertyName("span_id")]
     public string? SpanId { get; init; }
 
+    /// <summary>Gets the parent span id.</summary>
     [JsonPropertyName("parent_span_id")]
     public string? ParentSpanId { get; init; }
 
+    /// <summary>Gets the job id.</summary>
     [JsonPropertyName("job_id")]
     public string? JobId { get; init; }
 
@@ -42,6 +47,7 @@ public sealed record Envelope
     [JsonPropertyName("event_seq")]
     public long? EventSeq { get; init; }
 
+    /// <summary>Gets the timestamp.</summary>
     [JsonPropertyName("timestamp")]
     public DateTimeOffset Timestamp { get; init; } = DateTimeOffset.UtcNow;
 

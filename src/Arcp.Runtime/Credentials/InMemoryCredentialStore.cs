@@ -14,6 +14,7 @@ public sealed class InMemoryCredentialStore : ICredentialStore
 {
     private readonly ConcurrentDictionary<JobId, ConcurrentDictionary<string, byte>> _ids = new();
 
+    /// <summary>Add (asynchronous).</summary>
     public ValueTask AddAsync(JobId jobId, IReadOnlyList<string> credentialIds, CancellationToken cancellationToken)
     {
         var set = _ids.GetOrAdd(jobId, _ => new ConcurrentDictionary<string, byte>(StringComparer.Ordinal));
@@ -26,6 +27,7 @@ public sealed class InMemoryCredentialStore : ICredentialStore
         return ValueTask.CompletedTask;
     }
 
+    /// <summary>List (asynchronous).</summary>
     public ValueTask<IReadOnlyList<string>> ListAsync(JobId jobId, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
@@ -33,6 +35,7 @@ public sealed class InMemoryCredentialStore : ICredentialStore
         return ValueTask.FromResult<IReadOnlyList<string>>(set.Keys.ToArray());
     }
 
+    /// <summary>Remove (asynchronous).</summary>
     public ValueTask RemoveAsync(JobId jobId, string credentialId, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
@@ -45,6 +48,7 @@ public sealed class InMemoryCredentialStore : ICredentialStore
         return ValueTask.CompletedTask;
     }
 
+    /// <summary>List all (asynchronous).</summary>
     public ValueTask<IReadOnlyDictionary<JobId, IReadOnlyList<string>>> ListAllAsync(CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();

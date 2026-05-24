@@ -23,6 +23,7 @@ public sealed class CredentialManager
     private readonly ILogger _logger;
     private readonly TimeProvider _time;
 
+    /// <summary>Initializes a new instance of the <see cref="CredentialManager"/> class.</summary>
     public CredentialManager(
         ICredentialProvisioner provisioner,
         ICredentialStore store,
@@ -35,6 +36,7 @@ public sealed class CredentialManager
         _time = time;
     }
 
+    /// <summary>Issue for job (asynchronous).</summary>
     public async ValueTask<IReadOnlyList<ProvisionedCredential>> IssueForJobAsync(Job job, CancellationToken cancellationToken)
     {
         try
@@ -72,6 +74,7 @@ public sealed class CredentialManager
         }
     }
 
+    /// <summary>Rotate (asynchronous).</summary>
     public async ValueTask RotateAsync(
         Job job,
         string credentialId,
@@ -93,6 +96,7 @@ public sealed class CredentialManager
         }, cancellationToken).ConfigureAwait(false);
     }
 
+    /// <summary>Revoke all for job (asynchronous).</summary>
     public async Task RevokeAllForJobAsync(JobId jobId, CancellationToken cancellationToken)
     {
         var ids = await _store.ListAsync(jobId, cancellationToken).ConfigureAwait(false);
@@ -102,6 +106,7 @@ public sealed class CredentialManager
         }
     }
 
+    /// <summary>Redact for.</summary>
     public IReadOnlyList<ProvisionedCredential> RedactFor(
         IReadOnlyList<ProvisionedCredential> credentials,
         bool isSubmitter) =>

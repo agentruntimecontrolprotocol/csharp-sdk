@@ -9,8 +9,10 @@ namespace Arcp.Client;
 /// <summary>A typed view on a received <c>job.event</c> envelope.</summary>
 public sealed record JobEvent(string Kind, DateTimeOffset Ts, JsonElement Body, long EventSeq, string? JobId)
 {
+    /// <summary>Deserialize <see cref="Body"/> into the requested type using ARCP wire options.</summary>
     public T? BodyAs<T>() => Body.Deserialize<T>(ArcpJson.Options);
 
+    /// <summary>Project an <see cref="Envelope"/> with a <c>job.event</c> payload into a typed view.</summary>
     public static JobEvent From(Envelope env)
     {
         if (env.Payload is not JobEventPayload p)

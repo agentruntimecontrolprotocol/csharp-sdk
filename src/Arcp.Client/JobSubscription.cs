@@ -17,8 +17,10 @@ public sealed class JobSubscription
     private readonly Channel<Envelope> _events = Channel.CreateUnbounded<Envelope>(new UnboundedChannelOptions { SingleReader = false, SingleWriter = true });
     private readonly TaskCompletionSource<JobSubscribedPayload> _ackTcs = new(TaskCreationOptions.RunContinuationsAsynchronously);
 
+    /// <summary>Gets the job id.</summary>
     public JobId JobId { get; }
 
+    /// <summary>Gets the acknowledged.</summary>
     public Task<JobSubscribedPayload> Acknowledged => _ackTcs.Task;
 
     internal JobSubscription(ArcpClient client, JobId jobId)
@@ -38,6 +40,7 @@ public sealed class JobSubscription
         // Informational.
     }
 
+    /// <summary>Events.</summary>
     public async IAsyncEnumerable<JobEvent> Events([EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
         await foreach (var env in _events.Reader.ReadAllAsync(cancellationToken).ConfigureAwait(false))
@@ -46,6 +49,7 @@ public sealed class JobSubscription
         }
     }
 
+    /// <summary>Unsubscribe (asynchronous).</summary>
     public Task UnsubscribeAsync(CancellationToken cancellationToken = default) =>
         _client.UnsubscribeAsync(JobId, cancellationToken);
 }
