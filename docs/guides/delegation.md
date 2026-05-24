@@ -28,7 +28,7 @@ server.RegisterAgent("orchestrator", async (ctx, ct) =>
         input: new { topic = "arcp" }, ct);
 
     var summary = await child.Result;
-    return new { summary = summary.Output };
+    return new { summary = summary.Result?.Result };
 });
 ```
 

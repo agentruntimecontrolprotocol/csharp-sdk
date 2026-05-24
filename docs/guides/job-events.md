@@ -34,7 +34,7 @@ server.RegisterAgent("researcher", async (ctx, ct) =>
     await ctx.ProgressAsync(current: 1, total: 3, message: "fetched", ct);
 
     await ctx.LogAsync("info", "Processing ...", ct);
-    await ctx.MetricAsync("cost.inference", 0.012m, unit: "USD", ct);
+    await ctx.MetricAsync("cost.inference", 0.012, unit: "USD", cancellationToken: ct);
 
     await ctx.ArtifactRefAsync(
         uri: "s3://bucket/report.pdf",
