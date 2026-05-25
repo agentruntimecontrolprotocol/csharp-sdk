@@ -91,6 +91,7 @@ Arcp.Runtime.Job.WriteChunkAsync(Arcp.Core.Ids.ResultId resultId, string! data, 
 Arcp.Runtime.JobContext
 Arcp.Runtime.JobContext.Agent.get -> Arcp.Core.Agents.AgentRef
 Arcp.Runtime.JobContext.ArtifactRefAsync(string! uri, string? contentType = null, long? byteSize = null, string? sha256 = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask
+Arcp.Runtime.JobContext.AuthorizeOperation(string! namespaceName, string! pattern) -> void
 Arcp.Runtime.JobContext.BeginResultStream() -> Arcp.Core.Ids.ResultId
 Arcp.Runtime.JobContext.Budget.get -> System.Collections.Generic.IReadOnlyDictionary<string!, decimal>!
 Arcp.Runtime.JobContext.Cancellation.get -> System.Threading.CancellationToken

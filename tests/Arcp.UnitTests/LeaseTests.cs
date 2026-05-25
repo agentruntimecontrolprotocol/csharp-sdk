@@ -77,4 +77,23 @@ public class LeaseTests
         var act = () => BudgetAmount.Parse("not a budget");
         act.Should().Throw<FormatException>();
     }
+
+    [Fact]
+    public void GlobMatch_is_permissive_for_double_star_and_strict_otherwise()
+    {
+        // Anchor the runtime's lease-gate behavior: when a lease declares tool.call:["calc.*"],
+        // ctx.ToolCallAsync("calc.add", ...) is allowed but ctx.ToolCallAsync("fs.write", ...)
+        // raises PermissionDenied (spec §9.3).
+        var manager = new Arcp.Runtime.Leases.LeaseManager();
+        var lease = new Lease(new Dictionary<string, IReadOnlyList<string>>
+        {
+            [LeaseNamespaces.ToolCall] = new[] { "calc.*" },
+        });
+
+        var ok = () => manager.AuthorizeOperation(lease, null, LeaseNamespaces.ToolCall, "calc.add");
+        var bad = () => manager.AuthorizeOperation(lease, null, LeaseNamespaces.ToolCall, "fs.write");
+
+        ok.Should().NotThrow();
+        bad.Should().Throw<Arcp.Core.Errors.PermissionDeniedException>();
+    }
 }

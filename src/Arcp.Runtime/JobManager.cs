@@ -177,7 +177,7 @@ public sealed partial class JobManager
     public async Task RunAsync(Job job, IAgent agent, Func<Envelope, CancellationToken, ValueTask> emit, CancellationToken cancellationToken)
     {
         job.MarkRunning();
-        var ctx = new JobContext(job, _loggers.CreateLogger($"Arcp.Job.{job.JobId.Value}"), _credentials);
+        var ctx = new JobContext(job, _loggers.CreateLogger($"Arcp.Job.{job.JobId.Value}"), _credentials, _leases);
 
         // Watchdog cancellation source — cancelled in `finally` so the watchdog never outlives
         // the job and never emits a late lease-expired event after the terminal result.

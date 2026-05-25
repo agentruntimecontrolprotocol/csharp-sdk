@@ -23,12 +23,26 @@ public sealed class JobContext
 {
     private readonly Job _job;
     private readonly CredentialManager? _credentials;
+    private readonly Arcp.Runtime.Leases.LeaseManager? _leases;
 
-    internal JobContext(Job job, ILogger logger, CredentialManager? credentials = null)
+    internal JobContext(Job job, ILogger logger, CredentialManager? credentials = null,
+                        Arcp.Runtime.Leases.LeaseManager? leases = null)
     {
         _job = job;
         _credentials = credentials;
+        _leases = leases;
         Logger = logger;
+    }
+
+    /// <summary>Synchronously evaluate the job's lease for an operation under
+    /// <paramref name="namespaceName"/> against <paramref name="pattern"/> (spec §9.3).
+    /// Throws <see cref="PermissionDeniedException"/> on lease miss and
+    /// <see cref="LeaseExpiredException"/> on lease expiry. Agents that build their own tool
+    /// dispatch SHOULD call this before performing any authority-bearing operation.</summary>
+    public void AuthorizeOperation(string namespaceName, string pattern)
+    {
+        var leases = _leases ?? new Arcp.Runtime.Leases.LeaseManager();
+        leases.AuthorizeOperation(_job.Lease, _job.LeaseConstraints, namespaceName, pattern);
     }
 
     /// <summary>Gets the job id.</summary>
@@ -88,14 +102,31 @@ public sealed class JobContext
         return _credentials.RotateAsync(_job, credentialId, next, cancellationToken);
     }
 
-    /// <summary>Tool call (asynchronous).</summary>
-    public ValueTask ToolCallAsync(string tool, string callId, object? args, CancellationToken cancellationToken = default) =>
-        _job.EmitEventAsync(EventKinds.ToolCall, new ToolCallBody
+    /// <summary>Emit a <c>tool_call</c> event. If the job's lease declares <c>tool.call</c>, the
+    /// tool name is gated against the lease patterns first (spec §9.3); a non-matching tool
+    /// raises <see cref="PermissionDeniedException"/> before the event is emitted.</summary>
+    public ValueTask ToolCallAsync(string tool, string callId, object? args, CancellationToken cancellationToken = default)
+    {
+        EnforceIfLeased(LeaseNamespaces.ToolCall, tool);
+        return _job.EmitEventAsync(EventKinds.ToolCall, new ToolCallBody
         {
             Tool = tool,
             CallId = callId,
             Args = args is null ? null : ArcpJson.ToJsonElement(args),
         }, cancellationToken);
+    }
+
+    /// <summary>Gate an operation when the lease declares the given namespace. Leases that omit
+    /// the namespace remain permissive (spec §9.7 explicitly allows this when a runtime is
+    /// configured to do so; tighter policies SHOULD call <see cref="AuthorizeOperation"/>
+    /// directly).</summary>
+    private void EnforceIfLeased(string namespaceName, string pattern)
+    {
+        if (_job.Lease.Capabilities.ContainsKey(namespaceName))
+        {
+            AuthorizeOperation(namespaceName, pattern);
+        }
+    }
 
     /// <summary>Tool result (asynchronous).</summary>
     public ValueTask ToolResultAsync(string callId, object? result, ToolError? error = null, CancellationToken cancellationToken = default) =>
@@ -120,14 +151,18 @@ public sealed class JobContext
             Sha256 = sha256,
         }, cancellationToken);
 
-    /// <summary>Delegate (asynchronous).</summary>
-    public ValueTask DelegateAsync(string childJobId, string agent, object? input, CancellationToken cancellationToken = default) =>
-        _job.EmitEventAsync(EventKinds.Delegate, new DelegateBody
+    /// <summary>Emit a <c>delegate</c> event. If the job's lease declares <c>agent.delegate</c>, the
+    /// child agent name is gated against the lease patterns first (spec §9.3, §10).</summary>
+    public ValueTask DelegateAsync(string childJobId, string agent, object? input, CancellationToken cancellationToken = default)
+    {
+        EnforceIfLeased(LeaseNamespaces.AgentDelegate, agent);
+        return _job.EmitEventAsync(EventKinds.Delegate, new DelegateBody
         {
             ChildJobId = childJobId,
             Agent = agent,
             Input = input is null ? null : ArcpJson.ToJsonElement(input),
         }, cancellationToken);
+    }
 
     /// <summary>Emit a <c>progress</c> event (spec §8.2.1).</summary>
     public ValueTask ProgressAsync(long current, long? total = null, string? units = null, string? message = null, CancellationToken cancellationToken = default)
