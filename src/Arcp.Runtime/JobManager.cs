@@ -35,6 +35,8 @@ public sealed partial class JobManager
     private readonly ILoggerFactory _loggers;
     private readonly CredentialManager? _credentials;
     private readonly int _idempotencyWindowSec;
+    private readonly int _eventBufferCapacity;
+    private readonly int _terminalRetentionSec;
     private readonly bool _fatalBudgetExhaustion;
 
     /// <summary>Stored record for an idempotency key: original submission fingerprint plus issue time.</summary>
@@ -48,6 +50,8 @@ public sealed partial class JobManager
         ILoggerFactory loggers,
         CredentialManager? credentials = null,
         int idempotencyWindowSec = 3600,
+        int eventBufferCapacity = 4096,
+        int terminalRetentionSec = 600,
         bool fatalBudgetExhaustion = false)
     {
         _agents = agents;
@@ -56,6 +60,8 @@ public sealed partial class JobManager
         _loggers = loggers;
         _credentials = credentials;
         _idempotencyWindowSec = idempotencyWindowSec > 0 ? idempotencyWindowSec : 3600;
+        _eventBufferCapacity = eventBufferCapacity > 0 ? eventBufferCapacity : 4096;
+        _terminalRetentionSec = terminalRetentionSec;
         _fatalBudgetExhaustion = fatalBudgetExhaustion;
     }
 
@@ -134,7 +140,8 @@ public sealed partial class JobManager
             jobId, sessionId, resolved, lease, submit.LeaseConstraints,
             submit.Input, submit.IdempotencyKey, traceId, submit.ParentJobId, submitterPrincipal,
             submit.MaxRuntimeSec,
-            _time.GetUtcNow(), emit, _time, parentCancellation);
+            _time.GetUtcNow(), emit, _time, parentCancellation,
+            eventBufferCapacity: _eventBufferCapacity);
         if (_credentials is not null)
         {
             await _credentials.IssueForJobAsync(job, cancellationToken).ConfigureAwait(false);
@@ -281,7 +288,36 @@ public sealed partial class JobManager
             try { watchdogCts.Cancel(); } catch (ObjectDisposedException) { /* race on dispose */ }
             await AwaitWatchdogAsync(watchdog).ConfigureAwait(false);
             await AwaitWatchdogAsync(runtimeWatchdog).ConfigureAwait(false);
+
+            // Spec §6.6 / hygiene: terminal jobs stay listable for the retention window so
+            // session.list_jobs surfaces them briefly, then are GC'd to bound memory.
+            ScheduleTerminalCleanup(job);
         }
+    }
+
+    /// <summary>Schedule removal of a terminal job's bookkeeping after
+    /// <see cref="ArcpServerOptions.TerminalJobRetentionSec"/>. Negative / zero retention disables
+    /// cleanup (legacy "retain forever" behavior).</summary>
+    private void ScheduleTerminalCleanup(Job job)
+    {
+        if (_terminalRetentionSec <= 0) return;
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                await Task.Delay(TimeSpan.FromSeconds(_terminalRetentionSec), _time).ConfigureAwait(false);
+            }
+            catch (OperationCanceledException) { return; }
+            _jobs.TryRemove(job.JobId, out _);
+            if (job.IdempotencyKey is { } key)
+            {
+                var idemKey = $"{job.SubmitterPrincipal ?? "*"}|{key}";
+                if (_idempotency.TryGetValue(idemKey, out var rec) && rec.JobId.Equals(job.JobId))
+                {
+                    _idempotency.TryRemove(idemKey, out _);
+                }
+            }
+        });
     }
 
     private Task? StartLeaseWatchdog(Job job, Func<Envelope, CancellationToken, ValueTask> emit, CancellationToken cancellationToken)

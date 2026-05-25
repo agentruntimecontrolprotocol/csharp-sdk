@@ -26,7 +26,7 @@ public sealed class Job
     private readonly List<IssuedCredential> _credentials = [];
     private readonly object _eventBufferGate = new();
     private readonly List<Envelope> _eventBuffer = [];
-    private const int EventBufferCapacity = 1024;
+    private readonly int _eventBufferCapacity;
 
     /// <summary>Gets the job id.</summary>
     public JobId JobId { get; }
@@ -117,7 +117,8 @@ public sealed class Job
                JsonElement? input, string? idempotencyKey, TraceId? traceId, string? parentJobId,
                string? submitterPrincipal, int? maxRuntimeSec, DateTimeOffset createdAt,
                Func<Envelope, CancellationToken, ValueTask> emit, TimeProvider time,
-               CancellationToken parentCancellation)
+               CancellationToken parentCancellation,
+               int eventBufferCapacity = 4096)
     {
         JobId = jobId;
         SessionId = sessionId;
@@ -133,6 +134,7 @@ public sealed class Job
         CreatedAt = createdAt;
         _emit = emit;
         _time = time;
+        _eventBufferCapacity = eventBufferCapacity > 0 ? eventBufferCapacity : 4096;
         CancellationSource = CancellationTokenSource.CreateLinkedTokenSource(parentCancellation);
         BudgetLedger.Initialize(lease);
     }
@@ -193,14 +195,14 @@ public sealed class Job
     private void BufferEvent(Envelope env)
     {
         // Spec §7.6: bounded per-job history so a later subscriber with `history: true`
-        // can receive prior events in order before live events. Bounded by EventBufferCapacity
-        // to keep server memory predictable.
+        // can receive prior events in order before live events. Sized from
+        // `ArcpServerOptions.EventLogCapacity` so subscribers see the same window resumers do.
         lock (_eventBufferGate)
         {
             _eventBuffer.Add(env);
-            if (_eventBuffer.Count > EventBufferCapacity)
+            if (_eventBuffer.Count > _eventBufferCapacity)
             {
-                _eventBuffer.RemoveRange(0, _eventBuffer.Count - EventBufferCapacity);
+                _eventBuffer.RemoveRange(0, _eventBuffer.Count - _eventBufferCapacity);
             }
         }
     }

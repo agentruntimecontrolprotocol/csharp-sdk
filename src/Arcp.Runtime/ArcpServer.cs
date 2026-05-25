@@ -26,6 +26,8 @@ public sealed class ArcpServer : IAsyncDisposable
     private readonly ConcurrentDictionary<SessionId, string> _resumeTokenBySession = new();
     private readonly ConcurrentDictionary<SessionId, SessionState> _resumableSessions = new();
     private readonly ILoggerFactory _loggerFactory;
+    private readonly CancellationTokenSource _sweeperCts = new();
+    private readonly Task? _sweeperTask;
 
     private readonly record struct ResumeRegistration(SessionId SessionId, DateTimeOffset ExpiresAt);
 
@@ -71,11 +73,41 @@ public sealed class ArcpServer : IAsyncDisposable
             _loggerFactory,
             CredentialManager,
             options.IdempotencyWindowSec,
+            options.EventLogCapacity,
+            options.TerminalJobRetentionSec,
             options.FatalBudgetExhaustion);
         if (CredentialManager is not null)
         {
             _ = Task.Run(() => RevokeOutstandingCredentialsAsync(CancellationToken.None));
         }
+        _sweeperTask = Task.Run(() => RunResumeTokenSweeperAsync(_sweeperCts.Token));
+    }
+
+    /// <summary>Periodically purge expired resume tokens, their reverse indices, and dormant
+    /// session shells (spec §6.3). Without this, long-running runtimes accumulate one entry per
+    /// session forever.</summary>
+    private async Task RunResumeTokenSweeperAsync(CancellationToken cancellationToken)
+    {
+        // Sweep every minute, or sooner for short windows.
+        var interval = TimeSpan.FromSeconds(Math.Clamp(Options.ResumeWindowSec / 4, 30, 300));
+        try
+        {
+            using var timer = new PeriodicTimer(interval, Options.TimeProvider);
+            while (await timer.WaitForNextTickAsync(cancellationToken).ConfigureAwait(false))
+            {
+                var now = Options.TimeProvider.GetUtcNow();
+                foreach (var kv in _resumeTokens)
+                {
+                    if (kv.Value.ExpiresAt > now) continue;
+                    if (_resumeTokens.TryRemove(kv.Key, out _))
+                    {
+                        _resumeTokenBySession.TryRemove(kv.Value.SessionId, out _);
+                        _resumableSessions.TryRemove(kv.Value.SessionId, out _);
+                    }
+                }
+            }
+        }
+        catch (OperationCanceledException) { /* shutdown */ }
     }
 
     /// <summary>Register agent.</summary>
@@ -181,6 +213,14 @@ public sealed class ArcpServer : IAsyncDisposable
     /// <summary>Dispose (asynchronous).</summary>
     public async ValueTask DisposeAsync()
     {
+        try { _sweeperCts.Cancel(); } catch (ObjectDisposedException) { /* already disposed */ }
+        if (_sweeperTask is not null)
+        {
+            try { await _sweeperTask.ConfigureAwait(false); }
+            catch (OperationCanceledException) { /* expected */ }
+        }
+        _sweeperCts.Dispose();
+
         foreach (var session in _sessions.Values)
         {
             try { await session.CloseAsync().ConfigureAwait(false); } catch { /* shutdown */ }

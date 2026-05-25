@@ -43,8 +43,8 @@ public sealed partial class SessionState : IAsyncDisposable
     /// <summary>Gets the effective features.</summary>
     public IReadOnlyList<string> EffectiveFeatures { get; private set; } = Array.Empty<string>();
 
-    /// <summary>Gets the event log.</summary>
-    public EventLog EventLog { get; private set; } = new();
+    /// <summary>Gets the event log. Sized from <see cref="ArcpServerOptions.EventLogCapacity"/>.</summary>
+    public EventLog EventLog { get; private set; }
 
     /// <summary>Adopt the durable resumable state from a prior session of the same id. Called
     /// when a client supplies a still-valid resume token (spec §6.3).</summary>
@@ -69,6 +69,7 @@ public sealed partial class SessionState : IAsyncDisposable
             SingleWriter = false,
             FullMode = BoundedChannelFullMode.Wait,
         });
+        EventLog = new EventLog(options.EventLogCapacity);
         _cts = CancellationTokenSource.CreateLinkedTokenSource(cancellation);
         _lastInboundAt = options.TimeProvider.GetUtcNow();
     }

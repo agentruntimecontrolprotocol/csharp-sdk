@@ -31,6 +31,16 @@ public sealed class ArcpServerOptions
     /// (spec §7.2). Submissions with the same key after this window create a fresh job.</summary>
     public int IdempotencyWindowSec { get; init; } = 3600;
 
+    /// <summary>Capacity of the session-scoped event log (spec §6.3 resume window). Per-job
+    /// subscription-history buffers (spec §7.6) inherit this size so a subscriber with
+    /// <c>history: true</c> sees the same window as a resume client.</summary>
+    public int EventLogCapacity { get; init; } = 4096;
+
+    /// <summary>How long terminal jobs are retained in <c>session.list_jobs</c> and idempotency
+    /// records before being garbage-collected. Set to <c>0</c> or a negative value to retain
+    /// indefinitely (legacy behavior).</summary>
+    public int TerminalJobRetentionSec { get; init; } = 600;
+
     /// <summary>Whether a <c>cost.budget</c> exhaustion terminates the job with
     /// <c>BUDGET_EXHAUSTED</c> (legacy v1.0 behavior) or surfaces a non-fatal
     /// <c>tool_result.error</c> so the agent may emit a partial result and return normally
