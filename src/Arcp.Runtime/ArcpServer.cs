@@ -64,7 +64,14 @@ public sealed class ArcpServer : IAsyncDisposable
                 options.TimeProvider);
         AgentRegistry = new AgentRegistry();
         LeaseManager = new LeaseManager(options.TimeProvider);
-        JobManager = new JobManager(AgentRegistry, LeaseManager, options.TimeProvider, _loggerFactory, CredentialManager, options.IdempotencyWindowSec);
+        JobManager = new JobManager(
+            AgentRegistry,
+            LeaseManager,
+            options.TimeProvider,
+            _loggerFactory,
+            CredentialManager,
+            options.IdempotencyWindowSec,
+            options.FatalBudgetExhaustion);
         if (CredentialManager is not null)
         {
             _ = Task.Run(() => RevokeOutstandingCredentialsAsync(CancellationToken.None));

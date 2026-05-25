@@ -31,6 +31,12 @@ public sealed class ArcpServerOptions
     /// (spec §7.2). Submissions with the same key after this window create a fresh job.</summary>
     public int IdempotencyWindowSec { get; init; } = 3600;
 
+    /// <summary>Whether a <c>cost.budget</c> exhaustion terminates the job with
+    /// <c>BUDGET_EXHAUSTED</c> (legacy v1.0 behavior) or surfaces a non-fatal
+    /// <c>tool_result.error</c> so the agent may emit a partial result and return normally
+    /// (spec §9.6 SHOULD-preferred form). Default: <see langword="false"/>.</summary>
+    public bool FatalBudgetExhaustion { get; init; }
+
     /// <summary>Gets the back pressure threshold.</summary>
     public int BackPressureThreshold { get; init; } = 1000;
 

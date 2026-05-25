@@ -214,18 +214,19 @@ public sealed class Job
         }
     }
 
-    /// <summary>Apply the budget rule for <c>cost.*</c> metrics, then emit. If the metric exhausts
-    /// the matching budget counter (spec §9.6), the metric event is still emitted but a
-    /// <see cref="BudgetExhaustedException"/> is then thrown so the run-loop terminates the job
-    /// with <c>BUDGET_EXHAUSTED</c> (spec §12).</summary>
-    public async ValueTask EmitMetricAsync(MetricBody body, CancellationToken cancellationToken)
+    /// <summary>Apply the budget rule for <c>cost.*</c> metrics, then emit. Returns the exhausted
+    /// currency (or <see langword="null"/> if all counters remain positive). Callers decide whether
+    /// to surface the exhaustion as a <c>tool_result.error</c> or a fatal exception per spec §9.6
+    /// (which SHOULDs the former).</summary>
+    public async ValueTask<string?> EmitMetricAsync(MetricBody body, CancellationToken cancellationToken)
     {
         var charged = BudgetLedger.ApplyMetric(body.Name, body.Value, body.Unit);
         await EmitEventAsync(EventKinds.Metric, body, cancellationToken).ConfigureAwait(false);
-        if (charged)
+        if (charged && !string.IsNullOrEmpty(body.Unit) && BudgetLedger.IsExhausted(body.Unit))
         {
-            BudgetLedger.AssertNotExhausted();
+            return body.Unit;
         }
+        return null;
     }
 
     /// <summary>Begin result stream.</summary>

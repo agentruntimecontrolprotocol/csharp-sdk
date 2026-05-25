@@ -23,13 +23,15 @@ public sealed class JobContext
 {
     private readonly Job _job;
     private readonly CredentialManager? _credentials;
+    private readonly bool _fatalBudgetExhaustion;
     private readonly Arcp.Runtime.Leases.LeaseManager? _leases;
 
     internal JobContext(Job job, ILogger logger, CredentialManager? credentials = null,
-                        Arcp.Runtime.Leases.LeaseManager? leases = null)
+                        bool fatalBudgetExhaustion = false, Arcp.Runtime.Leases.LeaseManager? leases = null)
     {
         _job = job;
         _credentials = credentials;
+        _fatalBudgetExhaustion = fatalBudgetExhaustion;
         _leases = leases;
         Logger = logger;
     }
@@ -137,9 +139,34 @@ public sealed class JobContext
             Error = error,
         }, cancellationToken);
 
-    /// <summary>Metric (asynchronous).</summary>
-    public ValueTask MetricAsync(string name, double value, string? unit = null, IReadOnlyDictionary<string, string>? dimensions = null, CancellationToken cancellationToken = default) =>
-        _job.EmitMetricAsync(new MetricBody { Name = name, Value = value, Unit = unit, Dimensions = dimensions }, cancellationToken);
+    /// <summary>Emit a <c>metric</c> event. If <paramref name="name"/> begins with <c>cost.</c> and
+    /// <paramref name="unit"/> matches a budgeted currency, the budget counter is decremented
+    /// (spec §9.6). On exhaustion the runtime surfaces a non-fatal <c>tool_result.error</c> with
+    /// code <c>BUDGET_EXHAUSTED</c> so the agent may continue with non-cost-bearing operations
+    /// (spec §9.6 SHOULD); set <see cref="ArcpServerOptions.FatalBudgetExhaustion"/> to opt into
+    /// legacy fatal termination.</summary>
+    public async ValueTask MetricAsync(string name, double value, string? unit = null, IReadOnlyDictionary<string, string>? dimensions = null, CancellationToken cancellationToken = default)
+    {
+        var exhaustedCurrency = await _job
+            .EmitMetricAsync(new MetricBody { Name = name, Value = value, Unit = unit, Dimensions = dimensions }, cancellationToken)
+            .ConfigureAwait(false);
+        if (exhaustedCurrency is null) return;
+
+        var message = $"{exhaustedCurrency} budget exhausted (remaining≤0)";
+        if (_fatalBudgetExhaustion)
+            throw new BudgetExhaustedException(message);
+
+        await ToolResultAsync(
+            callId: $"budget_{exhaustedCurrency}",
+            result: null,
+            error: new ToolError
+            {
+                Code = ErrorCode.BudgetExhausted,
+                Message = message,
+                Retryable = false,
+            },
+            cancellationToken: cancellationToken).ConfigureAwait(false);
+    }
 
     /// <summary>Artifact ref (asynchronous).</summary>
     public ValueTask ArtifactRefAsync(string uri, string? contentType = null, long? byteSize = null, string? sha256 = null, CancellationToken cancellationToken = default) =>

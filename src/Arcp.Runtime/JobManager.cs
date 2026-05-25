@@ -35,6 +35,7 @@ public sealed partial class JobManager
     private readonly ILoggerFactory _loggers;
     private readonly CredentialManager? _credentials;
     private readonly int _idempotencyWindowSec;
+    private readonly bool _fatalBudgetExhaustion;
 
     /// <summary>Stored record for an idempotency key: original submission fingerprint plus issue time.</summary>
     private sealed record IdempotencyRecord(JobId JobId, string Fingerprint, DateTimeOffset CreatedAt);
@@ -46,7 +47,8 @@ public sealed partial class JobManager
         TimeProvider time,
         ILoggerFactory loggers,
         CredentialManager? credentials = null,
-        int idempotencyWindowSec = 3600)
+        int idempotencyWindowSec = 3600,
+        bool fatalBudgetExhaustion = false)
     {
         _agents = agents;
         _leases = leases;
@@ -54,6 +56,7 @@ public sealed partial class JobManager
         _loggers = loggers;
         _credentials = credentials;
         _idempotencyWindowSec = idempotencyWindowSec > 0 ? idempotencyWindowSec : 3600;
+        _fatalBudgetExhaustion = fatalBudgetExhaustion;
     }
 
     /// <summary>Initializes a new <see cref="JobManager"/> without credential provisioning.</summary>
@@ -177,7 +180,7 @@ public sealed partial class JobManager
     public async Task RunAsync(Job job, IAgent agent, Func<Envelope, CancellationToken, ValueTask> emit, CancellationToken cancellationToken)
     {
         job.MarkRunning();
-        var ctx = new JobContext(job, _loggers.CreateLogger($"Arcp.Job.{job.JobId.Value}"), _credentials, _leases);
+        var ctx = new JobContext(job, _loggers.CreateLogger($"Arcp.Job.{job.JobId.Value}"), _credentials, _fatalBudgetExhaustion, _leases);
 
         // Watchdog cancellation source — cancelled in `finally` so the watchdog never outlives
         // the job and never emits a late lease-expired event after the terminal result.
