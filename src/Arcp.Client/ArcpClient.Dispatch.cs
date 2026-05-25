@@ -19,7 +19,7 @@ public sealed partial class ArcpClient
             await foreach (var env in _transport.ReceiveAsync(cancellationToken).ConfigureAwait(false))
             {
                 if (env.EventSeq is { } seq) Interlocked.Exchange(ref _lastReceivedSeq, seq);
-                Dispatch(env, cancellationToken);
+                await DispatchAsync(env, cancellationToken).ConfigureAwait(false);
             }
         }
         catch (OperationCanceledException)
@@ -45,7 +45,7 @@ public sealed partial class ArcpClient
         }
     }
 
-    private void Dispatch(Envelope env, CancellationToken cancellationToken)
+    private async Task DispatchAsync(Envelope env, CancellationToken cancellationToken)
     {
         switch (env.Type)
         {
@@ -53,7 +53,8 @@ public sealed partial class ArcpClient
                 if (env.Payload is SessionWelcomePayload w) ApplyWelcome(env, w);
                 break;
             case MessageTypeNames.SessionPing:
-                if (env.Payload is SessionPingPayload p) RespondToPing(p, cancellationToken);
+                if (env.Payload is SessionPingPayload p)
+                    await RespondToPingAsync(p, cancellationToken).ConfigureAwait(false);
                 break;
             case MessageTypeNames.SessionError:
                 if (env.Payload is SessionErrorPayload err) PropagateSessionError(err);
@@ -115,9 +116,8 @@ public sealed partial class ArcpClient
         _welcomeTcs?.TrySetResult(w);
     }
 
-    private void RespondToPing(SessionPingPayload p, CancellationToken cancellationToken)
-    {
-        _ = _transport.SendAsync(new Envelope
+    private ValueTask RespondToPingAsync(SessionPingPayload p, CancellationToken cancellationToken) =>
+        _transport.SendAsync(new Envelope
         {
             Type = MessageTypeNames.SessionPong,
             SessionId = SessionId.Value,
@@ -126,8 +126,7 @@ public sealed partial class ArcpClient
                 PingNonce = p.Nonce,
                 ReceivedAt = _options.TimeProvider.GetUtcNow(),
             },
-        }, cancellationToken).AsTask();
-    }
+        }, cancellationToken);
 
     private void PropagateSessionError(SessionErrorPayload err)
     {
