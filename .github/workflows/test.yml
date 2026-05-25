@@ -88,6 +88,18 @@ jobs:
         run: |
           python3 scripts/check-coverage.py --threshold 80 --results-dir "${{ github.workspace }}/TestResults"
 
+      # `--collect:"XPlat Code Coverage"` (coverlet.collector) writes one
+      # coverage.cobertura.xml per test project under TestResults/<guid>/.
+      # Non-blocking: a Codecov outage must not break CI.
+      - name: Upload coverage to Codecov
+        # codecov/codecov-action v6.0.1
+        uses: codecov/codecov-action@e79a6962e0d4c0c17b229090214935d2e33f8354 # v6.0.1
+        with:
+          fail_ci_if_error: false
+          flags: unittests
+          directory: ${{ github.workspace }}/TestResults
+          token: ${{ secrets.CODECOV_TOKEN }}
+
       - name: Upload test results
         if: failure()
         uses: actions/upload-artifact@v7
