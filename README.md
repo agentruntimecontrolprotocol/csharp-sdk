@@ -123,7 +123,7 @@ using Arcp.Core.Leases;
 
 var lease = new Lease(new Dictionary<string, IReadOnlyList<string>>
 {
-    [LeaseNamespaces.NetFetch] = new[] { "s3://reports/**" },
+    [LeaseNamespaces.NetFetch] = new[] { "https://reports.example.com/**" },
 });
 
 var handle = await client.SubmitAsync(

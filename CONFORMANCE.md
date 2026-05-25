@@ -74,9 +74,12 @@ Status legend: Implemented ✅ · Partial 🚧 · Not implemented ⛔.
 
 ## Test cross-reference
 
-- Unit: [`tests/Arcp.UnitTests/`](./tests/Arcp.UnitTests/) — 33 facts.
-- End-to-end: [`tests/Arcp.IntegrationTests/`](./tests/Arcp.IntegrationTests/) — 12 facts.
-- Conformance: [`tests/Arcp.ConformanceTests/`](./tests/Arcp.ConformanceTests/) — 14 facts.
-- AspNetCore: [`tests/Arcp.AspNetCore.Tests/`](./tests/Arcp.AspNetCore.Tests/) — 1 fact.
+Run `dotnet test ARCP.slnx` to execute the full suite across all four projects:
 
-Run `dotnet test ARCP.slnx` to execute all 60.
+- Unit: [`tests/Arcp.UnitTests/`](./tests/Arcp.UnitTests/)
+- End-to-end: [`tests/Arcp.IntegrationTests/`](./tests/Arcp.IntegrationTests/)
+- Conformance: [`tests/Arcp.ConformanceTests/`](./tests/Arcp.ConformanceTests/)
+- AspNetCore: [`tests/Arcp.AspNetCore.Tests/`](./tests/Arcp.AspNetCore.Tests/)
+
+The CI badge at the top of [`README.md`](./README.md) reports current pass counts; hand-counting
+in this file has been intentionally removed to avoid drift.
