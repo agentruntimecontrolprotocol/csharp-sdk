@@ -207,6 +207,17 @@ public sealed partial class JobManager
                 await EmitTimeoutAsync(job, emit, cancellationToken).ConfigureAwait(false);
                 job.MarkTerminal(JobStatus.TimedOut);
             }
+            else if (job.LeaseExpired)
+            {
+                await EmitJobErrorAsync(job, emit, new JobErrorPayload
+                {
+                    FinalStatus = "error",
+                    Code = ErrorCode.LeaseExpired,
+                    Message = "Lease expired",
+                    Retryable = false,
+                }, cancellationToken).ConfigureAwait(false);
+                job.MarkTerminal(JobStatus.Error);
+            }
             else
             {
                 await EmitJobErrorAsync(job, emit, new JobErrorPayload
@@ -358,17 +369,15 @@ public sealed partial class JobManager
             if (cancellationToken.IsCancellationRequested || IsTerminal(job.Status)) return;
             if (!job.CancellationToken.IsCancellationRequested)
             {
-                // Emit a tool_result.error then job.error per spec §13.4.
-                await job.EmitEventAsync(EventKinds.ToolResult, new ToolResultBody
+                // Surface lease expiry as a status event (spec §9.5); the terminal
+                // job.error{LEASE_EXPIRED, final_status:"error"} is emitted by the run-loop
+                // once cancellation unwinds the agent.
+                await job.EmitEventAsync(EventKinds.Status, new StatusBody
                 {
-                    CallId = $"lease_{job.JobId.Value}",
-                    Error = new ToolError
-                    {
-                        Code = ErrorCode.LeaseExpired,
-                        Message = $"Lease expired at {expiresAt:O}",
-                        Retryable = false,
-                    },
+                    Phase = StatusPhases.LeaseExpired,
+                    Message = $"Lease expired at {expiresAt:O}",
                 }, cancellationToken).ConfigureAwait(false);
+                job.MarkLeaseExpired();
                 job.CancellationSource.Cancel();
             }
         }

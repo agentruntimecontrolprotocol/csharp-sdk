@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 // samples/LeaseExpiresAt: a short-lived lease expires while the agent is running; the runtime
-// emits tool_result.error{LEASE_EXPIRED} and then job.error{LEASE_EXPIRED}. Spec §9.5, §13.4.
+// emits a status{phase:"lease_expired"} event and then job.error{LEASE_EXPIRED,
+// final_status:"error"}. Spec §9.5.
 using Arcp.Client;
 using Arcp.Core.Leases;
 using Arcp.Core.Messages;

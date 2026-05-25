@@ -91,6 +91,13 @@ public sealed class Job
 
     internal void MarkRuntimeLimitExceeded() => RuntimeLimitExceeded = true;
 
+    /// <summary>Set by the lease watchdog when <c>lease_constraints.expires_at</c> elapses so the
+    /// run-loop can surface <c>LEASE_EXPIRED</c> / <c>final_status:"error"</c> instead of
+    /// <c>CANCELLED</c> (spec §9.5).</summary>
+    public bool LeaseExpired { get; private set; }
+
+    internal void MarkLeaseExpired() => LeaseExpired = true;
+
     /// <summary>Gets the credentials.</summary>
     public IReadOnlyList<ProvisionedCredential> Credentials
     {

@@ -73,4 +73,39 @@ public class RuntimeLimitTests
         sw.Elapsed.Should().BeLessThan(TimeSpan.FromSeconds(3),
             because: "the watchdog must not keep the run task alive until lease expiry");
     }
+
+    [Fact]
+    public async Task Lease_expiry_terminates_job_with_LEASE_EXPIRED_error_status()
+    {
+        // Spec §9.5: lease expiry yields `job.error{code: LEASE_EXPIRED, final_status: "error"}`,
+        // not `cancelled` — a separate terminal from the `job.cancel`-driven CANCELLED path.
+        var server = new ArcpServer(new ArcpServerOptions
+        {
+            Runtime = new RuntimeInfo { Name = "test-runtime", Version = "1.0.0" },
+        });
+        server.RegisterAgent("worker", async (ctx, ct) =>
+        {
+            try { await Task.Delay(TimeSpan.FromSeconds(10), ct); }
+            catch (OperationCanceledException) { throw; }
+            return null;
+        });
+        var (client, srv) = MemoryTransport.Pair();
+        _ = Task.Run(() => server.AcceptAsync(srv));
+
+        await using var c = await ArcpClient.ConnectAsync(client, new ArcpClientOptions
+        {
+            Client = new ClientInfo { Name = "test", Version = "1.0" },
+        });
+
+        var handle = await c.SubmitAsync("worker", leaseConstraints: new Arcp.Core.Leases.LeaseConstraints
+        {
+            ExpiresAt = DateTimeOffset.UtcNow.AddMilliseconds(500),
+        });
+        var result = await handle.Result.WaitAsync(TimeSpan.FromSeconds(5));
+
+        result.Success.Should().BeFalse();
+        result.Error!.Code.Should().Be(Arcp.Core.Errors.ErrorCode.LeaseExpired);
+        result.Error.FinalStatus.Should().Be("error");
+        result.Error.Retryable.Should().BeFalse();
+    }
 }

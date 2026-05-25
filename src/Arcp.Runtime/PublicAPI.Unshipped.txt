@@ -197,6 +197,7 @@ Arcp.Runtime.Job.Credentials.get -> System.Collections.Generic.IReadOnlyList<Arc
 Arcp.Runtime.JobContext.Credentials.get -> System.Collections.Generic.IReadOnlyList<Arcp.Core.Messages.ProvisionedCredential!>!
 Arcp.Runtime.JobContext.RotateCredentialAsync(string! credentialId, Arcp.Core.Messages.ProvisionedCredential! next, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask
 Arcp.Runtime.JobManager.JobManager(Arcp.Runtime.Agents.AgentRegistry! agents, Arcp.Runtime.Leases.LeaseManager! leases, System.TimeProvider! time, Microsoft.Extensions.Logging.ILoggerFactory! loggers, Arcp.Runtime.Credentials.CredentialManager? credentials = null, int idempotencyWindowSec = 3600) -> void
+Arcp.Runtime.Job.LeaseExpired.get -> bool
 Arcp.Runtime.Job.MaxRuntimeSec.get -> int?
 Arcp.Runtime.Job.RuntimeLimitExceeded.get -> bool
 Arcp.Runtime.ArcpServerOptions.IdempotencyWindowSec.get -> int

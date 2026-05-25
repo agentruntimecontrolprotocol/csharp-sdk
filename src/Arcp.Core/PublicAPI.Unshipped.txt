@@ -719,6 +719,7 @@ const Arcp.Core.Messages.MessageTypeNames.SessionPong = "session.pong" -> string
 const Arcp.Core.Messages.MessageTypeNames.SessionResume = "session.resume" -> string!
 const Arcp.Core.Messages.MessageTypeNames.SessionWelcome = "session.welcome" -> string!
 const Arcp.Core.Messages.StatusPhases.CredentialRotated = "credential_rotated" -> string!
+const Arcp.Core.Messages.StatusPhases.LeaseExpired = "lease_expired" -> string!
 const Arcp.Core.Tracing.ArcpDiagnostics.RuntimeSourceName = "Arcp.Runtime" -> string!
 const Arcp.Core.Tracing.ArcpDiagnostics.TransportSourceName = "Arcp.Transport" -> string!
 const Arcp.Core.Tracing.TraceAttributes.Agent = "arcp.agent" -> string!
