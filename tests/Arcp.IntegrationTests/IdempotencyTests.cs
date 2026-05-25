@@ -43,6 +43,26 @@ public class IdempotencyTests
     }
 
     [Fact]
+    public async Task Idempotent_retries_match_on_canonical_JSON_not_byte_identity()
+    {
+        // Spec §7.2: same key + identical *parameters* returns the same job — whitespace and
+        // key order in the JSON input MUST NOT cause a false DUPLICATE_KEY.
+        var (_, transport) = StartServer(s => s.RegisterAgent("echo", (ctx, ct) => Task.FromResult<object?>(ctx.Input)));
+        await using var c = await ArcpClient.ConnectAsync(transport, new ArcpClientOptions
+        {
+            Client = new ClientInfo { Name = "t", Version = "1" },
+        });
+
+        var compact = System.Text.Json.JsonDocument.Parse("{\"a\":1,\"b\":2}").RootElement.Clone();
+        var prettySwapped = System.Text.Json.JsonDocument.Parse("{ \"b\" : 2, \"a\" : 1 }").RootElement.Clone();
+
+        var first = await c.SubmitAsync("echo", compact, idempotencyKey: "canon-1");
+        var second = await c.SubmitAsync("echo", prettySwapped, idempotencyKey: "canon-1");
+
+        second.JobId.Value.Should().Be(first.JobId.Value);
+    }
+
+    [Fact]
     public async Task Mismatched_input_with_same_key_raises_session_error()
     {
         var (_, transport) = StartServer(s => s.RegisterAgent("echo", (ctx, ct) => Task.FromResult<object?>(ctx.Input)));

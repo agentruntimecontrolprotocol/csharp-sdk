@@ -403,13 +403,16 @@ public sealed partial class JobManager
         return true;
     }
 
-    /// <summary>SHA-256 fingerprint of the submission fields that must match for an idempotent retry to be honored.</summary>
+    /// <summary>SHA-256 fingerprint of the submission fields that must match for an idempotent
+    /// retry to be honored (spec §7.2). All JSON-shaped fields are re-serialized through the canonical
+    /// <see cref="ArcpJson.Options"/> writer first so cosmetically-different inputs (whitespace,
+    /// key order) round-trip to the same fingerprint.</summary>
     private static string ComputeFingerprint(JobSubmitPayload submit)
     {
         var canonical = new
         {
             agent = submit.Agent,
-            input = submit.Input?.ToString(),
+            input = submit.Input is null ? null : CanonicalizeJson(submit.Input.Value),
             lease_request = submit.LeaseRequest is null ? null : JsonSerializer.Serialize(submit.LeaseRequest, ArcpJson.Options),
             lease_constraints = submit.LeaseConstraints is null ? null : JsonSerializer.Serialize(submit.LeaseConstraints, ArcpJson.Options),
             parent_job_id = submit.ParentJobId,
@@ -417,5 +420,45 @@ public sealed partial class JobManager
         };
         var json = JsonSerializer.Serialize(canonical, ArcpJson.Options);
         return Convert.ToHexStringLower(SHA256.HashData(Encoding.UTF8.GetBytes(json)));
+    }
+
+    /// <summary>Canonicalize a <see cref="JsonElement"/> for fingerprinting: sort object keys
+    /// lexicographically and re-serialize. Two inputs that parse to the same JSON value produce
+    /// byte-identical output regardless of original whitespace or key order.</summary>
+    private static string CanonicalizeJson(JsonElement element)
+    {
+        using var ms = new System.IO.MemoryStream();
+        using (var writer = new Utf8JsonWriter(ms))
+        {
+            WriteCanonical(writer, element);
+        }
+        return Encoding.UTF8.GetString(ms.ToArray());
+    }
+
+    private static void WriteCanonical(Utf8JsonWriter writer, JsonElement element)
+    {
+        switch (element.ValueKind)
+        {
+            case JsonValueKind.Object:
+                writer.WriteStartObject();
+                var props = new List<JsonProperty>();
+                foreach (var p in element.EnumerateObject()) props.Add(p);
+                props.Sort((a, b) => string.CompareOrdinal(a.Name, b.Name));
+                foreach (var p in props)
+                {
+                    writer.WritePropertyName(p.Name);
+                    WriteCanonical(writer, p.Value);
+                }
+                writer.WriteEndObject();
+                break;
+            case JsonValueKind.Array:
+                writer.WriteStartArray();
+                foreach (var item in element.EnumerateArray()) WriteCanonical(writer, item);
+                writer.WriteEndArray();
+                break;
+            default:
+                element.WriteTo(writer);
+                break;
+        }
     }
 }
