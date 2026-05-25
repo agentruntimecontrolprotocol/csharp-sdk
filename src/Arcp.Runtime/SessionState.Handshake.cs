@@ -90,9 +90,51 @@ public sealed partial class SessionState
     private async Task ReplayBufferedEventsAsync(SessionHelloPayload hello, CancellationToken cancellationToken)
     {
         if (hello.LastEventSeq is not { } last) return;
-        foreach (var bufferedEnv in EventLog.ReadFrom(last))
+        await ReplayFromSeqAsync(last, cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>Replay events with <c>seq &gt; fromSeq</c>. Throws <c>RESUME_WINDOW_EXPIRED</c> if
+    /// the buffer no longer covers the requested point (spec §6.3).</summary>
+    private async Task ReplayFromSeqAsync(long fromSeq, CancellationToken cancellationToken)
+    {
+        var earliest = EventLog.EarliestSeq;
+        // Buffer is non-empty and the requested point pre-dates the oldest retained event.
+        // (`earliest > fromSeq + 1` means events `fromSeq+1 .. earliest-1` were evicted.)
+        if (earliest > 0 && fromSeq + 1 < earliest)
+        {
+            throw new ResumeWindowExpiredException(
+                $"Buffer no longer covers requested last_event_seq={fromSeq}; earliest buffered seq is {earliest}.");
+        }
+
+        foreach (var bufferedEnv in EventLog.ReadFrom(fromSeq))
         {
             await SendAsync(bufferedEnv, cancellationToken).ConfigureAwait(false);
+        }
+    }
+
+    /// <summary>Handle a spec §6.3 <c>session.resume</c> envelope. Adopts the prior session's
+    /// durable state (event log + session_id) and replays buffered events. Unlike
+    /// <c>session.hello</c>, this does NOT rotate the resume token or emit a fresh
+    /// <c>session.welcome</c> — it is the protocol-level "fast reconnect" path.</summary>
+    internal async Task HandleResumeAsync(Envelope env, SessionResumePayload payload, CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrEmpty(payload.ResumeToken))
+            throw new InvalidRequestException("session.resume requires a non-empty resume_token (spec §6.3)");
+
+        if (!_server.TryResume(payload.ResumeToken, out var resumed) || resumed is null)
+            throw new ResumeWindowExpiredException("Resume token unknown or outside ResumeWindowSec");
+
+        // Adopt the prior session's durable state (session_id + event log) so replays come
+        // from the correct buffer.
+        var previousLiveId = SessionId;
+        AdoptResumableStateFrom(resumed);
+        _server.OnSessionAdoptedResumedId(previousLiveId, this);
+
+        // Feature set is unknown at this point because we never saw a hello — treat the resume
+        // attempt as inheriting the prior session's features (already reflected in EventLog).
+        if (payload.LastEventSeq is { } last)
+        {
+            await ReplayFromSeqAsync(last, cancellationToken).ConfigureAwait(false);
         }
     }
 

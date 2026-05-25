@@ -51,6 +51,12 @@ public sealed partial class SessionState
             case MessageTypeNames.SessionHello:
                 await HandleHelloAsync(env, cancellationToken).ConfigureAwait(false);
                 break;
+            case MessageTypeNames.SessionResume:
+                if (env.Payload is SessionResumePayload resume)
+                    await HandleResumeAsync(env, resume, cancellationToken).ConfigureAwait(false);
+                else
+                    throw new InvalidRequestException("session.resume payload missing");
+                break;
             case MessageTypeNames.SessionPing:
                 await HandlePingAsync(env, cancellationToken).ConfigureAwait(false);
                 break;

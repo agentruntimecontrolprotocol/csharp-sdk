@@ -39,6 +39,14 @@ public sealed class EventLog
         get { lock (_gate) return _events.Count == 0 ? 0 : _events[^1].EventSeq ?? 0; }
     }
 
+    /// <summary>The lowest <c>event_seq</c> currently held in the buffer, or 0 when empty. Used to
+    /// detect <c>RESUME_WINDOW_EXPIRED</c> when a resume client asks for events older than the
+    /// buffer covers (spec §6.3).</summary>
+    public long EarliestSeq
+    {
+        get { lock (_gate) return _events.Count == 0 ? 0 : _events[0].EventSeq ?? 0; }
+    }
+
     /// <summary>Append an event envelope, assigning it the next session-scoped <c>event_seq</c>.</summary>
     public Envelope Append(Envelope envelope)
     {

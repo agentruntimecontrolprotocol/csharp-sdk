@@ -512,6 +512,14 @@ Arcp.Core.Messages.SessionPingPayload.Nonce.init -> void
 Arcp.Core.Messages.SessionPingPayload.SentAt.get -> System.DateTimeOffset
 Arcp.Core.Messages.SessionPingPayload.SentAt.init -> void
 Arcp.Core.Messages.SessionPingPayload.SessionPingPayload() -> void
+Arcp.Core.Messages.SessionResumePayload
+Arcp.Core.Messages.SessionResumePayload.<Clone>$() -> Arcp.Core.Messages.SessionResumePayload!
+Arcp.Core.Messages.SessionResumePayload.Equals(Arcp.Core.Messages.SessionResumePayload? other) -> bool
+Arcp.Core.Messages.SessionResumePayload.LastEventSeq.get -> long?
+Arcp.Core.Messages.SessionResumePayload.LastEventSeq.init -> void
+Arcp.Core.Messages.SessionResumePayload.ResumeToken.get -> string!
+Arcp.Core.Messages.SessionResumePayload.ResumeToken.init -> void
+Arcp.Core.Messages.SessionResumePayload.SessionResumePayload() -> void
 Arcp.Core.Messages.SessionPongPayload
 Arcp.Core.Messages.SessionPongPayload.<Clone>$() -> Arcp.Core.Messages.SessionPongPayload!
 Arcp.Core.Messages.SessionPongPayload.Equals(Arcp.Core.Messages.SessionPongPayload? other) -> bool
@@ -581,6 +589,7 @@ Arcp.Core.Messages.ToolResultBody.ToolResultBody() -> void
 Arcp.Core.Store.EventLog
 Arcp.Core.Store.EventLog.Append(Arcp.Core.Wire.Envelope! envelope) -> Arcp.Core.Wire.Envelope!
 Arcp.Core.Store.EventLog.Capacity.get -> int
+Arcp.Core.Store.EventLog.EarliestSeq.get -> long
 Arcp.Core.Store.EventLog.EventLog(int capacity = 4096) -> void
 Arcp.Core.Store.EventLog.HighWatermark.get -> long
 Arcp.Core.Store.EventLog.LastAckedSeq.get -> long
@@ -840,6 +849,9 @@ override Arcp.Core.Messages.SessionPingPayload.ToString() -> string!
 override Arcp.Core.Messages.SessionPongPayload.Equals(object? obj) -> bool
 override Arcp.Core.Messages.SessionPongPayload.GetHashCode() -> int
 override Arcp.Core.Messages.SessionPongPayload.ToString() -> string!
+override Arcp.Core.Messages.SessionResumePayload.Equals(object? obj) -> bool
+override Arcp.Core.Messages.SessionResumePayload.GetHashCode() -> int
+override Arcp.Core.Messages.SessionResumePayload.ToString() -> string!
 override Arcp.Core.Messages.SessionWelcomePayload.Equals(object? obj) -> bool
 override Arcp.Core.Messages.SessionWelcomePayload.GetHashCode() -> int
 override Arcp.Core.Messages.SessionWelcomePayload.ToString() -> string!
@@ -970,6 +982,8 @@ static Arcp.Core.Messages.SessionPingPayload.operator !=(Arcp.Core.Messages.Sess
 static Arcp.Core.Messages.SessionPingPayload.operator ==(Arcp.Core.Messages.SessionPingPayload? left, Arcp.Core.Messages.SessionPingPayload? right) -> bool
 static Arcp.Core.Messages.SessionPongPayload.operator !=(Arcp.Core.Messages.SessionPongPayload? left, Arcp.Core.Messages.SessionPongPayload? right) -> bool
 static Arcp.Core.Messages.SessionPongPayload.operator ==(Arcp.Core.Messages.SessionPongPayload? left, Arcp.Core.Messages.SessionPongPayload? right) -> bool
+static Arcp.Core.Messages.SessionResumePayload.operator !=(Arcp.Core.Messages.SessionResumePayload? left, Arcp.Core.Messages.SessionResumePayload? right) -> bool
+static Arcp.Core.Messages.SessionResumePayload.operator ==(Arcp.Core.Messages.SessionResumePayload? left, Arcp.Core.Messages.SessionResumePayload? right) -> bool
 static Arcp.Core.Messages.SessionWelcomePayload.operator !=(Arcp.Core.Messages.SessionWelcomePayload? left, Arcp.Core.Messages.SessionWelcomePayload? right) -> bool
 static Arcp.Core.Messages.SessionWelcomePayload.operator ==(Arcp.Core.Messages.SessionWelcomePayload? left, Arcp.Core.Messages.SessionWelcomePayload? right) -> bool
 static Arcp.Core.Messages.StatusBody.operator !=(Arcp.Core.Messages.StatusBody? left, Arcp.Core.Messages.StatusBody? right) -> bool

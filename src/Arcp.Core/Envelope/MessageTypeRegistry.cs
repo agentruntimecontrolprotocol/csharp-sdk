@@ -48,6 +48,7 @@ public sealed class MessageTypeRegistry
         r.Register(MessageTypeNames.SessionListJobs, typeof(SessionListJobsPayload));
         r.Register(MessageTypeNames.SessionJobs, typeof(SessionJobsPayload));
         r.Register(MessageTypeNames.SessionError, typeof(SessionErrorPayload));
+        r.Register(MessageTypeNames.SessionResume, typeof(SessionResumePayload));
         r.Register(MessageTypeNames.JobSubmit, typeof(JobSubmitPayload));
         r.Register(MessageTypeNames.JobAccepted, typeof(JobAcceptedPayload));
         r.Register(MessageTypeNames.JobEvent, typeof(JobEventPayload));
