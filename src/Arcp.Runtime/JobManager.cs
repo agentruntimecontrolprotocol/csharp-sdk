@@ -143,29 +143,6 @@ public sealed partial class JobManager
         return (job, BuildAccepted(job));
     }
 
-    /// <summary>Synchronous wrapper for <see cref="SubmitAsync"/> when no credential provisioning is configured.</summary>
-    public Job Submit(
-        JobSubmitPayload submit,
-        SessionId sessionId,
-        string? submitterPrincipal,
-        Func<Envelope, CancellationToken, ValueTask> emit,
-        CancellationToken parentCancellation,
-        out JobAcceptedPayload accepted)
-    {
-        if (_credentials is not null)
-            throw new InvalidOperationException("Use SubmitAsync when credential provisioning is configured.");
-
-        var result = SubmitAsync(
-            submit,
-            sessionId,
-            submitterPrincipal,
-            emit,
-            parentCancellation,
-            CancellationToken.None).GetAwaiter().GetResult();
-        accepted = result.Accepted;
-        return result.Job;
-    }
-
     private void AssertChildLeaseIsSubset(string parentJobId, Lease child, LeaseConstraints? childConstraints)
     {
         if (!JobId.TryParse(parentJobId, null, out var parsed))

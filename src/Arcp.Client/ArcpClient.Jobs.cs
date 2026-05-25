@@ -17,7 +17,6 @@ public sealed partial class ArcpClient
     {
         var handle = new JobHandle(this);
         _pendingSubmits.Enqueue(handle);
-        var sent = false;
         try
         {
             await _transport.SendAsync(new Envelope
@@ -35,7 +34,6 @@ public sealed partial class ArcpClient
                     ParentJobId = parentJobId,
                 },
             }, cancellationToken).ConfigureAwait(false);
-            sent = true;
             await handle.Accepted.WaitAsync(cancellationToken).ConfigureAwait(false);
             return handle;
         }
@@ -43,25 +41,22 @@ public sealed partial class ArcpClient
         {
             // The pending queue is FIFO-correlated with job.accepted responses. If we never
             // got an acceptance, evict our handle so the NEXT successful submit isn't bound
-            // to this stale slot.
-            RemovePendingSubmit(handle, sent);
+            // to this stale slot. If the acceptance already dequeued us, the walk is a no-op.
+            RemovePendingSubmit(handle);
             throw;
         }
     }
 
     /// <summary>Evict a handle from the pending-submits queue. Walks the queue and re-enqueues
     /// every other handle in order so FIFO correlation with <c>job.accepted</c> is preserved.</summary>
-    private void RemovePendingSubmit(JobHandle handle, bool ackPossiblyArrived)
+    private void RemovePendingSubmit(JobHandle handle)
     {
-        // If we successfully sent and an acceptance may already be in flight, the dispatcher
-        // could have removed our handle via TryDequeue already; either way, drain+filter.
         var keep = new System.Collections.Generic.List<JobHandle>();
         while (_pendingSubmits.TryDequeue(out var h))
         {
             if (!ReferenceEquals(h, handle)) keep.Add(h);
         }
         foreach (var h in keep) _pendingSubmits.Enqueue(h);
-        _ = ackPossiblyArrived; // currently identical behavior; reserved for future correlation work
     }
 
     /// <summary>Cancel job (asynchronous).</summary>

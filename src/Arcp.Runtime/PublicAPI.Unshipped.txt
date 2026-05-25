@@ -118,7 +118,6 @@ Arcp.Runtime.JobManager.JobManager(Arcp.Runtime.Agents.AgentRegistry! agents, Ar
 Arcp.Runtime.JobManager.Jobs.get -> System.Collections.Generic.IEnumerable<Arcp.Runtime.Job!>!
 Arcp.Runtime.JobManager.List(string? requesterPrincipal, Arcp.Runtime.Authorization.IJobAuthorizationPolicy! policy, Arcp.Core.Messages.JobListFilter? filter, int? limit, string? cursor, out string? nextCursor) -> System.Collections.Generic.IReadOnlyList<Arcp.Core.Messages.JobListEntry!>!
 Arcp.Runtime.JobManager.RunAsync(Arcp.Runtime.Job! job, Arcp.Runtime.Agents.IAgent! agent, System.Func<Arcp.Core.Wire.Envelope!, System.Threading.CancellationToken, System.Threading.Tasks.ValueTask>! emit, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
-Arcp.Runtime.JobManager.Submit(Arcp.Core.Messages.JobSubmitPayload! submit, Arcp.Core.Ids.SessionId sessionId, string? submitterPrincipal, System.Func<Arcp.Core.Wire.Envelope!, System.Threading.CancellationToken, System.Threading.Tasks.ValueTask>! emit, System.Threading.CancellationToken parentCancellation, out Arcp.Core.Messages.JobAcceptedPayload! accepted) -> Arcp.Runtime.Job!
 Arcp.Runtime.JobManager.TryGet(Arcp.Core.Ids.JobId id, out Arcp.Runtime.Job? job) -> bool
 Arcp.Runtime.JobStatus
 Arcp.Runtime.JobStatus.Cancelled = 4 -> Arcp.Runtime.JobStatus

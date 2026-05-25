@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
 using Arcp.Core.Ids;
 
 namespace Arcp.Runtime.Subscriptions;
@@ -10,7 +10,7 @@ namespace Arcp.Runtime.Subscriptions;
 /// to every subscribed session (spec §7.6).</summary>
 public sealed class SubscriptionManager
 {
-    private readonly ConcurrentDictionary<JobId, HashSet<SessionId>> _byJob = new();
+    private readonly Dictionary<JobId, HashSet<SessionId>> _byJob = new();
     private readonly object _gate = new();
 
     /// <summary>Subscribe.</summary>
@@ -35,7 +35,7 @@ public sealed class SubscriptionManager
             if (_byJob.TryGetValue(jobId, out var set))
             {
                 set.Remove(sessionId);
-                if (set.Count == 0) _byJob.TryRemove(jobId, out _);
+                if (set.Count == 0) _byJob.Remove(jobId);
             }
         }
     }
@@ -54,10 +54,14 @@ public sealed class SubscriptionManager
     {
         lock (_gate)
         {
+            // Snapshot keys because we may remove entries during iteration.
+            var emptyJobs = new List<JobId>();
             foreach (var kv in _byJob)
             {
                 kv.Value.Remove(sessionId);
+                if (kv.Value.Count == 0) emptyJobs.Add(kv.Key);
             }
+            foreach (var jobId in emptyJobs) _byJob.Remove(jobId);
         }
     }
 }

@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 using System;
+using System.Globalization;
 using System.Threading;
 using System.Threading.Tasks;
 using Arcp.AspNetCore;
@@ -60,7 +61,7 @@ public static class Program
     private static async Task<int> Serve(string[] args)
     {
         var host = ParseFlag(args, "--host") ?? "127.0.0.1";
-        var port = int.Parse(ParseFlag(args, "--port") ?? "7777");
+        var port = int.Parse(ParseFlag(args, "--port") ?? "7777", CultureInfo.InvariantCulture);
         var token = ParseFlag(args, "--token") ?? "tok-demo";
 
         var server = new ArcpServer(new ArcpServerOptions
