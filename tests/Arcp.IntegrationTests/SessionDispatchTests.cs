@@ -165,6 +165,37 @@ public class SessionDispatchTests
     }
 
     [Fact]
+    public async Task Malformed_envelope_yields_INVALID_REQUEST_session_error()
+    {
+        // Spec §12: malformed envelopes get explicit INVALID_REQUEST feedback (no silent drop).
+        // Transports surface a sentinel `arcp.invalid_envelope` envelope on parse failure; the
+        // dispatcher converts it into a `session.error{INVALID_REQUEST}` response.
+        var (server, transport) = StartServer(s =>
+            s.RegisterAgent("noop", (ctx, ct) => Task.FromResult<object?>(null)));
+
+        // Simulate a transport-level deserialization failure by sending the sentinel directly.
+        await transport.SendAsync(new Arcp.Core.Wire.Envelope
+        {
+            Type = MessageTypeNames.InvalidEnvelope,
+            Payload = new InvalidEnvelopePayload { ParseError = "test: not valid JSON" },
+        });
+
+        Arcp.Core.Wire.Envelope? err = null;
+        var cts = new CancellationTokenSource(TimeSpan.FromSeconds(2));
+        try
+        {
+            await foreach (var env in transport.ReceiveAsync(cts.Token))
+            {
+                if (env.Type == MessageTypeNames.SessionError) { err = env; break; }
+            }
+        }
+        catch (OperationCanceledException) { }
+
+        err.Should().NotBeNull();
+        ((SessionErrorPayload)err!.Payload!).Code.Should().Be(ErrorCode.InvalidRequest);
+    }
+
+    [Fact]
     public async Task SessionBye_closes_the_session_cleanly()
     {
         var (_, transport) = StartServer(s => s.RegisterAgent("noop", (ctx, ct) => Task.FromResult<object?>(null)));

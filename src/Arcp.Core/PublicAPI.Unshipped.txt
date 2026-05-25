@@ -512,6 +512,12 @@ Arcp.Core.Messages.SessionPingPayload.Nonce.init -> void
 Arcp.Core.Messages.SessionPingPayload.SentAt.get -> System.DateTimeOffset
 Arcp.Core.Messages.SessionPingPayload.SentAt.init -> void
 Arcp.Core.Messages.SessionPingPayload.SessionPingPayload() -> void
+Arcp.Core.Messages.InvalidEnvelopePayload
+Arcp.Core.Messages.InvalidEnvelopePayload.<Clone>$() -> Arcp.Core.Messages.InvalidEnvelopePayload!
+Arcp.Core.Messages.InvalidEnvelopePayload.Equals(Arcp.Core.Messages.InvalidEnvelopePayload? other) -> bool
+Arcp.Core.Messages.InvalidEnvelopePayload.InvalidEnvelopePayload() -> void
+Arcp.Core.Messages.InvalidEnvelopePayload.ParseError.get -> string!
+Arcp.Core.Messages.InvalidEnvelopePayload.ParseError.init -> void
 Arcp.Core.Messages.SessionResumePayload
 Arcp.Core.Messages.SessionResumePayload.<Clone>$() -> Arcp.Core.Messages.SessionResumePayload!
 Arcp.Core.Messages.SessionResumePayload.Equals(Arcp.Core.Messages.SessionResumePayload? other) -> bool
@@ -716,6 +722,7 @@ const Arcp.Core.Messages.MessageTypeNames.SessionJobs = "session.jobs" -> string
 const Arcp.Core.Messages.MessageTypeNames.SessionListJobs = "session.list_jobs" -> string!
 const Arcp.Core.Messages.MessageTypeNames.SessionPing = "session.ping" -> string!
 const Arcp.Core.Messages.MessageTypeNames.SessionPong = "session.pong" -> string!
+const Arcp.Core.Messages.MessageTypeNames.InvalidEnvelope = "arcp.invalid_envelope" -> string!
 const Arcp.Core.Messages.MessageTypeNames.SessionResume = "session.resume" -> string!
 const Arcp.Core.Messages.MessageTypeNames.SessionWelcome = "session.welcome" -> string!
 const Arcp.Core.Messages.StatusPhases.CredentialRotated = "credential_rotated" -> string!
@@ -850,6 +857,9 @@ override Arcp.Core.Messages.SessionPingPayload.ToString() -> string!
 override Arcp.Core.Messages.SessionPongPayload.Equals(object? obj) -> bool
 override Arcp.Core.Messages.SessionPongPayload.GetHashCode() -> int
 override Arcp.Core.Messages.SessionPongPayload.ToString() -> string!
+override Arcp.Core.Messages.InvalidEnvelopePayload.Equals(object? obj) -> bool
+override Arcp.Core.Messages.InvalidEnvelopePayload.GetHashCode() -> int
+override Arcp.Core.Messages.InvalidEnvelopePayload.ToString() -> string!
 override Arcp.Core.Messages.SessionResumePayload.Equals(object? obj) -> bool
 override Arcp.Core.Messages.SessionResumePayload.GetHashCode() -> int
 override Arcp.Core.Messages.SessionResumePayload.ToString() -> string!
@@ -983,6 +993,8 @@ static Arcp.Core.Messages.SessionPingPayload.operator !=(Arcp.Core.Messages.Sess
 static Arcp.Core.Messages.SessionPingPayload.operator ==(Arcp.Core.Messages.SessionPingPayload? left, Arcp.Core.Messages.SessionPingPayload? right) -> bool
 static Arcp.Core.Messages.SessionPongPayload.operator !=(Arcp.Core.Messages.SessionPongPayload? left, Arcp.Core.Messages.SessionPongPayload? right) -> bool
 static Arcp.Core.Messages.SessionPongPayload.operator ==(Arcp.Core.Messages.SessionPongPayload? left, Arcp.Core.Messages.SessionPongPayload? right) -> bool
+static Arcp.Core.Messages.InvalidEnvelopePayload.operator !=(Arcp.Core.Messages.InvalidEnvelopePayload? left, Arcp.Core.Messages.InvalidEnvelopePayload? right) -> bool
+static Arcp.Core.Messages.InvalidEnvelopePayload.operator ==(Arcp.Core.Messages.InvalidEnvelopePayload? left, Arcp.Core.Messages.InvalidEnvelopePayload? right) -> bool
 static Arcp.Core.Messages.SessionResumePayload.operator !=(Arcp.Core.Messages.SessionResumePayload? left, Arcp.Core.Messages.SessionResumePayload? right) -> bool
 static Arcp.Core.Messages.SessionResumePayload.operator ==(Arcp.Core.Messages.SessionResumePayload? left, Arcp.Core.Messages.SessionResumePayload? right) -> bool
 static Arcp.Core.Messages.SessionWelcomePayload.operator !=(Arcp.Core.Messages.SessionWelcomePayload? left, Arcp.Core.Messages.SessionWelcomePayload? right) -> bool

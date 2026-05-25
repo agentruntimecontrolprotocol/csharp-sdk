@@ -6,6 +6,7 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Arcp.Core.Messages;
 using Arcp.Core.Wire;
 
 namespace Arcp.Core.Transport;
@@ -72,7 +73,11 @@ public sealed class StdioTransport : ITransport
             }
             catch (Exception ex) when (ex is Errors.ArcpException or System.Text.Json.JsonException)
             {
-                continue;
+                env = new Envelope
+                {
+                    Type = MessageTypeNames.InvalidEnvelope,
+                    Payload = new InvalidEnvelopePayload { ParseError = ex.Message },
+                };
             }
             yield return env;
         }

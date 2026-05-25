@@ -48,6 +48,11 @@ public sealed partial class SessionState
     {
         switch (env.Type)
         {
+            case MessageTypeNames.InvalidEnvelope:
+                // Spec §12: surface INVALID_REQUEST to the peer so it gets feedback instead of
+                // a silent drop. Detail keeps the parse-error short to avoid echoing bytes back.
+                var parseError = (env.Payload as InvalidEnvelopePayload)?.ParseError ?? "malformed envelope";
+                throw new InvalidRequestException("Malformed ARCP envelope", parseError);
             case MessageTypeNames.SessionHello:
                 await HandleHelloAsync(env, cancellationToken).ConfigureAwait(false);
                 break;

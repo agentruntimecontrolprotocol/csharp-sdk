@@ -33,6 +33,12 @@ public static class MessageTypeNames
     /// <summary>Gets the session resume.</summary>
     public const string SessionResume = "session.resume";
 
+    /// <summary>Sentinel emitted by a transport when an inbound envelope fails to deserialize.
+    /// The dispatcher converts this into an outbound <c>session.error{INVALID_REQUEST}</c> per
+    /// spec §12 so the misbehaving peer receives feedback instead of silent drop. Not transmitted
+    /// over the wire.</summary>
+    public const string InvalidEnvelope = "arcp.invalid_envelope";
+
     /// <summary>Gets the job submit.</summary>
     public const string JobSubmit = "job.submit";
     /// <summary>Gets the job accepted.</summary>

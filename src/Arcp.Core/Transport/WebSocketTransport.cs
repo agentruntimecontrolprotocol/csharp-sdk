@@ -8,6 +8,7 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Arcp.Core.Messages;
 using Arcp.Core.Wire;
 
 namespace Arcp.Core.Transport;
@@ -116,15 +117,21 @@ public sealed class WebSocketTransport : ITransport
         {
             return ArcpJson.Deserialize(utf8);
         }
-        catch (Errors.ArcpException)
+        catch (Errors.ArcpException ex)
         {
-            return null;
+            return InvalidEnvelopeSentinel(ex.Message);
         }
-        catch (System.Text.Json.JsonException)
+        catch (System.Text.Json.JsonException ex)
         {
-            return null;
+            return InvalidEnvelopeSentinel(ex.Message);
         }
     }
+
+    private static Envelope InvalidEnvelopeSentinel(string parseError) => new()
+    {
+        Type = MessageTypeNames.InvalidEnvelope,
+        Payload = new InvalidEnvelopePayload { ParseError = parseError },
+    };
 
     /// <summary>Close (asynchronous).</summary>
     public async ValueTask CloseAsync(string? reason = null, CancellationToken cancellationToken = default)
