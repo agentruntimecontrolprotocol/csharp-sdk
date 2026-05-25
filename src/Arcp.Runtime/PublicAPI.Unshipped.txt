@@ -201,7 +201,7 @@ Arcp.Runtime.Job.MaxRuntimeSec.get -> int?
 Arcp.Runtime.Job.RuntimeLimitExceeded.get -> bool
 Arcp.Runtime.ArcpServerOptions.IdempotencyWindowSec.get -> int
 Arcp.Runtime.ArcpServerOptions.IdempotencyWindowSec.init -> void
-Arcp.Runtime.JobManager.SubmitAsync(Arcp.Core.Messages.JobSubmitPayload! submit, Arcp.Core.Ids.SessionId sessionId, string? submitterPrincipal, System.Func<Arcp.Core.Wire.Envelope!, System.Threading.CancellationToken, System.Threading.Tasks.ValueTask>! emit, System.Threading.CancellationToken parentCancellation, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<(Arcp.Runtime.Job! Job, Arcp.Core.Messages.JobAcceptedPayload! Accepted)>!
+Arcp.Runtime.JobManager.SubmitAsync(Arcp.Core.Messages.JobSubmitPayload! submit, Arcp.Core.Ids.SessionId sessionId, string? submitterPrincipal, System.Func<Arcp.Core.Wire.Envelope!, System.Threading.CancellationToken, System.Threading.Tasks.ValueTask>! emit, Arcp.Core.Ids.TraceId? inboundTraceId, System.Threading.CancellationToken parentCancellation, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<(Arcp.Runtime.Job! Job, Arcp.Core.Messages.JobAcceptedPayload! Accepted)>!
 Arcp.Runtime.Leases.LeaseManager.AuthorizeModelUse(Arcp.Core.Leases.Lease! lease, Arcp.Core.Leases.LeaseConstraints? constraints, string! modelId) -> void
 override Arcp.Runtime.Credentials.CredentialIssueContext.Equals(object? obj) -> bool
 override Arcp.Runtime.Credentials.CredentialIssueContext.GetHashCode() -> int

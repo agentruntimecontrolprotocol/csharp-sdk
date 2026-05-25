@@ -74,12 +74,14 @@ public sealed partial class JobManager
     }
 
     /// <summary>Submit a job. The caller (SessionState) hands in the envelope; this method returns
-    /// the <see cref="Job"/> to run asynchronously plus the <c>job.accepted</c> payload.</summary>
+    /// the <see cref="Job"/> to run asynchronously plus the <c>job.accepted</c> payload.
+    /// <paramref name="inboundTraceId"/> propagates the envelope's <c>trace_id</c> per spec §11.</summary>
     public async Task<(Job Job, JobAcceptedPayload Accepted)> SubmitAsync(
         JobSubmitPayload submit,
         SessionId sessionId,
         string? submitterPrincipal,
         Func<Envelope, CancellationToken, ValueTask> emit,
+        TraceId? inboundTraceId,
         CancellationToken parentCancellation,
         CancellationToken cancellationToken = default)
     {
@@ -123,7 +125,8 @@ public sealed partial class JobManager
         }
 
         var jobId = JobId.New();
-        var traceId = TraceId.New();
+        // Spec §11: propagate inbound W3C trace context when present; otherwise mint a fresh one.
+        var traceId = inboundTraceId ?? TraceId.New();
         var job = new Job(
             jobId, sessionId, resolved, lease, submit.LeaseConstraints,
             submit.Input, submit.IdempotencyKey, traceId, submit.ParentJobId, submitterPrincipal,

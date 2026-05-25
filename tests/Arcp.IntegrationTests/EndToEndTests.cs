@@ -140,6 +140,45 @@ public class EndToEndTests
     }
 
     [Fact]
+    public async Task Inbound_envelope_trace_id_is_propagated_to_job_accepted()
+    {
+        // Spec §11: ARCP propagates W3C trace context — the runtime must honor the inbound
+        // envelope's trace_id rather than minting a fresh one.
+        var (_, transport) = StartServer(s =>
+            s.RegisterAgent("noop", (ctx, ct) => Task.FromResult<object?>(null)));
+        await using var client = await ArcpClient.ConnectAsync(transport, new ArcpClientOptions
+        {
+            Client = new ClientInfo { Name = "test", Version = "1.0" },
+        });
+
+        // Send a raw job.submit with an explicit trace_id.
+        const string expected = "0123456789abcdef0123456789abcdef";
+        var traceCarrying = new Arcp.Core.Wire.Envelope
+        {
+            Type = MessageTypeNames.JobSubmit,
+            SessionId = client.SessionId.Value,
+            TraceId = expected,
+            Payload = new JobSubmitPayload { Agent = "noop" },
+        };
+        await transport.SendAsync(traceCarrying);
+
+        Arcp.Core.Wire.Envelope? accepted = null;
+        var cts = new CancellationTokenSource(TimeSpan.FromSeconds(2));
+        try
+        {
+            await foreach (var env in transport.ReceiveAsync(cts.Token))
+            {
+                if (env.Type == MessageTypeNames.JobAccepted) { accepted = env; break; }
+            }
+        }
+        catch (OperationCanceledException) { }
+
+        accepted.Should().NotBeNull();
+        var payload = (JobAcceptedPayload)accepted!.Payload!;
+        payload.TraceId.Should().Be(expected);
+    }
+
+    [Fact]
     public async Task ListJobs_returns_running_jobs()
     {
         var (_, transport) = StartServer(s =>

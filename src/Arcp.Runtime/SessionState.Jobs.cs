@@ -17,10 +17,16 @@ public sealed partial class SessionState
     {
         Func<Envelope, CancellationToken, ValueTask> emit = (e, ct) => EmitJobEnvelopeAsync(e, ct);
 
+        // Spec §11: forward the inbound envelope's trace context to the JobManager so a client-side
+        // span flows through to job-scoped events instead of being severed by a fresh trace id.
+        TraceId? inboundTraceId = null;
+        if (env.TraceId is { Length: > 0 } incoming && TraceId.TryParse(incoming, null, out var parsed))
+            inboundTraceId = parsed;
+
         try
         {
             var submission = await _server.JobManager
-                .SubmitAsync(submit, SessionId, Principal?.Subject, emit, _cts.Token, cancellationToken)
+                .SubmitAsync(submit, SessionId, Principal?.Subject, emit, inboundTraceId, _cts.Token, cancellationToken)
                 .ConfigureAwait(false);
             var job = submission.Job;
             var accepted = submission.Accepted;
