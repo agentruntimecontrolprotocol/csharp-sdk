@@ -30,3 +30,6 @@ coverage/
 # Build outputs
 out/
 publish/
+
+# Generated API reference (regenerate via scripts/docs.sh)
+docs/api/
