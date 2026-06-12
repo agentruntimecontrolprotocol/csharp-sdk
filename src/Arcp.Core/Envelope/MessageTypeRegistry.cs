@@ -41,6 +41,8 @@ public sealed class MessageTypeRegistry
         var r = new MessageTypeRegistry();
         r.Register(MessageTypeNames.SessionHello, typeof(SessionHelloPayload));
         r.Register(MessageTypeNames.SessionWelcome, typeof(SessionWelcomePayload));
+        r.Register(MessageTypeNames.SessionClose, typeof(SessionByePayload));
+        r.Register(MessageTypeNames.SessionClosed, typeof(SessionByePayload));
         r.Register(MessageTypeNames.SessionBye, typeof(SessionByePayload));
         r.Register(MessageTypeNames.SessionPing, typeof(SessionPingPayload));
         r.Register(MessageTypeNames.SessionPong, typeof(SessionPongPayload));
@@ -56,6 +58,7 @@ public sealed class MessageTypeRegistry
         r.Register(MessageTypeNames.JobResult, typeof(JobResultPayload));
         r.Register(MessageTypeNames.JobError, typeof(JobErrorPayload));
         r.Register(MessageTypeNames.JobCancel, typeof(JobCancelPayload));
+        r.Register(MessageTypeNames.JobCancelled, typeof(JobCancelledPayload));
         r.Register(MessageTypeNames.JobSubscribe, typeof(JobSubscribePayload));
         r.Register(MessageTypeNames.JobSubscribed, typeof(JobSubscribedPayload));
         r.Register(MessageTypeNames.JobUnsubscribe, typeof(JobUnsubscribePayload));

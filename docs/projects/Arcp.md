@@ -22,7 +22,7 @@ Optional add-ons are **not** bundled and must be referenced explicitly:
 | ------------------ | ----------------------------------------------------- |
 | `Arcp.AspNetCore`  | Kestrel / ASP.NET Core hosting (`MapArcp`).           |
 | `Arcp.Otel`        | OpenTelemetry transport instrumentation.              |
-| `Arcp.Hosting`     | `IHostedService` + `IHostApplicationLifetime` wiring. |
+| `Arcp.Hosting`     | `IServiceCollection.AddArcpRuntime` DI registration.    |
 | `Arcp.Cli`         | `arcp` CLI tool — serve and submit from a terminal.   |
 
 ## Typical project file

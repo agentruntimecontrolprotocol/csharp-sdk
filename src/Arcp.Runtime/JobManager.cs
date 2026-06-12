@@ -25,10 +25,11 @@ namespace Arcp.Runtime;
 
 /// <summary>Runtime-wide registry of running jobs. Coordinates submit → accept → terminal, idempotency
 /// dedup, cancellation, lease watchdog, and subscription fan-out.</summary>
-public sealed partial class JobManager
+public sealed partial class JobManager : IDisposable
 {
     private readonly ConcurrentDictionary<JobId, Job> _jobs = new();
     private readonly ConcurrentDictionary<string, IdempotencyRecord> _idempotency = new(StringComparer.Ordinal);
+    private readonly CancellationTokenSource _runtimeCts = new();
     private readonly AgentRegistry _agents;
     private readonly LeaseManager _leases;
     private readonly TimeProvider _time;
@@ -38,6 +39,7 @@ public sealed partial class JobManager
     private readonly int _eventBufferCapacity;
     private readonly int _terminalRetentionSec;
     private readonly bool _fatalBudgetExhaustion;
+    private readonly bool _permissiveUnleasedOperations;
 
     /// <summary>Stored record for an idempotency key: original submission fingerprint plus issue time.</summary>
     private sealed record IdempotencyRecord(JobId JobId, string Fingerprint, DateTimeOffset CreatedAt);
@@ -52,7 +54,8 @@ public sealed partial class JobManager
         int idempotencyWindowSec = 3600,
         int eventBufferCapacity = 4096,
         int terminalRetentionSec = 600,
-        bool fatalBudgetExhaustion = false)
+        bool fatalBudgetExhaustion = false,
+        bool permissiveUnleasedOperations = false)
     {
         _agents = agents;
         _leases = leases;
@@ -63,6 +66,7 @@ public sealed partial class JobManager
         _eventBufferCapacity = eventBufferCapacity > 0 ? eventBufferCapacity : 4096;
         _terminalRetentionSec = terminalRetentionSec;
         _fatalBudgetExhaustion = fatalBudgetExhaustion;
+        _permissiveUnleasedOperations = permissiveUnleasedOperations;
     }
 
     /// <summary>Initializes a new <see cref="JobManager"/> without credential provisioning.</summary>
@@ -73,6 +77,27 @@ public sealed partial class JobManager
 
     /// <summary>All jobs currently tracked, in arbitrary order.</summary>
     public IEnumerable<Job> Jobs => _jobs.Values;
+
+    /// <summary>Cancellation token rooted at the runtime, NOT at any session. Running jobs are linked
+    /// to this token so they survive session teardown — a heartbeat timeout, graceful
+    /// <c>session.close</c>, or transient transport drop MUST NOT terminate in-flight jobs
+    /// (spec §6.4, §6.7). Only an explicit <c>job.cancel</c>, a lease/budget/runtime limit, or
+    /// runtime shutdown cancels a job.</summary>
+    internal CancellationToken RuntimeToken => _runtimeCts.Token;
+
+    /// <summary>Cancel every running job and stop the runtime. Called on <see cref="ArcpServer"/>
+    /// disposal.</summary>
+    internal void ShutdownRuntime()
+    {
+        try { _runtimeCts.Cancel(); } catch (ObjectDisposedException) { /* already disposed */ }
+    }
+
+    /// <summary>Cancel all in-flight jobs and release the runtime cancellation source.</summary>
+    public void Dispose()
+    {
+        ShutdownRuntime();
+        _runtimeCts.Dispose();
+    }
 
     /// <summary>Look up a job by id.</summary>
     public bool TryGet(JobId id, out Job? job)
@@ -85,7 +110,7 @@ public sealed partial class JobManager
     /// <summary>Submit a job. The caller (SessionState) hands in the envelope; this method returns
     /// the <see cref="Job"/> to run asynchronously plus the <c>job.accepted</c> payload.
     /// <paramref name="inboundTraceId"/> propagates the envelope's <c>trace_id</c> per spec §11.</summary>
-    public async Task<(Job Job, JobAcceptedPayload Accepted)> SubmitAsync(
+    public async Task<(Job Job, JobAcceptedPayload Accepted, bool IsReplay)> SubmitAsync(
         JobSubmitPayload submit,
         SessionId sessionId,
         string? submitterPrincipal,
@@ -113,7 +138,9 @@ public sealed partial class JobManager
                     }
                     if (_jobs.TryGetValue(existingRecord.JobId, out var existing))
                     {
-                        return (existing, BuildAccepted(existing));
+                        // Spec §7.2: an idempotent replay returns the *same* job.accepted and MUST
+                        // NOT re-run the agent. Flag it so the caller skips Resolve/RunAsync.
+                        return (existing, BuildAccepted(existing), true);
                     }
                 }
                 else
@@ -153,7 +180,7 @@ public sealed partial class JobManager
             _idempotency[idemKey] = new IdempotencyRecord(jobId, fingerprint, _time.GetUtcNow());
         }
 
-        return (job, BuildAccepted(job));
+        return (job, BuildAccepted(job), false);
     }
 
     private void AssertChildLeaseIsSubset(string parentJobId, Lease child, LeaseConstraints? childConstraints)
@@ -187,7 +214,7 @@ public sealed partial class JobManager
     public async Task RunAsync(Job job, IAgent agent, Func<Envelope, CancellationToken, ValueTask> emit, CancellationToken cancellationToken)
     {
         job.MarkRunning();
-        var ctx = new JobContext(job, _loggers.CreateLogger($"Arcp.Job.{job.JobId.Value}"), _credentials, _fatalBudgetExhaustion, _leases);
+        var ctx = new JobContext(job, _loggers.CreateLogger($"Arcp.Job.{job.JobId.Value}"), _credentials, _fatalBudgetExhaustion, _leases, _permissiveUnleasedOperations);
 
         // Watchdog cancellation source — cancelled in `finally` so the watchdog never outlives
         // the job and never emits a late lease-expired event after the terminal result.
@@ -440,15 +467,19 @@ public sealed partial class JobManager
     private static bool IsTerminal(JobStatus s) =>
         s is JobStatus.Success or JobStatus.Error or JobStatus.Cancelled or JobStatus.TimedOut;
 
-    /// <summary>Cancel a running job. Only the original submitter may cancel; subscribers may not (spec §7.6).</summary>
-    public bool Cancel(JobId jobId, string? requesterPrincipal, string? reason)
+    /// <summary>Cancel a running job. Cancellation authority is scoped to the *submitting session*
+    /// (spec §7.6, §13.3, §14): only the session that submitted the job may cancel it. Subscription —
+    /// even from another session of the same principal — does NOT confer cancel authority. Returns
+    /// <see langword="false"/> if the job does not exist; throws <see cref="PermissionDeniedException"/>
+    /// when the requesting session is not the submitter.</summary>
+    public bool Cancel(JobId jobId, SessionId requesterSession, string? reason)
     {
         if (!_jobs.TryGetValue(jobId, out var job)) return false;
-        // Spec §7.6: subscription does NOT grant cancel authority; only submitter may cancel.
-        if (requesterPrincipal is not null && job.SubmitterPrincipal is not null &&
-            !string.Equals(requesterPrincipal, job.SubmitterPrincipal, StringComparison.Ordinal))
+        // Fail closed: compare the submitting session, never the principal. A null/foreign requester
+        // must not be able to bypass the check (spec §14: "Subscription MUST NOT confer cancel authority").
+        if (!job.SessionId.Equals(requesterSession))
         {
-            throw new PermissionDeniedException("Subscribers MUST NOT cancel jobs (spec §7.6)");
+            throw new PermissionDeniedException("Only the submitting session may cancel a job (spec §7.6, §14)");
         }
         job.CancellationSource.Cancel();
         return true;

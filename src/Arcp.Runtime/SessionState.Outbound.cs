@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 using System;
 using System.Threading;
+using System.Threading.Channels;
 using System.Threading.Tasks;
 using Arcp.Core.Ids;
 using Arcp.Core.Messages;
@@ -70,16 +71,42 @@ public sealed partial class SessionState
 
     private async ValueTask EmitJobEnvelopeAsync(Envelope env, CancellationToken cancellationToken)
     {
-        // Append the event to this owning session's log if it's an event/result/error.
-        var stamped = env.Type is MessageTypeNames.JobEvent or MessageTypeNames.JobResult or MessageTypeNames.JobError
-            ? EventLog.Append(env)
-            : env;
+        var isEvent = env.Type is MessageTypeNames.JobEvent or MessageTypeNames.JobResult or MessageTypeNames.JobError;
 
-        await SendAsync(stamped, cancellationToken).ConfigureAwait(false);
-        FanOutToSubscribers(env, stamped, cancellationToken);
+        // Spec §8.3: event_seq assignment and enqueue MUST be atomic so the single-reader outbound
+        // channel delivers events in strictly monotonic order. Concurrent emitters in one session
+        // (agent, lease watchdog, back-pressure status) are serialized through this gate so a higher
+        // seq can never be enqueued before a lower one.
+        await _emitGate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            var stamped = isEvent ? EventLog.Append(env) : env;
+            await WriteToOutboundAsync(stamped, cancellationToken).ConfigureAwait(false);
+        }
+        finally
+        {
+            _emitGate.Release();
+        }
+
+        await FanOutToSubscribersAsync(env, cancellationToken).ConfigureAwait(false);
     }
 
-    private void FanOutToSubscribers(Envelope env, Envelope stamped, CancellationToken cancellationToken)
+    /// <summary>Write to the outbound channel, tolerating a closed channel. Spec §6.7: when the
+    /// session's transport has dropped, the job keeps running and the event is retained in the
+    /// EventLog for resume — so a closed channel is a no-op, not a failure that faults the job.</summary>
+    private async ValueTask WriteToOutboundAsync(Envelope env, CancellationToken cancellationToken)
+    {
+        try
+        {
+            await _outbound.Writer.WriteAsync(env, cancellationToken).ConfigureAwait(false);
+        }
+        catch (ChannelClosedException)
+        {
+            // Transport gone; event retained in EventLog for replay on resume (spec §6.7).
+        }
+    }
+
+    private async ValueTask FanOutToSubscribersAsync(Envelope env, CancellationToken cancellationToken)
     {
         // Spec §7.6.
         if (env.JobId is not { } jobIdStr) return;
@@ -88,16 +115,49 @@ public sealed partial class SessionState
         foreach (var sub in _server.Subscriptions.SubscribersOf(jid))
         {
             if (sub.Value == SessionId.Value) continue;
-            _server.GetSession(sub)?.EmitToSubscriber(stamped, cancellationToken);
+            var session = _server.GetSession(sub);
+            if (session is not null)
+                await session.EmitToSubscriberAsync(env, cancellationToken).ConfigureAwait(false);
         }
     }
 
-    internal void EmitToSubscriber(Envelope env, CancellationToken cancellationToken)
+    internal async ValueTask EmitToSubscriberAsync(Envelope env, CancellationToken cancellationToken)
     {
-        // Re-stamp for the subscriber's session_id and event_seq.
+        // Re-stamp for the subscriber's session_id and event_seq under the subscriber's emit gate so
+        // append+enqueue stay atomic (spec §8.3) and the subscriber's wire order is monotonic.
         var rekeyed = RedactCredentialSecretsForSubscriber(env) with { SessionId = SessionId.Value };
-        var stamped = EventLog.Append(rekeyed);
-        _outbound.Writer.TryWrite(stamped);
+        bool overflow;
+        await _emitGate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            // Spec §7.6: drop events already covered by the subscribe history replay. The check runs
+            // under the gate so it observes the exact boundary set while the gate was held by replay.
+            if (ShouldSkipReplayedEvent(env)) return;
+            var stamped = EventLog.Append(rekeyed);
+            // The subscriber channel is bounded. A silent TryWrite drop would leave a gap in the
+            // subscriber's event_seq (spec §8.3 requires gap-free). If the channel is full, tear the
+            // subscription down deterministically instead of dropping the event silently.
+            overflow = !_outbound.Writer.TryWrite(stamped);
+        }
+        finally
+        {
+            _emitGate.Release();
+        }
+
+        if (overflow)
+        {
+            _logger.LogWarning(
+                "Subscriber session {SessionId} outbound is full; closing to avoid a silent event_seq gap (spec §8.3)",
+                SessionId);
+            await CloseAsync(reason: "SUBSCRIBER_OVERFLOW", cancellationToken).ConfigureAwait(false);
+        }
+    }
+
+    private bool ShouldSkipReplayedEvent(Envelope env)
+    {
+        if (env.JobId is not { } jobId || !JobId.TryParse(jobId, null, out var jid)) return false;
+        if (env.JobEventIndex is not { } idx) return false;
+        return _subscribeMarks.TryGetValue(jid, out var mark) && idx <= mark;
     }
 
     private Envelope RedactCredentialSecretsForSubscriber(Envelope env)
@@ -116,7 +176,17 @@ public sealed partial class SessionState
 
     private async ValueTask EmitEventAsync(Envelope env, CancellationToken cancellationToken)
     {
-        var stamped = EventLog.Append(env);
-        await SendAsync(stamped, cancellationToken).ConfigureAwait(false);
+        // Route through the same emit gate as job events so back-pressure status events keep the
+        // session's event_seq strictly monotonic (spec §8.3).
+        await _emitGate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            var stamped = EventLog.Append(env);
+            await WriteToOutboundAsync(stamped, cancellationToken).ConfigureAwait(false);
+        }
+        finally
+        {
+            _emitGate.Release();
+        }
     }
 }

@@ -12,42 +12,95 @@ namespace Arcp.Runtime;
 
 public sealed partial class JobManager
 {
-    /// <summary>List.</summary>
+    /// <summary>List jobs visible to <paramref name="requesterPrincipal"/>, paged by a stable keyset
+    /// cursor on <c>(created_at, job_id)</c> (spec §6.6). Page materialization is bounded to
+    /// <c>limit + 1</c> entries regardless of how many jobs are visible, and ordering is stable when
+    /// multiple jobs share the same <c>CreatedAt</c>.</summary>
     public IReadOnlyList<JobListEntry> List(string? requesterPrincipal, IJobAuthorizationPolicy policy,
         JobListFilter? filter, int? limit, string? cursor, out string? nextCursor)
     {
-        var jobs = FilterByPrincipal(requesterPrincipal, policy);
-        jobs = ApplyFilter(jobs, filter);
-        jobs = jobs.OrderBy(j => j.CreatedAt).ToList();
+        var take = limit is > 0 ? limit.Value : 100;
+        var after = DecodeCursor(cursor);
 
-        var skip = ParseCursor(cursor);
-        var take = limit ?? 100;
-        var page = jobs.Skip(skip).Take(take).ToList();
-        nextCursor = skip + page.Count < jobs.Count ? EncodeCursor(skip + page.Count) : null;
+        // Convert the status filter to a set once per request rather than per job.
+        var statusSet = filter?.Status is { Count: > 0 } statuses
+            ? new HashSet<string>(statuses, StringComparer.Ordinal)
+            : null;
 
-        return page.Select(ToListEntry).ToArray();
+        // Single streaming pass: keep only the smallest take+1 entries strictly after the cursor.
+        // This bounds page materialization to take+1 entries instead of sorting/rematerializing the
+        // full visible job set on every page (spec §6.6).
+        var page = new List<Job>(take + 1);
+        foreach (var job in FilterByPrincipal(requesterPrincipal, policy))
+        {
+            if (!MatchesFilter(job, filter, statusSet)) continue;
+            var key = JobKey.From(job);
+            if (after is { } a && JobKey.Compare(key, a) <= 0) continue; // at or before the cursor
+            InsertBounded(page, job, take + 1);
+        }
+
+        // A take+1th entry means there is at least one more page; the cursor is the last returned key.
+        nextCursor = page.Count > take ? EncodeCursor(JobKey.From(page[take - 1])) : null;
+        var count = Math.Min(page.Count, take);
+        var result = new JobListEntry[count];
+        for (var i = 0; i < count; i++) result[i] = ToListEntry(page[i]);
+        return result;
     }
 
-    private List<Job> FilterByPrincipal(string? requesterPrincipal, IJobAuthorizationPolicy policy) =>
-        _jobs.Values
-            .Where(j => string.IsNullOrEmpty(requesterPrincipal) ||
-                        string.Equals(j.SubmitterPrincipal, requesterPrincipal, StringComparison.Ordinal) ||
-                        policy.CanObserve(j.SubmitterPrincipal, new AuthPrincipal(requesterPrincipal)))
-            .ToList();
-
-    private static List<Job> ApplyFilter(List<Job> jobs, JobListFilter? filter)
+    /// <summary>Jobs the requester is allowed to see. Fail closed: an empty/absent principal is NOT a
+    /// wildcard — it sees only what the authorization policy explicitly permits, never the full
+    /// cross-principal set (spec §6.6, §14).</summary>
+    private IEnumerable<Job> FilterByPrincipal(string? requesterPrincipal, IJobAuthorizationPolicy policy)
     {
-        if (filter is null) return jobs;
-        if (filter.Status is { Count: > 0 } statuses)
-            jobs = jobs.Where(j => statuses.Contains(MapStatus(j.Status), StringComparer.Ordinal)).ToList();
-        if (!string.IsNullOrEmpty(filter.Agent))
+        if (string.IsNullOrEmpty(requesterPrincipal))
         {
-            var a = filter.Agent;
-            jobs = jobs.Where(j => j.Agent.Name == a || j.Agent.ToString() == a).ToList();
+            var anonymous = new AuthPrincipal(string.Empty);
+            return _jobs.Values.Where(j => policy.CanObserve(j.SubmitterPrincipal, anonymous));
         }
-        if (filter.CreatedAfter is { } after)
-            jobs = jobs.Where(j => j.CreatedAt > after).ToList();
-        return jobs;
+
+        var principal = new AuthPrincipal(requesterPrincipal);
+        return _jobs.Values.Where(j =>
+            string.Equals(j.SubmitterPrincipal, requesterPrincipal, StringComparison.Ordinal) ||
+            policy.CanObserve(j.SubmitterPrincipal, principal));
+    }
+
+    private static bool MatchesFilter(Job j, JobListFilter? filter, HashSet<string>? statusSet)
+    {
+        if (filter is null) return true;
+        if (statusSet is not null && !statusSet.Contains(MapStatus(j.Status))) return false;
+        if (!string.IsNullOrEmpty(filter.Agent) && j.Agent.Name != filter.Agent && j.Agent.ToString() != filter.Agent)
+            return false;
+        if (filter.CreatedAfter is { } after && j.CreatedAt <= after) return false;
+        return true;
+    }
+
+    /// <summary>Insert <paramref name="job"/> into the ascending-ordered <paramref name="page"/>,
+    /// keeping at most <paramref name="cap"/> entries. Jobs ordering larger than everything retained
+    /// are discarded without growing the list, so the buffer never exceeds <c>cap</c>.</summary>
+    private static void InsertBounded(List<Job> page, Job job, int cap)
+    {
+        var key = JobKey.From(job);
+        int lo = 0, hi = page.Count;
+        while (lo < hi)
+        {
+            var mid = (lo + hi) / 2;
+            if (JobKey.Compare(JobKey.From(page[mid]), key) < 0) lo = mid + 1;
+            else hi = mid;
+        }
+        if (lo >= cap) return; // larger than every retained entry; cannot be in the smallest `cap`
+        page.Insert(lo, job);
+        if (page.Count > cap) page.RemoveAt(page.Count - 1);
+    }
+
+    private readonly record struct JobKey(DateTimeOffset CreatedAt, string JobId)
+    {
+        public static JobKey From(Job j) => new(j.CreatedAt, j.JobId.Value);
+
+        public static int Compare(JobKey a, JobKey b)
+        {
+            var byTime = a.CreatedAt.UtcDateTime.CompareTo(b.CreatedAt.UtcDateTime);
+            return byTime != 0 ? byTime : string.CompareOrdinal(a.JobId, b.JobId);
+        }
     }
 
     private static JobListEntry ToListEntry(Job j) => new()
@@ -60,6 +113,7 @@ public sealed partial class JobManager
         ParentJobId = j.ParentJobId,
         CreatedAt = j.CreatedAt,
         TraceId = j.TraceId?.Value,
+        LastEventSeq = j.LastEmittedSeq,
     };
 
     private static string MapStatus(JobStatus s) => s switch
@@ -73,13 +127,25 @@ public sealed partial class JobManager
         _ => "unknown",
     };
 
-    private static int ParseCursor(string? cursor)
+    private static JobKey? DecodeCursor(string? cursor)
     {
-        if (string.IsNullOrEmpty(cursor)) return 0;
-        try { return int.Parse(Encoding.UTF8.GetString(Convert.FromBase64String(cursor)), CultureInfo.InvariantCulture); }
-        catch (FormatException) { return 0; }
+        if (string.IsNullOrEmpty(cursor)) return null;
+        try
+        {
+            var raw = Encoding.UTF8.GetString(Convert.FromBase64String(cursor));
+            var sep = raw.IndexOf('|');
+            if (sep < 0) return null;
+            var ticks = long.Parse(raw[..sep], CultureInfo.InvariantCulture);
+            var jobId = raw[(sep + 1)..];
+            return new JobKey(new DateTimeOffset(ticks, TimeSpan.Zero), jobId);
+        }
+        catch (FormatException) { return null; }
+        catch (OverflowException) { return null; }
     }
 
-    private static string EncodeCursor(int offset) =>
-        Convert.ToBase64String(Encoding.UTF8.GetBytes(offset.ToString(CultureInfo.InvariantCulture)));
+    private static string EncodeCursor(JobKey key)
+    {
+        var raw = $"{key.CreatedAt.UtcTicks.ToString(CultureInfo.InvariantCulture)}|{key.JobId}";
+        return Convert.ToBase64String(Encoding.UTF8.GetBytes(raw));
+    }
 }

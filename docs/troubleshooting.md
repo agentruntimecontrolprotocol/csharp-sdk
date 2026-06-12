@@ -110,7 +110,7 @@ trace ID). See
 
 An incoming envelope has a malformed payload. The most common cause is a
 version mismatch between the client and server SDK. Verify both sides use
-compatible `arcp` wire versions (`client.WireVersion` / `server.WireVersion`).
+compatible `arcp` wire versions (the envelope `arcp` field, default `"1.1"`).
 
 ### Vendor extension fields disappear
 

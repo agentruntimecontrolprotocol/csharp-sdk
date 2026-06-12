@@ -63,20 +63,23 @@ public sealed class AgentRegistry
 
     /// <summary>To inventory.</summary>
     public IReadOnlyList<AgentInventoryEntry> ToInventory() =>
-        _byName.Values.Select(e => new AgentInventoryEntry
+        _byName.Values.Select(e =>
         {
-            Name = e.Name,
-            Versions = e.Versions.Count > 0 ? e.Versions.Keys.ToArray() : null,
-            Default = e.DefaultVersion,
+            var (versions, defaultVersion) = e.SnapshotInventoryFields();
+            return new AgentInventoryEntry
+            {
+                Name = e.Name,
+                Versions = versions,
+                Default = defaultVersion,
+            };
         }).ToArray();
 
     private sealed class AgentEntry
     {
         private readonly object _gate = new();
+        private readonly Dictionary<string, IAgent> _versions = new(StringComparer.Ordinal);
 
         public string Name { get; }
-
-        public Dictionary<string, IAgent> Versions { get; } = new(StringComparer.Ordinal);
 
         public string? DefaultVersion { get; private set; }
 
@@ -86,14 +89,14 @@ public sealed class AgentRegistry
 
         public bool TryGetVersion(string v, out IAgent? agent)
         {
-            lock (_gate) return Versions.TryGetValue(v, out agent);
+            lock (_gate) return _versions.TryGetValue(v, out agent);
         }
 
         public void AddVersion(string version, IAgent agent)
         {
             lock (_gate)
             {
-                Versions[version] = agent;
+                _versions[version] = agent;
                 DefaultVersion ??= version;
             }
         }
@@ -107,7 +110,7 @@ public sealed class AgentRegistry
         {
             lock (_gate)
             {
-                if (!Versions.ContainsKey(version))
+                if (!_versions.ContainsKey(version))
                     throw new AgentVersionNotAvailableException($"{Name}@{version} not registered");
                 DefaultVersion = version;
             }
@@ -119,9 +122,21 @@ public sealed class AgentRegistry
             {
                 lock (_gate)
                 {
-                    foreach (var kv in Versions) return (kv.Key, kv.Value);
+                    foreach (var kv in _versions) return (kv.Key, kv.Value);
                     return null;
                 }
+            }
+        }
+
+        /// <summary>Atomically snapshot the inventory-visible fields under the same lock that guards
+        /// mutation, so <see cref="ToInventory"/> never enumerates the mutable dictionary while a
+        /// concurrent registration is writing to it.</summary>
+        public (IReadOnlyList<string>? Versions, string? Default) SnapshotInventoryFields()
+        {
+            lock (_gate)
+            {
+                var versions = _versions.Count > 0 ? _versions.Keys.ToArray() : null;
+                return (versions, DefaultVersion);
             }
         }
     }

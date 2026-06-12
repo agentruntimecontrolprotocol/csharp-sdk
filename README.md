@@ -105,7 +105,7 @@ await using var client = await ArcpClient.ConnectAsync(transport, new ArcpClient
 
 var sessionId = client.SessionId;
 var resumeToken = client.ResumeToken;
-var effective = client.EffectiveFeatures; // intersection of client/runtime hello.features
+var effective = client.EffectiveFeatures; // intersection of hello.features and welcome.features
 
 // ... transport drops; track the last seq your reader observed ...
 var lastSeq = client.LastReceivedSeq;

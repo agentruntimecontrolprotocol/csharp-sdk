@@ -50,6 +50,12 @@ public sealed class ArcpServerOptions
     /// <summary>Gets the back pressure threshold.</summary>
     public int BackPressureThreshold { get; init; } = 1000;
 
+    /// <summary>When <see langword="false"/> (the default, spec §9.1/§9.3 deny-by-default), an
+    /// authority-bearing operation (<c>tool.call</c>, <c>agent.delegate</c>) whose namespace the
+    /// job's lease does not declare fails with <c>PERMISSION_DENIED</c>. Set to <see langword="true"/>
+    /// to opt into the legacy permissive behavior where uncovered namespaces are allowed.</summary>
+    public bool PermissiveUnleasedOperations { get; init; }
+
     /// <summary>Gets the authorization policy.</summary>
     public IJobAuthorizationPolicy AuthorizationPolicy { get; init; } = new SamePrincipalPolicy();
 

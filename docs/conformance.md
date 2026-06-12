@@ -60,7 +60,7 @@ Opt out of features on either peer:
 ```csharp
 new ArcpClientOptions
 {
-    Features = new FeatureSet(["heartbeat", "ack"]), // drop the rest
+    Features = new[] { FeatureFlags.Heartbeat, FeatureFlags.Ack }, // drop the rest
 };
 ```
 

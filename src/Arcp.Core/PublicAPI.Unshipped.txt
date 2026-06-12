@@ -266,6 +266,19 @@ static Arcp.Core.Messages.ProvisionedCredential.operator ==(Arcp.Core.Messages.P
 Arcp.Core.Messages.JobCancelPayload.JobId.init -> void
 Arcp.Core.Messages.JobCancelPayload.Reason.get -> string?
 Arcp.Core.Messages.JobCancelPayload.Reason.init -> void
+Arcp.Core.Messages.JobCancelledPayload
+Arcp.Core.Messages.JobCancelledPayload.<Clone>$() -> Arcp.Core.Messages.JobCancelledPayload!
+Arcp.Core.Messages.JobCancelledPayload.Equals(Arcp.Core.Messages.JobCancelledPayload? other) -> bool
+Arcp.Core.Messages.JobCancelledPayload.JobCancelledPayload() -> void
+Arcp.Core.Messages.JobCancelledPayload.JobId.get -> string!
+Arcp.Core.Messages.JobCancelledPayload.JobId.init -> void
+Arcp.Core.Messages.JobCancelledPayload.Reason.get -> string?
+Arcp.Core.Messages.JobCancelledPayload.Reason.init -> void
+override Arcp.Core.Messages.JobCancelledPayload.Equals(object? obj) -> bool
+override Arcp.Core.Messages.JobCancelledPayload.GetHashCode() -> int
+override Arcp.Core.Messages.JobCancelledPayload.ToString() -> string!
+static Arcp.Core.Messages.JobCancelledPayload.operator !=(Arcp.Core.Messages.JobCancelledPayload? left, Arcp.Core.Messages.JobCancelledPayload? right) -> bool
+static Arcp.Core.Messages.JobCancelledPayload.operator ==(Arcp.Core.Messages.JobCancelledPayload? left, Arcp.Core.Messages.JobCancelledPayload? right) -> bool
 Arcp.Core.Messages.JobErrorPayload
 Arcp.Core.Messages.JobErrorPayload.<Clone>$() -> Arcp.Core.Messages.JobErrorPayload!
 Arcp.Core.Messages.JobErrorPayload.Code.get -> string!
@@ -638,6 +651,8 @@ Arcp.Core.Wire.Envelope.Extensions.get -> System.Collections.Generic.IDictionary
 Arcp.Core.Wire.Envelope.Extensions.init -> void
 Arcp.Core.Wire.Envelope.Id.get -> string!
 Arcp.Core.Wire.Envelope.Id.init -> void
+Arcp.Core.Wire.Envelope.JobEventIndex.get -> long?
+Arcp.Core.Wire.Envelope.JobEventIndex.init -> void
 Arcp.Core.Wire.Envelope.JobId.get -> string?
 Arcp.Core.Wire.Envelope.JobId.init -> void
 Arcp.Core.Wire.Envelope.ParentSpanId.get -> string?
@@ -707,6 +722,7 @@ const Arcp.Core.Messages.EventKinds.ToolCall = "tool_call" -> string!
 const Arcp.Core.Messages.EventKinds.ToolResult = "tool_result" -> string!
 const Arcp.Core.Messages.MessageTypeNames.JobAccepted = "job.accepted" -> string!
 const Arcp.Core.Messages.MessageTypeNames.JobCancel = "job.cancel" -> string!
+const Arcp.Core.Messages.MessageTypeNames.JobCancelled = "job.cancelled" -> string!
 const Arcp.Core.Messages.MessageTypeNames.JobError = "job.error" -> string!
 const Arcp.Core.Messages.MessageTypeNames.JobEvent = "job.event" -> string!
 const Arcp.Core.Messages.MessageTypeNames.JobResult = "job.result" -> string!
@@ -716,6 +732,8 @@ const Arcp.Core.Messages.MessageTypeNames.JobSubscribed = "job.subscribed" -> st
 const Arcp.Core.Messages.MessageTypeNames.JobUnsubscribe = "job.unsubscribe" -> string!
 const Arcp.Core.Messages.MessageTypeNames.SessionAck = "session.ack" -> string!
 const Arcp.Core.Messages.MessageTypeNames.SessionBye = "session.bye" -> string!
+const Arcp.Core.Messages.MessageTypeNames.SessionClose = "session.close" -> string!
+const Arcp.Core.Messages.MessageTypeNames.SessionClosed = "session.closed" -> string!
 const Arcp.Core.Messages.MessageTypeNames.SessionError = "session.error" -> string!
 const Arcp.Core.Messages.MessageTypeNames.SessionHello = "session.hello" -> string!
 const Arcp.Core.Messages.MessageTypeNames.SessionJobs = "session.jobs" -> string!

@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Arcp.Client;
 using Arcp.Core.Caps;
+using Arcp.Core.Errors;
 using Arcp.Core.Messages;
 using Arcp.Core.Transport;
 using Arcp.Runtime;
@@ -79,11 +80,11 @@ public class EndToEndTests
             Client = new ClientInfo { Name = "test", Version = "1.0" },
         });
 
-        // Submitting an unknown version yields a session.error; the SubmitAsync await never
-        // resolves because no job.accepted is emitted. Wrap in a timeout to confirm rejection.
-        var submitTask = client.SubmitAsync("code-refactor@9.9.9");
-        var completed = await Task.WhenAny(submitTask, Task.Delay(800));
-        completed.Should().NotBeSameAs(submitTask);
+        // Submitting an unknown version is rejected with a session.error; the awaiting SubmitAsync
+        // MUST surface that as a thrown ArcpException (it used to hang until cancellation).
+        var act = async () => await client.SubmitAsync("code-refactor@9.9.9").WaitAsync(TimeSpan.FromSeconds(3));
+        await act.Should().ThrowAsync<ArcpException>()
+            .Where(e => e.Code == ErrorCode.AgentVersionNotAvailable);
     }
 
     [Fact]

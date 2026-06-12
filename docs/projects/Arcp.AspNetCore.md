@@ -77,6 +77,6 @@ app.MapArcp(server, o => { o.Path = "/arcp-external";  o.AllowedHosts = new[] { 
 
 - [Arcp.Runtime](./Arcp.Runtime.md) — `ArcpServer` configuration.
 - [Arcp.Otel](./Arcp.Otel.md) — transport instrumentation.
-- [Arcp.Hosting](./Arcp.Hosting.md) — `IHostedService` / DI integration.
+- [Arcp.Hosting](./Arcp.Hosting.md) — `AddArcpRuntime` DI registration.
 - [Troubleshooting — 403 Forbidden](../troubleshooting.md#websocket-upgrade-returns-403-forbidden) — allowed-host failures.
 - [Troubleshooting — HEARTBEAT_LOST](../troubleshooting.md#job-is-cancelled-with-heartbeat_lost) — keepalive collision.

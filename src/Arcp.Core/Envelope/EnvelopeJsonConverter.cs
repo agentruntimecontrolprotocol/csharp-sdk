@@ -8,7 +8,7 @@ namespace Arcp.Core.Wire;
 
 /// <summary>Custom envelope (de)serializer. Reads the <c>type</c> field first to choose the
 /// concrete payload type from <see cref="MessageTypeRegistry"/>. Unknown <c>type</c> values produce
-/// an envelope with a <see cref="JsonElement"/> payload — they round-trip without loss per spec §5.1.</summary>
+/// an envelope with a <see cref="JsonElement"/> payload — they round-trip without loss per spec §5.</summary>
 public sealed class EnvelopeJsonConverter : JsonConverter<Envelope>
 {
     private readonly MessageTypeRegistry _registry;
@@ -101,9 +101,9 @@ public sealed class EnvelopeJsonConverter : JsonConverter<Envelope>
     private static void ValidateHeader(EnvelopeFields fields)
     {
         if (string.IsNullOrEmpty(fields.Type))
-            throw new Errors.InvalidRequestException("Envelope missing required 'type' field (spec §5.1).");
+            throw new Errors.InvalidRequestException("Envelope missing required 'type' field (spec §5).");
         if (fields.Arcp is not null && fields.Arcp != "1.1")
-            throw new Errors.InvalidRequestException($"Unsupported ARCP envelope version: '{fields.Arcp}' (spec §5.1; expected '1.1').");
+            throw new Errors.InvalidRequestException($"Unsupported ARCP envelope version: '{fields.Arcp}' (spec §5; expected '1.1').");
     }
 
     private object? DeserializePayload(EnvelopeFields fields, JsonSerializerOptions options)

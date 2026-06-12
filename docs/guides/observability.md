@@ -41,7 +41,7 @@ constants.
 | Name              | Purpose                                            |
 | ----------------- | -------------------------------------------------- |
 | `Arcp.Transport`  | One span per envelope (send and receive).          |
-| `Arcp.Runtime`    | Runtime-internal spans (dispatch, agent run).      |
+| `Arcp.Runtime`    | Application spans you start manually (e.g. delegation). |
 
 ## Span shape
 
@@ -66,10 +66,6 @@ For each envelope, the wrapper:
 | `arcp.job_id`              | envelope `job_id`                             |
 | `arcp.trace_id`            | envelope `trace_id`                           |
 | `arcp.event_seq`           | envelope `event_seq`                          |
-| `arcp.agent`               | `payload.agent` (on submit / accept)          |
-| `arcp.lease.capabilities`  | comma-joined lease keys                       |
-| `arcp.lease.expires_at`    | ISO 8601 string (v1.1)                        |
-| `arcp.budget.remaining`    | JSON-stringified currency map (v1.1)          |
 
 ## Use with ASP.NET Core
 

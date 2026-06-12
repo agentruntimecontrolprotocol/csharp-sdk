@@ -81,9 +81,34 @@ public sealed class JobHandle : IAsyncDisposable
 
     internal void OnError(JobErrorPayload payload)
     {
+        // If the job was rejected before acceptance (e.g. a server session.error for a duplicate
+        // key or unavailable agent), the awaiter on Accepted must fault rather than hang forever.
+        // For a post-acceptance terminal error, Accepted is already resolved so this is a no-op.
+        _accepted.TrySetException(ToException(payload.Code, payload.Message, payload.Detail));
         _terminal.TrySetResult(new JobResult(false, null, payload));
         _events.Writer.TryComplete();
     }
+
+    /// <summary>Map a wire error code to the most specific <see cref="ArcpException"/> subtype so
+    /// callers can <c>catch</c> on the concrete type (e.g. <see cref="DuplicateKeyException"/>).</summary>
+    internal static ArcpException ToException(string code, string message, string? detail) => code switch
+    {
+        ErrorCode.DuplicateKey => new DuplicateKeyException(message, detail),
+        ErrorCode.AgentNotAvailable => new AgentNotAvailableException(message, detail),
+        ErrorCode.AgentVersionNotAvailable => new AgentVersionNotAvailableException(message, detail),
+        ErrorCode.LeaseSubsetViolation => new LeaseSubsetViolationException(message, detail),
+        ErrorCode.PermissionDenied => new PermissionDeniedException(message, detail),
+        ErrorCode.JobNotFound => new JobNotFoundException(message, detail),
+        ErrorCode.InvalidRequest => new InvalidRequestException(message, detail),
+        ErrorCode.Unauthenticated => new UnauthenticatedException(message, detail),
+        ErrorCode.BudgetExhausted => new BudgetExhaustedException(message, detail),
+        ErrorCode.LeaseExpired => new LeaseExpiredException(message, detail),
+        ErrorCode.ResumeWindowExpired => new ResumeWindowExpiredException(message, detail),
+        ErrorCode.HeartbeatLost => new HeartbeatLostException(message, detail),
+        ErrorCode.Timeout => new Arcp.Core.Errors.TimeoutException(message, detail),
+        ErrorCode.Cancelled => new CancelledException(message, detail),
+        _ => new ArcpException(code, message, detail),
+    };
 
     /// <summary>Events.</summary>
     public async IAsyncEnumerable<JobEvent> Events([EnumeratorCancellation] CancellationToken cancellationToken = default)

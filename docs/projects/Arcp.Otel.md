@@ -73,10 +73,6 @@ For each envelope the wrapper:
 | `arcp.job_id`                | envelope `job_id`                        |
 | `arcp.trace_id`              | envelope `trace_id`                      |
 | `arcp.event_seq`             | envelope `event_seq`                     |
-| `arcp.agent`                 | `payload.agent` (on submit / accept)     |
-| `arcp.lease.capabilities`    | comma-joined lease keys                  |
-| `arcp.lease.expires_at`      | ISO 8601 string (v1.1)                   |
-| `arcp.budget.remaining`      | JSON-stringified currency map (v1.1)     |
 
 ## Propagating trace IDs to child jobs
 

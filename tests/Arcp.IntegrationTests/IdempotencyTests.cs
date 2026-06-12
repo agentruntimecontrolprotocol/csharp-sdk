@@ -74,10 +74,39 @@ public class IdempotencyTests
         var first = await c.SubmitAsync("echo", new { x = 1 }, idempotencyKey: "key-2");
         first.JobId.Value.Should().NotBeNullOrEmpty();
 
-        // Submitting again with the same key but a different payload should never resolve to
-        // an acceptance — the server emits a session.error with DUPLICATE_KEY.
-        var submitTask = c.SubmitAsync("echo", new { x = 99 }, idempotencyKey: "key-2");
-        var completed = await Task.WhenAny(submitTask, Task.Delay(800));
-        completed.Should().NotBeSameAs(submitTask);
+        // Submitting again with the same key but a different payload is rejected with DUPLICATE_KEY.
+        // The server's session.error MUST reach the awaiting SubmitAsync (it used to hang forever).
+        var act = async () => await c.SubmitAsync("echo", new { x = 99 }, idempotencyKey: "key-2")
+            .WaitAsync(TimeSpan.FromSeconds(3));
+        await act.Should().ThrowAsync<DuplicateKeyException>();
+    }
+
+    [Fact]
+    public async Task Idempotent_replay_does_not_run_the_agent_twice()
+    {
+        // Spec §7.2: a duplicate idempotent submit re-acknowledges the existing job but MUST NOT
+        // invoke the agent a second time (no re-emitted events, no second terminal, no status reset).
+        var runCount = 0;
+        var (_, transport) = StartServer(s => s.RegisterAgent("counter", async (ctx, ct) =>
+        {
+            Interlocked.Increment(ref runCount);
+            await Task.Delay(50, ct);
+            return "done";
+        }));
+        await using var c = await ArcpClient.ConnectAsync(transport, new ArcpClientOptions
+        {
+            Client = new ClientInfo { Name = "t", Version = "1" },
+        });
+
+        var first = await c.SubmitAsync("counter", new { x = 1 }, idempotencyKey: "dup");
+        var firstResult = await first.Result.WaitAsync(TimeSpan.FromSeconds(3));
+        firstResult.Success.Should().BeTrue();
+
+        var second = await c.SubmitAsync("counter", new { x = 1 }, idempotencyKey: "dup");
+        second.JobId.Value.Should().Be(first.JobId.Value);
+
+        // Allow time for any (erroneous) replayed run to fire before asserting.
+        await Task.Delay(200);
+        runCount.Should().Be(1);
     }
 }

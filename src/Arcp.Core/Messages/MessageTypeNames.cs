@@ -16,7 +16,12 @@ public static class MessageTypeNames
     public const string SessionHello = "session.hello";
     /// <summary>Gets the session welcome.</summary>
     public const string SessionWelcome = "session.welcome";
-    /// <summary>Gets the session bye.</summary>
+    /// <summary>Client-sent graceful session close (spec §6.7).</summary>
+    public const string SessionClose = "session.close";
+    /// <summary>Runtime-sent acknowledgement of <see cref="SessionClose"/> (spec §6.7).</summary>
+    public const string SessionClosed = "session.closed";
+    /// <summary>Gets the session bye. Deprecated alias for <see cref="SessionClose"/> kept for
+    /// back-compat with pre-1.1 peers; the runtime treats it like <c>session.close</c> (spec §6.7).</summary>
     public const string SessionBye = "session.bye";
     /// <summary>Gets the session ping.</summary>
     public const string SessionPing = "session.ping";
@@ -51,6 +56,8 @@ public static class MessageTypeNames
     public const string JobError = "job.error";
     /// <summary>Gets the job cancel.</summary>
     public const string JobCancel = "job.cancel";
+    /// <summary>Gets the job cancelled acknowledgement (spec §7.4).</summary>
+    public const string JobCancelled = "job.cancelled";
     /// <summary>Gets the job subscribe.</summary>
     public const string JobSubscribe = "job.subscribe";
     /// <summary>Gets the job subscribed.</summary>
@@ -61,9 +68,9 @@ public static class MessageTypeNames
     /// <summary>Gets the all.</summary>
     public static readonly FrozenSet<string> All = new HashSet<string>(StringComparer.Ordinal)
     {
-        SessionHello, SessionWelcome, SessionBye, SessionPing, SessionPong, SessionAck,
+        SessionHello, SessionWelcome, SessionClose, SessionClosed, SessionBye, SessionPing, SessionPong, SessionAck,
         SessionListJobs, SessionJobs, SessionError, SessionResume,
-        JobSubmit, JobAccepted, JobEvent, JobResult, JobError, JobCancel,
+        JobSubmit, JobAccepted, JobEvent, JobResult, JobError, JobCancel, JobCancelled,
         JobSubscribe, JobSubscribed, JobUnsubscribe,
     }.ToFrozenSet();
 }

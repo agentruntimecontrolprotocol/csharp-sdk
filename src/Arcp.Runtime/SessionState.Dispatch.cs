@@ -39,7 +39,27 @@ public sealed partial class SessionState
             }
             catch (Exception ex)
             {
+                // Spec §12: surface an unexpected failure as session.error{INTERNAL_ERROR} so the
+                // peer is not left waiting forever for an acknowledgement that never arrives.
                 _logger.LogError(ex, "Dispatch error for type {Type}", env.Type);
+                try
+                {
+                    await SendAsync(new Envelope
+                    {
+                        Type = MessageTypeNames.SessionError,
+                        SessionId = SessionId.Value,
+                        Payload = new SessionErrorPayload
+                        {
+                            Code = ErrorCode.InternalError,
+                            Message = "Internal error while processing request",
+                            Retryable = true,
+                        },
+                    }, cancellationToken).ConfigureAwait(false);
+                }
+                catch (Exception sendEx)
+                {
+                    _logger.LogError(sendEx, "Failed to send INTERNAL_ERROR for type {Type}", env.Type);
+                }
             }
         }
     }
@@ -74,8 +94,11 @@ public sealed partial class SessionState
             case MessageTypeNames.SessionListJobs:
                 await HandleListJobsAsync(env, cancellationToken).ConfigureAwait(false);
                 break;
+            case MessageTypeNames.SessionClose:
             case MessageTypeNames.SessionBye:
-                IsClosed = true;
+                // Spec §6.7: client-sent session.close (or the deprecated session.bye alias) is
+                // acknowledged with session.closed (emitted by CloseAsync). In-flight jobs are
+                // rooted at the runtime token, so this does NOT terminate them.
                 await CloseAsync(reason: (env.Payload as SessionByePayload)?.Reason, cancellationToken).ConfigureAwait(false);
                 break;
             case MessageTypeNames.JobSubmit:
@@ -84,10 +107,7 @@ public sealed partial class SessionState
                 break;
             case MessageTypeNames.JobCancel:
                 if (env.Payload is JobCancelPayload cancel)
-                {
-                    if (JobId.TryParse(cancel.JobId, null, out var jid))
-                        _server.JobManager.Cancel(jid, Principal?.Subject, cancel.Reason);
-                }
+                    await HandleJobCancelAsync(cancel, cancellationToken).ConfigureAwait(false);
                 break;
             case MessageTypeNames.JobSubscribe:
                 if (env.Payload is JobSubscribePayload sub)
@@ -97,13 +117,38 @@ public sealed partial class SessionState
                 if (env.Payload is JobUnsubscribePayload unsub)
                 {
                     if (JobId.TryParse(unsub.JobId, null, out var jid))
+                    {
                         _server.Subscriptions.Unsubscribe(jid, SessionId);
+                        _subscribeMarks.TryRemove(jid, out _);
+                    }
                 }
                 break;
             default:
                 _logger.LogDebug("Unhandled inbound type {Type}", env.Type);
                 break;
         }
+    }
+
+    private async Task HandleJobCancelAsync(JobCancelPayload cancel, CancellationToken cancellationToken)
+    {
+        if (!JobId.TryParse(cancel.JobId, null, out var jid))
+            throw new InvalidRequestException("Invalid job_id");
+
+        // Cancellation authority is scoped to the submitting session (spec §7.6, §14). A foreign
+        // session throws PERMISSION_DENIED; an unknown job returns false → JOB_NOT_FOUND (spec §12).
+        var cancelled = _server.JobManager.Cancel(jid, SessionId, cancel.Reason);
+        if (!cancelled)
+            throw new JobNotFoundException($"job {cancel.JobId} not found");
+
+        // Spec §7.4: acknowledge with job.cancelled before the run-loop emits the terminal
+        // job.error{CANCELLED, final_status:"cancelled"}.
+        await SendAsync(new Envelope
+        {
+            Type = MessageTypeNames.JobCancelled,
+            SessionId = SessionId.Value,
+            JobId = jid.Value,
+            Payload = new JobCancelledPayload { JobId = jid.Value, Reason = cancel.Reason },
+        }, cancellationToken).ConfigureAwait(false);
     }
 
     private async Task HandlePingAsync(Envelope env, CancellationToken cancellationToken)

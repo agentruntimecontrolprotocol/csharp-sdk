@@ -9,7 +9,7 @@
 | `Arcp.Runtime`    | `ArcpServer`, `JobManager`, `LeaseManager`, `SessionState` — the side that runs them. |
 | `Arcp.AspNetCore` | Mounts a runtime on Kestrel via `IEndpointRouteBuilder.MapArcp("/arcp")`. |
 | `Arcp.Otel`       | Wraps `ITransport` with `ActivitySource`-based OTel instrumentation. |
-| `Arcp.Hosting`    | Registers a runtime in `IHostedService` for non-ASP.NET workers. |
+| `Arcp.Hosting`    | Registers `ArcpServer` in DI via `AddArcpRuntime` for non-ASP.NET workers. |
 | `Arcp.Cli`        | `arcp serve` / `arcp submit` / `arcp version` executable. |
 | `Arcp`            | Umbrella meta-package — `dotnet add package Arcp` pulls Core + Client + Runtime. |
 
@@ -37,12 +37,12 @@ Every message is a JSON object envelope:
 
 Unknown top-level fields are preserved verbatim in
 `Envelope.Extensions` (`Dictionary<string, JsonElement>`), so
-vendor-extension hints round-trip without loss (spec §5.1).
+vendor-extension hints round-trip without loss (spec §5).
 
 ## Versioning
 
 The SDK follows SemVer strictly. The `arcp` wire version field
-(`"1.1"`) is fixed in `Arcp.Core.WireVersion.Current`. Adding a
+defaults to `"1.1"` on `Envelope.Arcp` (also exposed as `Arcp.ArcpInfo.ProtocolVersion`). Adding a
 public member is a minor bump; changing a signature is a major bump.
 One minor deprecation cycle (`[Obsolete]`) before removal. See the
 [style guide](./style-guide.md#14-versioning--compatibility).

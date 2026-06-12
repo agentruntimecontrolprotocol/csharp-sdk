@@ -30,6 +30,8 @@ await using var client = await ArcpClient.ConnectAsync(clientT, new ArcpClientOp
 var lease = new Lease(new Dictionary<string, IReadOnlyList<string>>
 {
     ["cost.budget"] = new[] { "USD:1.00" },
+    // Spec §9.3 deny-by-default: tool.call must be covered by the lease for the agent to emit it.
+    ["tool.call"] = new[] { "*" },
 });
 var handle = await client.SubmitAsync("research", leaseRequest: lease);
 Console.WriteLine($"initial budget: {string.Join(",", handle.Budget!)}");

@@ -90,7 +90,7 @@ Agents can produce errors by throwing:
 ```csharp
 server.RegisterAgent("strict", async (ctx, ct) =>
 {
-    if (!ctx.Lease.Contains(LeaseNamespaces.FsRead))
+    if (ctx.Lease.Get(LeaseNamespaces.FsRead).Count == 0)
         throw new PermissionDeniedException("fs.read required");
 
     // ...

@@ -16,7 +16,7 @@ dotnet add package Arcp.Core
 The JSON container that wraps every ARCP message on the wire (spec §5):
 
 ```csharp
-public sealed class Envelope
+public sealed record Envelope
 {
     public string  Arcp       { get; init; }  // wire version, e.g. "1.1"
     public string  Id         { get; init; }  // random message id
@@ -25,10 +25,10 @@ public sealed class Envelope
     public string? JobId      { get; init; }
     public string? TraceId    { get; init; }
     public long?   EventSeq   { get; init; }
-    public JsonElement? Payload { get; init; }
+    public object? Payload    { get; init; }
 
     // Unknown top-level fields round-trip here (§15):
-    public Dictionary<string, JsonElement> Extensions { get; }
+    public IDictionary<string, JsonElement>? Extensions { get; init; }
 }
 ```
 
