@@ -84,10 +84,7 @@ public sealed partial class SessionState
                 break;
             case MessageTypeNames.JobCancel:
                 if (env.Payload is JobCancelPayload cancel)
-                {
-                    if (JobId.TryParse(cancel.JobId, null, out var jid))
-                        _server.JobManager.Cancel(jid, Principal?.Subject, cancel.Reason);
-                }
+                    await HandleJobCancelAsync(cancel, cancellationToken).ConfigureAwait(false);
                 break;
             case MessageTypeNames.JobSubscribe:
                 if (env.Payload is JobSubscribePayload sub)
@@ -104,6 +101,28 @@ public sealed partial class SessionState
                 _logger.LogDebug("Unhandled inbound type {Type}", env.Type);
                 break;
         }
+    }
+
+    private async Task HandleJobCancelAsync(JobCancelPayload cancel, CancellationToken cancellationToken)
+    {
+        if (!JobId.TryParse(cancel.JobId, null, out var jid))
+            throw new InvalidRequestException("Invalid job_id");
+
+        // Cancellation authority is scoped to the submitting session (spec §7.6, §14). A foreign
+        // session throws PERMISSION_DENIED; an unknown job returns false → JOB_NOT_FOUND (spec §12).
+        var cancelled = _server.JobManager.Cancel(jid, SessionId, cancel.Reason);
+        if (!cancelled)
+            throw new JobNotFoundException($"job {cancel.JobId} not found");
+
+        // Spec §7.4: acknowledge with job.cancelled before the run-loop emits the terminal
+        // job.error{CANCELLED, final_status:"cancelled"}.
+        await SendAsync(new Envelope
+        {
+            Type = MessageTypeNames.JobCancelled,
+            SessionId = SessionId.Value,
+            JobId = jid.Value,
+            Payload = new JobCancelledPayload { JobId = jid.Value, Reason = cancel.Reason },
+        }, cancellationToken).ConfigureAwait(false);
     }
 
     private async Task HandlePingAsync(Envelope env, CancellationToken cancellationToken)

@@ -51,6 +51,8 @@ public static class MessageTypeNames
     public const string JobError = "job.error";
     /// <summary>Gets the job cancel.</summary>
     public const string JobCancel = "job.cancel";
+    /// <summary>Gets the job cancelled acknowledgement (spec §7.4).</summary>
+    public const string JobCancelled = "job.cancelled";
     /// <summary>Gets the job subscribe.</summary>
     public const string JobSubscribe = "job.subscribe";
     /// <summary>Gets the job subscribed.</summary>
@@ -63,7 +65,7 @@ public static class MessageTypeNames
     {
         SessionHello, SessionWelcome, SessionBye, SessionPing, SessionPong, SessionAck,
         SessionListJobs, SessionJobs, SessionError, SessionResume,
-        JobSubmit, JobAccepted, JobEvent, JobResult, JobError, JobCancel,
+        JobSubmit, JobAccepted, JobEvent, JobResult, JobError, JobCancel, JobCancelled,
         JobSubscribe, JobSubscribed, JobUnsubscribe,
     }.ToFrozenSet();
 }

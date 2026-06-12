@@ -96,4 +96,41 @@ public class LeaseTests
         ok.Should().NotThrow();
         bad.Should().Throw<Arcp.Core.Errors.PermissionDeniedException>();
     }
+
+    [Fact]
+    public void GlobMatch_double_star_respects_the_path_boundary()
+    {
+        // Spec §9.2/§9.3: a "/prefix/**" grant must not authorize sibling paths that merely
+        // share the string prefix. The trailing separator is the enforcement boundary.
+        Arcp.Runtime.Leases.LeaseManager.GlobMatch("/workspace/myapp/src/a.cs", "/workspace/myapp/**")
+            .Should().BeTrue();
+        Arcp.Runtime.Leases.LeaseManager.GlobMatch("/workspace/myapp/a", "/workspace/myapp/**")
+            .Should().BeTrue();
+        // The directory itself is covered.
+        Arcp.Runtime.Leases.LeaseManager.GlobMatch("/workspace/myapp", "/workspace/myapp/**")
+            .Should().BeTrue();
+        // Siblings sharing the textual prefix MUST NOT match.
+        Arcp.Runtime.Leases.LeaseManager.GlobMatch("/workspace/myapp-private/secret", "/workspace/myapp/**")
+            .Should().BeFalse();
+        Arcp.Runtime.Leases.LeaseManager.GlobMatch("/workspace/myapp.bak", "/workspace/myapp/**")
+            .Should().BeFalse();
+    }
+
+    [Fact]
+    public void AuthorizeOperation_double_star_does_not_leak_to_sibling_directories()
+    {
+        // End-to-end gate: fs.read:["/workspace/myapp/**"] authorizes files under the directory
+        // but rejects a sibling like /workspace/myapp-private (spec §9.3).
+        var manager = new Arcp.Runtime.Leases.LeaseManager();
+        var lease = new Lease(new Dictionary<string, IReadOnlyList<string>>
+        {
+            [LeaseNamespaces.FsRead] = new[] { "/workspace/myapp/**" },
+        });
+
+        var ok = () => manager.AuthorizeOperation(lease, null, LeaseNamespaces.FsRead, "/workspace/myapp/src/a.cs");
+        var sibling = () => manager.AuthorizeOperation(lease, null, LeaseNamespaces.FsRead, "/workspace/myapp-private/secret");
+
+        ok.Should().NotThrow();
+        sibling.Should().Throw<Arcp.Core.Errors.PermissionDeniedException>();
+    }
 }

@@ -85,7 +85,7 @@ public sealed class LeaseManager
                 if (childExp > parentExp)
                     throw new LeaseSubsetViolationException("Child lease_constraints.expires_at MUST NOT exceed parent's (spec ยง9.4)");
             }
-            // No child constraints โ’ child implicitly inherits parent expiry. (spec ยง9.4)
+            // No child constraints โÿÿ child implicitly inherits parent expiry. (spec ยง9.4)
         }
     }
 
@@ -153,8 +153,12 @@ public sealed class LeaseManager
         // Convert to regex-ish prefix/suffix.
         if (pattern.EndsWith("/**", StringComparison.Ordinal))
         {
-            var prefix = pattern[..^3];
-            return input.StartsWith(prefix, StringComparison.Ordinal);
+            // Keep the trailing separator so the match respects the path boundary (spec ?9.3):
+            // "/workspace/myapp/**" authorizes "/workspace/myapp" itself and anything strictly
+            // beneath "/workspace/myapp/", but NOT siblings like "/workspace/myapp-private/x".
+            var dir = pattern[..^2];                                   // "/workspace/myapp/"
+            return input.StartsWith(dir, StringComparison.Ordinal)
+                || input.Equals(dir[..^1], StringComparison.Ordinal);  // the directory itself
         }
         if (pattern.EndsWith("*", StringComparison.Ordinal))
         {

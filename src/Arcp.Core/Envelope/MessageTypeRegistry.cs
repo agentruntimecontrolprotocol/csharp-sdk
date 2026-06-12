@@ -56,6 +56,7 @@ public sealed class MessageTypeRegistry
         r.Register(MessageTypeNames.JobResult, typeof(JobResultPayload));
         r.Register(MessageTypeNames.JobError, typeof(JobErrorPayload));
         r.Register(MessageTypeNames.JobCancel, typeof(JobCancelPayload));
+        r.Register(MessageTypeNames.JobCancelled, typeof(JobCancelledPayload));
         r.Register(MessageTypeNames.JobSubscribe, typeof(JobSubscribePayload));
         r.Register(MessageTypeNames.JobSubscribed, typeof(JobSubscribedPayload));
         r.Register(MessageTypeNames.JobUnsubscribe, typeof(JobUnsubscribePayload));

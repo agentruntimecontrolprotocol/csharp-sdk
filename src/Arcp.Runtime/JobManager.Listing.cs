@@ -60,6 +60,7 @@ public sealed partial class JobManager
         ParentJobId = j.ParentJobId,
         CreatedAt = j.CreatedAt,
         TraceId = j.TraceId?.Value,
+        LastEventSeq = j.LastEmittedSeq,
     };
 
     private static string MapStatus(JobStatus s) => s switch

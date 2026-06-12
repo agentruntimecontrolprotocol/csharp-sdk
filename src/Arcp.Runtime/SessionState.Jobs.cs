@@ -40,6 +40,12 @@ public sealed partial class SessionState
                 Payload = accepted,
             }, cancellationToken).ConfigureAwait(false);
 
+            // Spec §7.2: a replay re-acknowledges the existing job but MUST NOT invoke the agent
+            // again — re-running would re-emit events, re-emit a terminal result, and reset a
+            // terminal job back to Running. Only fresh submissions are dispatched to the agent.
+            if (submission.IsReplay)
+                return;
+
             // Resolve agent and run.
             var resolved = _server.AgentRegistry.Resolve(job.Agent).Agent;
             _ = Task.Run(() => _server.JobManager.RunAsync(job, resolved, emit, _cts.Token), _cts.Token);

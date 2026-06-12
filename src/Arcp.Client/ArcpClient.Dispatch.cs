@@ -130,15 +130,32 @@ public sealed partial class ArcpClient
 
     private void PropagateSessionError(SessionErrorPayload err)
     {
+        var jobError = new JobErrorPayload
+        {
+            Code = err.Code,
+            Message = err.Message,
+            Retryable = err.Retryable,
+            Detail = err.Detail,
+        };
+
         foreach (var h in _handles.Values)
         {
-            h.OnError(new JobErrorPayload
-            {
-                Code = err.Code,
-                Message = err.Message,
-                Retryable = err.Retryable,
-                Detail = err.Detail,
-            });
+            h.OnError(jobError);
+        }
+
+        // A submission rejected before acceptance lives in _pendingSubmits, not _handles, and a
+        // list_jobs request lives in _listJobsRequests. session.error is not correlated to a
+        // specific request id, so the safe contract is to fault every outstanding request — leaving
+        // them pending would hang SubmitAsync/ListJobsAsync until the caller's token fires.
+        while (_pendingSubmits.TryDequeue(out var pending))
+        {
+            pending.OnError(jobError);
+        }
+
+        foreach (var key in _listJobsRequests.Keys)
+        {
+            if (_listJobsRequests.TryRemove(key, out var tcs))
+                tcs.TrySetException(JobHandle.ToException(err.Code, err.Message, err.Detail));
         }
     }
 }

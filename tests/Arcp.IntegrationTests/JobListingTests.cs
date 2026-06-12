@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Arcp.Client;
 using Arcp.Core.Caps;
+using Arcp.Core.Errors;
 using Arcp.Core.Messages;
 using Arcp.Core.Transport;
 using Arcp.Runtime;
@@ -99,5 +100,53 @@ public class JobListingTests
         var secondPage = await c.ListJobsAsync(limit: 2, cursor: firstPage.NextCursor);
         secondPage.Jobs.Should().HaveCount(1);
         secondPage.NextCursor.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task ListJobsAsync_throws_when_server_returns_session_error()
+    {
+        // A list_jobs request rejected by the server (here: feature not negotiated → INVALID_REQUEST)
+        // emits a session.error. The awaiting ListJobsAsync MUST throw, not hang until cancellation.
+        var (_, transport) = StartServer(s =>
+            s.RegisterAgent("noop", (ctx, ct) => Task.FromResult<object?>(null)));
+        await using var c = await ArcpClient.ConnectAsync(transport, new ArcpClientOptions
+        {
+            Client = new ClientInfo { Name = "t", Version = "1" },
+            // list_jobs feature intentionally NOT negotiated → server rejects with INVALID_REQUEST.
+            Features = Array.Empty<string>(),
+        });
+
+        var act = async () => await c.ListJobsAsync().WaitAsync(TimeSpan.FromSeconds(3));
+        await act.Should().ThrowAsync<ArcpException>()
+            .Where(e => e.Code == ErrorCode.InvalidRequest);
+    }
+
+    [Fact]
+    public async Task ListJobsAsync_reports_last_event_seq_for_jobs_that_emitted_events()
+    {
+        // Spec §6.6: each listed job carries last_event_seq so a dashboard knows where to subscribe
+        // from. A running job that has emitted events MUST report a non-null, monotonic value.
+        var gate = new TaskCompletionSource();
+        var (_, transport) = StartServer(s => s.RegisterAgent("emitter", async (ctx, ct) =>
+        {
+            await ctx.StatusAsync("phase-1", "working", ct);
+            await ctx.ProgressAsync(1, 10, "items", null, ct);
+            gate.SetResult();
+            await Task.Delay(System.Threading.Timeout.InfiniteTimeSpan, ct);
+            return null;
+        }));
+        await using var c = await ArcpClient.ConnectAsync(transport, new ArcpClientOptions
+        {
+            Client = new ClientInfo { Name = "t", Version = "1" },
+            Features = new[] { FeatureFlags.ListJobs },
+        });
+
+        await c.SubmitAsync("emitter");
+        await gate.Task.WaitAsync(TimeSpan.FromSeconds(3));
+
+        var page = await c.ListJobsAsync();
+        var entry = page.Jobs.Should().ContainSingle().Subject;
+        entry.LastEventSeq.Should().NotBeNull();
+        entry.LastEventSeq.Should().BeGreaterThan(0);
     }
 }

@@ -27,6 +27,7 @@ public sealed class Job
     private readonly object _eventBufferGate = new();
     private readonly List<Envelope> _eventBuffer = [];
     private readonly int _eventBufferCapacity;
+    private long _lastEmittedSeq;
 
     /// <summary>Gets the job id.</summary>
     public JobId JobId { get; }
@@ -192,6 +193,18 @@ public sealed class Job
         await _emit(env, cancellationToken).ConfigureAwait(false);
     }
 
+    /// <summary>Highest <c>event_seq</c> high-water mark emitted by this job, or <see langword="null"/>
+    /// if it has not emitted any events yet. Surfaced in <c>session.jobs</c> (spec §6.6) so a dashboard
+    /// can decide where to subscribe from.</summary>
+    internal long? LastEmittedSeq
+    {
+        get
+        {
+            var seq = Interlocked.Read(ref _lastEmittedSeq);
+            return seq > 0 ? seq : null;
+        }
+    }
+
     private void BufferEvent(Envelope env)
     {
         // Spec §7.6: bounded per-job history so a later subscriber with `history: true`
@@ -205,6 +218,9 @@ public sealed class Job
                 _eventBuffer.RemoveRange(0, _eventBuffer.Count - _eventBufferCapacity);
             }
         }
+
+        // Spec §6.6: track a monotonic per-job high-water mark for last_event_seq in the listing.
+        Interlocked.Increment(ref _lastEmittedSeq);
     }
 
     /// <summary>Snapshot of all events buffered for replay on a new subscription.</summary>

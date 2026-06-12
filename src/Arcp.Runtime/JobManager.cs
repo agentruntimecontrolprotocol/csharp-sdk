@@ -85,7 +85,7 @@ public sealed partial class JobManager
     /// <summary>Submit a job. The caller (SessionState) hands in the envelope; this method returns
     /// the <see cref="Job"/> to run asynchronously plus the <c>job.accepted</c> payload.
     /// <paramref name="inboundTraceId"/> propagates the envelope's <c>trace_id</c> per spec §11.</summary>
-    public async Task<(Job Job, JobAcceptedPayload Accepted)> SubmitAsync(
+    public async Task<(Job Job, JobAcceptedPayload Accepted, bool IsReplay)> SubmitAsync(
         JobSubmitPayload submit,
         SessionId sessionId,
         string? submitterPrincipal,
@@ -113,7 +113,9 @@ public sealed partial class JobManager
                     }
                     if (_jobs.TryGetValue(existingRecord.JobId, out var existing))
                     {
-                        return (existing, BuildAccepted(existing));
+                        // Spec §7.2: an idempotent replay returns the *same* job.accepted and MUST
+                        // NOT re-run the agent. Flag it so the caller skips Resolve/RunAsync.
+                        return (existing, BuildAccepted(existing), true);
                     }
                 }
                 else
@@ -153,7 +155,7 @@ public sealed partial class JobManager
             _idempotency[idemKey] = new IdempotencyRecord(jobId, fingerprint, _time.GetUtcNow());
         }
 
-        return (job, BuildAccepted(job));
+        return (job, BuildAccepted(job), false);
     }
 
     private void AssertChildLeaseIsSubset(string parentJobId, Lease child, LeaseConstraints? childConstraints)
@@ -440,15 +442,19 @@ public sealed partial class JobManager
     private static bool IsTerminal(JobStatus s) =>
         s is JobStatus.Success or JobStatus.Error or JobStatus.Cancelled or JobStatus.TimedOut;
 
-    /// <summary>Cancel a running job. Only the original submitter may cancel; subscribers may not (spec §7.6).</summary>
-    public bool Cancel(JobId jobId, string? requesterPrincipal, string? reason)
+    /// <summary>Cancel a running job. Cancellation authority is scoped to the *submitting session*
+    /// (spec §7.6, §13.3, §14): only the session that submitted the job may cancel it. Subscription —
+    /// even from another session of the same principal — does NOT confer cancel authority. Returns
+    /// <see langword="false"/> if the job does not exist; throws <see cref="PermissionDeniedException"/>
+    /// when the requesting session is not the submitter.</summary>
+    public bool Cancel(JobId jobId, SessionId requesterSession, string? reason)
     {
         if (!_jobs.TryGetValue(jobId, out var job)) return false;
-        // Spec §7.6: subscription does NOT grant cancel authority; only submitter may cancel.
-        if (requesterPrincipal is not null && job.SubmitterPrincipal is not null &&
-            !string.Equals(requesterPrincipal, job.SubmitterPrincipal, StringComparison.Ordinal))
+        // Fail closed: compare the submitting session, never the principal. A null/foreign requester
+        // must not be able to bypass the check (spec §14: "Subscription MUST NOT confer cancel authority").
+        if (!job.SessionId.Equals(requesterSession))
         {
-            throw new PermissionDeniedException("Subscribers MUST NOT cancel jobs (spec §7.6)");
+            throw new PermissionDeniedException("Only the submitting session may cancel a job (spec §7.6, §14)");
         }
         job.CancellationSource.Cancel();
         return true;
