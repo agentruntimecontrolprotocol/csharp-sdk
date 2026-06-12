@@ -25,14 +25,17 @@ public sealed class JobContext
     private readonly CredentialManager? _credentials;
     private readonly bool _fatalBudgetExhaustion;
     private readonly Arcp.Runtime.Leases.LeaseManager? _leases;
+    private readonly bool _permissiveUnleasedOperations;
 
     internal JobContext(Job job, ILogger logger, CredentialManager? credentials = null,
-                        bool fatalBudgetExhaustion = false, Arcp.Runtime.Leases.LeaseManager? leases = null)
+                        bool fatalBudgetExhaustion = false, Arcp.Runtime.Leases.LeaseManager? leases = null,
+                        bool permissiveUnleasedOperations = false)
     {
         _job = job;
         _credentials = credentials;
         _fatalBudgetExhaustion = fatalBudgetExhaustion;
         _leases = leases;
+        _permissiveUnleasedOperations = permissiveUnleasedOperations;
         Logger = logger;
     }
 
@@ -44,7 +47,9 @@ public sealed class JobContext
     public void AuthorizeOperation(string namespaceName, string pattern)
     {
         var leases = _leases ?? new Arcp.Runtime.Leases.LeaseManager();
-        leases.AuthorizeOperation(_job.Lease, _job.LeaseConstraints, namespaceName, pattern);
+        // Spec §9.6: pass the job's budget ledger so the operation is gated on remaining budget
+        // before the capability/pattern check.
+        leases.AuthorizeOperation(_job.Lease, _job.LeaseConstraints, namespaceName, pattern, _job.BudgetLedger);
     }
 
     /// <summary>Gets the job id.</summary>
@@ -109,7 +114,7 @@ public sealed class JobContext
     /// raises <see cref="PermissionDeniedException"/> before the event is emitted.</summary>
     public ValueTask ToolCallAsync(string tool, string callId, object? args, CancellationToken cancellationToken = default)
     {
-        EnforceIfLeased(LeaseNamespaces.ToolCall, tool);
+        EnforceLeaseCoverage(LeaseNamespaces.ToolCall, tool);
         return _job.EmitEventAsync(EventKinds.ToolCall, new ToolCallBody
         {
             Tool = tool,
@@ -118,15 +123,23 @@ public sealed class JobContext
         }, cancellationToken);
     }
 
-    /// <summary>Gate an operation when the lease declares the given namespace. Leases that omit
-    /// the namespace remain permissive (spec §9.7 explicitly allows this when a runtime is
-    /// configured to do so; tighter policies SHOULD call <see cref="AuthorizeOperation"/>
-    /// directly).</summary>
-    private void EnforceIfLeased(string namespaceName, string pattern)
+    /// <summary>Gate an authority-bearing operation against the lease. Spec §9.1/§9.3 require
+    /// deny-by-default: an operation whose namespace the lease does not declare is unauthorized and
+    /// raises <see cref="PermissionDeniedException"/>. Opt into the legacy permissive behavior (allow
+    /// uncovered namespaces) via <see cref="ArcpServerOptions.PermissiveUnleasedOperations"/>.</summary>
+    private void EnforceLeaseCoverage(string namespaceName, string pattern)
     {
         if (_job.Lease.Capabilities.ContainsKey(namespaceName))
         {
             AuthorizeOperation(namespaceName, pattern);
+            return;
+        }
+
+        if (!_permissiveUnleasedOperations)
+        {
+            throw new PermissionDeniedException(
+                $"Operation '{namespaceName}' is not covered by the job's lease (deny-by-default, spec §9.3). " +
+                "Grant the namespace in the lease, or enable ArcpServerOptions.PermissiveUnleasedOperations.");
         }
     }
 
@@ -182,7 +195,7 @@ public sealed class JobContext
     /// child agent name is gated against the lease patterns first (spec §9.3, §10).</summary>
     public ValueTask DelegateAsync(string childJobId, string agent, object? input, CancellationToken cancellationToken = default)
     {
-        EnforceIfLeased(LeaseNamespaces.AgentDelegate, agent);
+        EnforceLeaseCoverage(LeaseNamespaces.AgentDelegate, agent);
         return _job.EmitEventAsync(EventKinds.Delegate, new DelegateBody
         {
             ChildJobId = childJobId,

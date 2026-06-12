@@ -16,7 +16,12 @@ public static class MessageTypeNames
     public const string SessionHello = "session.hello";
     /// <summary>Gets the session welcome.</summary>
     public const string SessionWelcome = "session.welcome";
-    /// <summary>Gets the session bye.</summary>
+    /// <summary>Client-sent graceful session close (spec §6.7).</summary>
+    public const string SessionClose = "session.close";
+    /// <summary>Runtime-sent acknowledgement of <see cref="SessionClose"/> (spec §6.7).</summary>
+    public const string SessionClosed = "session.closed";
+    /// <summary>Gets the session bye. Deprecated alias for <see cref="SessionClose"/> kept for
+    /// back-compat with pre-1.1 peers; the runtime treats it like <c>session.close</c> (spec §6.7).</summary>
     public const string SessionBye = "session.bye";
     /// <summary>Gets the session ping.</summary>
     public const string SessionPing = "session.ping";
@@ -63,7 +68,7 @@ public static class MessageTypeNames
     /// <summary>Gets the all.</summary>
     public static readonly FrozenSet<string> All = new HashSet<string>(StringComparer.Ordinal)
     {
-        SessionHello, SessionWelcome, SessionBye, SessionPing, SessionPong, SessionAck,
+        SessionHello, SessionWelcome, SessionClose, SessionClosed, SessionBye, SessionPing, SessionPong, SessionAck,
         SessionListJobs, SessionJobs, SessionError, SessionResume,
         JobSubmit, JobAccepted, JobEvent, JobResult, JobError, JobCancel, JobCancelled,
         JobSubscribe, JobSubscribed, JobUnsubscribe,

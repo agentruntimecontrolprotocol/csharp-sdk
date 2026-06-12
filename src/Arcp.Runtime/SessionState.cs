@@ -26,6 +26,15 @@ public sealed partial class SessionState : IAsyncDisposable
     private readonly Channel<Envelope> _outbound;
     private readonly CancellationTokenSource _cts;
 
+    /// <summary>Serializes event_seq assignment with the outbound enqueue so wire order always matches
+    /// assigned event_seq under concurrent emitters (spec §8.3).</summary>
+    private readonly SemaphoreSlim _emitGate = new(1, 1);
+
+    /// <summary>Per-subscribed-job replay boundary (job-local event index). A fanned-out event whose
+    /// <see cref="Arcp.Core.Wire.Envelope.JobEventIndex"/> is ≤ this mark was already delivered by the
+    /// subscribe history replay and is dropped to avoid a duplicate at the boundary (spec §7.6).</summary>
+    private readonly System.Collections.Concurrent.ConcurrentDictionary<Arcp.Core.Ids.JobId, long> _subscribeMarks = new();
+
     private long _lastAckedSeq;
     private bool _heartbeatNegotiated;
     private bool _ackNegotiated;
@@ -107,9 +116,12 @@ public sealed partial class SessionState : IAsyncDisposable
         IsClosed = true;
         try
         {
-            await SendAsync(new Envelope
+            // Spec §6.7: the runtime's graceful-close wire type is session.closed. Write it straight
+            // to the transport (not the outbound channel) so it is flushed before teardown — enqueuing
+            // it and then cancelling the sender loop would race the ack away.
+            await _transport.SendAsync(new Envelope
             {
-                Type = MessageTypeNames.SessionBye,
+                Type = MessageTypeNames.SessionClosed,
                 SessionId = SessionId.Value,
                 Payload = new SessionByePayload { Reason = reason },
             }, cancellationToken).ConfigureAwait(false);
@@ -136,5 +148,6 @@ public sealed partial class SessionState : IAsyncDisposable
         if (IsClosed) return;
         await CloseAsync().ConfigureAwait(false);
         _cts.Dispose();
+        _emitGate.Dispose();
     }
 }

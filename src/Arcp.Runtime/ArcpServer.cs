@@ -75,7 +75,8 @@ public sealed class ArcpServer : IAsyncDisposable
             options.IdempotencyWindowSec,
             options.EventLogCapacity,
             options.TerminalJobRetentionSec,
-            options.FatalBudgetExhaustion);
+            options.FatalBudgetExhaustion,
+            options.PermissiveUnleasedOperations);
         if (CredentialManager is not null)
         {
             _ = Task.Run(() => RevokeOutstandingCredentialsAsync(CancellationToken.None));
@@ -213,6 +214,9 @@ public sealed class ArcpServer : IAsyncDisposable
     /// <summary>Dispose (asynchronous).</summary>
     public async ValueTask DisposeAsync()
     {
+        // Cancel in-flight jobs only at runtime shutdown — never on individual session teardown
+        // (spec §6.4, §6.7). Jobs are rooted at the JobManager's runtime token, not session _cts.
+        JobManager.Dispose();
         try { _sweeperCts.Cancel(); } catch (ObjectDisposedException) { /* already disposed */ }
         if (_sweeperTask is not null)
         {
@@ -240,9 +244,12 @@ public sealed class ArcpServer : IAsyncDisposable
                 nameof(options));
         }
 
+        // Spec §9.7: model.use enforcement is independent of credential provisioning —
+        // LeaseManager.AuthorizeModelUse enforces it directly, so it MUST stay advertisable even
+        // when no ICredentialProvisioner is configured. Only provisioned_credentials is coupled to
+        // having a provisioner.
         return requested
-            .Where(f => !string.Equals(f, FeatureFlags.ProvisionedCredentials, StringComparison.Ordinal) &&
-                        !string.Equals(f, FeatureFlags.ModelUse, StringComparison.Ordinal))
+            .Where(f => !string.Equals(f, FeatureFlags.ProvisionedCredentials, StringComparison.Ordinal))
             .ToArray();
     }
 

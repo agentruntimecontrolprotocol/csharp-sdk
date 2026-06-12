@@ -60,4 +60,11 @@ public sealed record Envelope
     /// unknown fields") so they round-trip without loss.</summary>
     [JsonExtensionData]
     public IDictionary<string, JsonElement>? Extensions { get; init; }
+
+    /// <summary>Runtime-only, NON-serialized per-job monotonic index. Used by the runtime to make the
+    /// <c>job.subscribe</c> history/live-fan-out boundary exact (spec §7.6) — a subscriber drops a
+    /// fanned-out event whose index was already covered by its replayed history. Never transmitted
+    /// on the wire.</summary>
+    [JsonIgnore]
+    public long? JobEventIndex { get; init; }
 }

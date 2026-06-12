@@ -85,7 +85,7 @@ public sealed class LeaseManager
                 if (childExp > parentExp)
                     throw new LeaseSubsetViolationException("Child lease_constraints.expires_at MUST NOT exceed parent's (spec Â§9.4)");
             }
-            // No child constraints âÿÿ child implicitly inherits parent expiry. (spec Â§9.4)
+            // No child constraints ï¿½ï¿½ï¿½ child implicitly inherits parent expiry. (spec Â§9.4)
         }
     }
 
@@ -126,10 +126,21 @@ public sealed class LeaseManager
     /// <summary>Authorize a single operation against the lease. Throws <see cref="PermissionDeniedException"/>
     /// if no parent pattern matches; throws <see cref="LeaseExpiredException"/> if the lease has
     /// expired (spec Â§9.3, Â§9.5).</summary>
-    public void AuthorizeOperation(Lease lease, LeaseConstraints? constraints, string namespaceName, string pattern)
+    public void AuthorizeOperation(Lease lease, LeaseConstraints? constraints, string namespaceName, string pattern) =>
+        AuthorizeOperation(lease, constraints, namespaceName, pattern, budget: null);
+
+    /// <summary>Authorize a single operation, also checking budget counters first. Spec 9.6: the
+    /// runtime MUST check all budget counters before authorizing any operation through the lease and
+    /// fail with BUDGET_EXHAUSTED if any counter is &lt;= 0 ? a pre-operation gate, not only a
+    /// reactive cost-metric error.</summary>
+    public void AuthorizeOperation(Lease lease, LeaseConstraints? constraints, string namespaceName, string pattern,
+        Arcp.Runtime.Budget.BudgetLedger? budget)
     {
         if (constraints?.ExpiresAt is { } exp && _time.GetUtcNow() >= exp)
             throw new LeaseExpiredException($"Lease expired at {exp:O}");
+
+        // Spec 9.6: pre-operation budget gate.
+        budget?.AssertNotExhausted();
 
         if (!lease.Capabilities.TryGetValue(namespaceName, out var allowed) || allowed.Count == 0)
             throw new PermissionDeniedException($"No lease for namespace '{namespaceName}'");

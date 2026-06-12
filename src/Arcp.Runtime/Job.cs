@@ -189,8 +189,8 @@ public sealed class Job
             TraceId = TraceId?.Value,
             Payload = payload,
         };
-        BufferEvent(env);
-        await _emit(env, cancellationToken).ConfigureAwait(false);
+        var stamped = BufferEvent(env);
+        await _emit(stamped, cancellationToken).ConfigureAwait(false);
     }
 
     /// <summary>Highest <c>event_seq</c> high-water mark emitted by this job, or <see langword="null"/>
@@ -205,29 +205,39 @@ public sealed class Job
         }
     }
 
-    private void BufferEvent(Envelope env)
+    /// <summary>Buffer an event for subscription replay, assigning it a monotonic per-job index.
+    /// Returns the index-stamped envelope. Spec §7.6: bounded per-job history so a later subscriber
+    /// with <c>history: true</c> can receive prior events in order before live events. Sized from
+    /// <see cref="ArcpServerOptions.EventLogCapacity"/> so subscribers see the same window resumers
+    /// do.</summary>
+    private Envelope BufferEvent(Envelope env)
     {
-        // Spec §7.6: bounded per-job history so a later subscriber with `history: true`
-        // can receive prior events in order before live events. Sized from
-        // `ArcpServerOptions.EventLogCapacity` so subscribers see the same window resumers do.
         lock (_eventBufferGate)
         {
-            _eventBuffer.Add(env);
+            // Spec §6.6: monotonic per-job high-water mark, surfaced as last_event_seq in the listing
+            // and used as the exact subscribe history/live-fan-out boundary (spec §7.6).
+            var index = ++_lastEmittedSeq;
+            var stamped = env with { JobEventIndex = index };
+            _eventBuffer.Add(stamped);
             if (_eventBuffer.Count > _eventBufferCapacity)
             {
                 _eventBuffer.RemoveRange(0, _eventBuffer.Count - _eventBufferCapacity);
             }
+            return stamped;
         }
-
-        // Spec §6.6: track a monotonic per-job high-water mark for last_event_seq in the listing.
-        Interlocked.Increment(ref _lastEmittedSeq);
     }
 
-    /// <summary>Snapshot of all events buffered for replay on a new subscription.</summary>
-    internal IReadOnlyList<Envelope> SnapshotEventHistory()
+    /// <summary>Atomically register a subscriber and snapshot the current event history under the same
+    /// lock that guards <see cref="BufferEvent"/>. Spec §7.6: this makes the subscribe boundary exact —
+    /// every event with index ≤ <paramref name="highWaterIndex"/> is in the returned snapshot, and
+    /// every event after is delivered live via fan-out, so the new subscriber sees each event exactly
+    /// once with no gap or duplicate at the boundary.</summary>
+    internal IReadOnlyList<Envelope> RegisterSubscriberAndSnapshot(Action register, out long highWaterIndex)
     {
         lock (_eventBufferGate)
         {
+            register();
+            highWaterIndex = _lastEmittedSeq;
             return _eventBuffer.ToArray();
         }
     }

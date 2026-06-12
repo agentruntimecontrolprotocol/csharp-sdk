@@ -41,6 +41,8 @@ public sealed class MessageTypeRegistry
         var r = new MessageTypeRegistry();
         r.Register(MessageTypeNames.SessionHello, typeof(SessionHelloPayload));
         r.Register(MessageTypeNames.SessionWelcome, typeof(SessionWelcomePayload));
+        r.Register(MessageTypeNames.SessionClose, typeof(SessionByePayload));
+        r.Register(MessageTypeNames.SessionClosed, typeof(SessionByePayload));
         r.Register(MessageTypeNames.SessionBye, typeof(SessionByePayload));
         r.Register(MessageTypeNames.SessionPing, typeof(SessionPingPayload));
         r.Register(MessageTypeNames.SessionPong, typeof(SessionPongPayload));

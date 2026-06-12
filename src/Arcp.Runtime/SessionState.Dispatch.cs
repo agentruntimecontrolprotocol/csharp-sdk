@@ -39,7 +39,27 @@ public sealed partial class SessionState
             }
             catch (Exception ex)
             {
+                // Spec §12: surface an unexpected failure as session.error{INTERNAL_ERROR} so the
+                // peer is not left waiting forever for an acknowledgement that never arrives.
                 _logger.LogError(ex, "Dispatch error for type {Type}", env.Type);
+                try
+                {
+                    await SendAsync(new Envelope
+                    {
+                        Type = MessageTypeNames.SessionError,
+                        SessionId = SessionId.Value,
+                        Payload = new SessionErrorPayload
+                        {
+                            Code = ErrorCode.InternalError,
+                            Message = "Internal error while processing request",
+                            Retryable = true,
+                        },
+                    }, cancellationToken).ConfigureAwait(false);
+                }
+                catch (Exception sendEx)
+                {
+                    _logger.LogError(sendEx, "Failed to send INTERNAL_ERROR for type {Type}", env.Type);
+                }
             }
         }
     }
@@ -74,8 +94,11 @@ public sealed partial class SessionState
             case MessageTypeNames.SessionListJobs:
                 await HandleListJobsAsync(env, cancellationToken).ConfigureAwait(false);
                 break;
+            case MessageTypeNames.SessionClose:
             case MessageTypeNames.SessionBye:
-                IsClosed = true;
+                // Spec §6.7: client-sent session.close (or the deprecated session.bye alias) is
+                // acknowledged with session.closed (emitted by CloseAsync). In-flight jobs are
+                // rooted at the runtime token, so this does NOT terminate them.
                 await CloseAsync(reason: (env.Payload as SessionByePayload)?.Reason, cancellationToken).ConfigureAwait(false);
                 break;
             case MessageTypeNames.JobSubmit:
@@ -94,7 +117,10 @@ public sealed partial class SessionState
                 if (env.Payload is JobUnsubscribePayload unsub)
                 {
                     if (JobId.TryParse(unsub.JobId, null, out var jid))
+                    {
                         _server.Subscriptions.Unsubscribe(jid, SessionId);
+                        _subscribeMarks.TryRemove(jid, out _);
+                    }
                 }
                 break;
             default:

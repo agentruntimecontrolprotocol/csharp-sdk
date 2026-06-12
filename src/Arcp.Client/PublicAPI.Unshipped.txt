@@ -7,7 +7,9 @@ Arcp.Client.ArcpClient.CancelJobAsync(Arcp.Core.Ids.JobId jobId, string? reason 
 Arcp.Client.ArcpClient.ConnectAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
 Arcp.Client.ArcpClient.DisposeAsync() -> System.Threading.Tasks.ValueTask
 Arcp.Client.ArcpClient.EffectiveFeatures.get -> System.Collections.Generic.IReadOnlyList<string!>!
+Arcp.Client.ArcpClient.EventSeqGapDetected -> System.Action<long, long>?
 Arcp.Client.ArcpClient.HeartbeatIntervalSec.get -> int?
+Arcp.Client.ArcpClient.IsSessionBroken.get -> bool
 Arcp.Client.ArcpClient.LastReceivedSeq.get -> long
 Arcp.Client.ArcpClient.ListJobsAsync(Arcp.Core.Messages.JobListFilter? filter = null, int? limit = null, string? cursor = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Arcp.Core.Messages.SessionJobsPayload!>!
 Arcp.Client.ArcpClient.ResumeToken.get -> string?

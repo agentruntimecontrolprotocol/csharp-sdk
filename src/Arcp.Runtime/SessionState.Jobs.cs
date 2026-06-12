@@ -23,10 +23,15 @@ public sealed partial class SessionState
         if (env.TraceId is { Length: > 0 } incoming && TraceId.TryParse(incoming, null, out var parsed))
             inboundTraceId = parsed;
 
+        // Spec §6.4/§6.7: a job's lifetime is rooted at the runtime, not this session. Session
+        // teardown (heartbeat loss, graceful close, transport drop) stops streaming to this
+        // transport but MUST NOT cancel the job — it keeps running and stays resumable.
+        var jobLifetime = _server.JobManager.RuntimeToken;
+
         try
         {
             var submission = await _server.JobManager
-                .SubmitAsync(submit, SessionId, Principal?.Subject, emit, inboundTraceId, _cts.Token, cancellationToken)
+                .SubmitAsync(submit, SessionId, Principal?.Subject, emit, inboundTraceId, jobLifetime, cancellationToken)
                 .ConfigureAwait(false);
             var job = submission.Job;
             var accepted = submission.Accepted;
@@ -46,9 +51,10 @@ public sealed partial class SessionState
             if (submission.IsReplay)
                 return;
 
-            // Resolve agent and run.
+            // Resolve agent and run. The run task is rooted at the runtime token (not _cts.Token)
+            // so it outlives this session (spec §6.7).
             var resolved = _server.AgentRegistry.Resolve(job.Agent).Agent;
-            _ = Task.Run(() => _server.JobManager.RunAsync(job, resolved, emit, _cts.Token), _cts.Token);
+            _ = Task.Run(() => _server.JobManager.RunAsync(job, resolved, emit, jobLifetime), jobLifetime);
         }
         catch (ArcpException ex)
         {
@@ -83,46 +89,63 @@ public sealed partial class SessionState
         if (!_options.AuthorizationPolicy.CanObserve(job.SubmitterPrincipal, Principal))
             throw new PermissionDeniedException("Subscriber not authorized to observe job");
 
-        // Snapshot prior events BEFORE subscribing so we can replay them, then attach the live
-        // subscription. Live events from the buffer's tail to "now" could double-fire; we filter
-        // by event-seq below when re-sending.
-        var history = sub.History
-            ? job.SnapshotEventHistory()
-            : Array.Empty<Envelope>();
         var subscriberSeesOwnerSecrets = string.Equals(Principal?.Subject, job.SubmitterPrincipal, StringComparison.Ordinal);
 
-        _server.Subscriptions.Subscribe(job.JobId, SessionId);
-
-        await SendAsync(new Envelope
+        // Spec §7.6: history-snapshot and live-subscription registration MUST be atomic, otherwise an
+        // event emitted in the window between them is lost (or duplicated). Hold the subscriber's emit
+        // gate across the whole replay so no live fan-out for this job can interleave ahead of the
+        // replayed history, and register + snapshot atomically under the job's buffer lock so the
+        // boundary (highWaterIndex) is exact. Any fanned-out event with JobEventIndex ≤ the boundary
+        // was already replayed and is skipped by EmitToSubscriberAsync; everything after is delivered
+        // live exactly once.
+        await _emitGate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
         {
-            Type = MessageTypeNames.JobSubscribed,
-            SessionId = SessionId.Value,
-            JobId = job.JobId.Value,
-            Payload = new JobSubscribedPayload
+            var history = job.RegisterSubscriberAndSnapshot(
+                () => _server.Subscriptions.Subscribe(job.JobId, SessionId),
+                out var highWater);
+
+            // Everything with index ≤ highWater is delivered here (or suppressed if no history was
+            // requested); live fan-out delivers only index > highWater. Set the boundary now: any
+            // concurrent fan-out for this job blocks on _emitGate until we release, then honors it.
+            _subscribeMarks[jid] = highWater;
+            if (!sub.History) history = Array.Empty<Envelope>();
+
+            await WriteToOutboundAsync(new Envelope
             {
+                Type = MessageTypeNames.JobSubscribed,
+                SessionId = SessionId.Value,
                 JobId = job.JobId.Value,
-                CurrentStatus = job.Status.ToString().ToLowerInvariant(),
-                Agent = job.Agent.ToString(),
-                Lease = job.Lease,
-                LeaseConstraints = job.LeaseConstraints,
-                ParentJobId = job.ParentJobId,
-                TraceId = job.TraceId?.Value,
-                SubscribedFrom = EventLog.HighWatermark,
-                Replayed = sub.History && history.Count > 0,
-                Credentials = subscriberSeesOwnerSecrets ? job.Credentials : null,
-            },
-        }, cancellationToken).ConfigureAwait(false);
+                Payload = new JobSubscribedPayload
+                {
+                    JobId = job.JobId.Value,
+                    CurrentStatus = job.Status.ToString().ToLowerInvariant(),
+                    Agent = job.Agent.ToString(),
+                    Lease = job.Lease,
+                    LeaseConstraints = job.LeaseConstraints,
+                    ParentJobId = job.ParentJobId,
+                    TraceId = job.TraceId?.Value,
+                    SubscribedFrom = EventLog.HighWatermark,
+                    Replayed = sub.History && history.Count > 0,
+                    Credentials = subscriberSeesOwnerSecrets ? job.Credentials : null,
+                },
+            }, cancellationToken).ConfigureAwait(false);
 
-        // Spec §7.6: replay matching prior events, in original order, before live events arrive.
-        var fromSeq = sub.FromEventSeq;
-        foreach (var historic in history)
+            // Replay matching prior events, in original order, before live events arrive.
+            var fromSeq = sub.FromEventSeq;
+            foreach (var historic in history)
+            {
+                if (fromSeq is { } f && historic.JobEventIndex is { } idx && idx <= f) continue;
+                var rekeyed = (subscriberSeesOwnerSecrets ? historic : RedactForNonOwner(historic, job))
+                    with
+                { SessionId = SessionId.Value };
+                var stamped = EventLog.Append(rekeyed);
+                await WriteToOutboundAsync(stamped, cancellationToken).ConfigureAwait(false);
+            }
+        }
+        finally
         {
-            if (fromSeq is { } f && historic.EventSeq is { } seq && seq <= f) continue;
-            var rekeyed = (subscriberSeesOwnerSecrets ? historic : RedactForNonOwner(historic, job))
-                with
-            { SessionId = SessionId.Value };
-            var stamped = EventLog.Append(rekeyed);
-            await SendAsync(stamped, cancellationToken).ConfigureAwait(false);
+            _emitGate.Release();
         }
     }
 

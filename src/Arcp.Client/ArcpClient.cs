@@ -53,6 +53,22 @@ public sealed partial class ArcpClient : IAsyncDisposable
     /// <summary>Gets the last received seq.</summary>
     public long LastReceivedSeq => Interlocked.Read(ref _lastReceivedSeq);
 
+    /// <summary>True once an inbound <c>event_seq</c> has skipped the expected next value, indicating
+    /// the session stream has a gap and SHOULD be treated as broken (and resumed once resume is
+    /// wired) per spec §8.3.</summary>
+    public bool IsSessionBroken { get; private set; }
+
+    /// <summary>Raised when an inbound <c>event_seq</c> skips the expected successor (spec §8.3). The
+    /// arguments are <c>(expectedSeq, receivedSeq)</c>. Handlers run on the reader loop; keep them
+    /// fast and non-throwing.</summary>
+    public event Action<long, long>? EventSeqGapDetected;
+
+    private void OnEventSeqGap(long expected, long received)
+    {
+        IsSessionBroken = true;
+        EventSeqGapDetected?.Invoke(expected, received);
+    }
+
     /// <summary>Initializes a new instance of the <see cref="ArcpClient"/> class.</summary>
     public ArcpClient(ITransport transport, ArcpClientOptions options)
     {

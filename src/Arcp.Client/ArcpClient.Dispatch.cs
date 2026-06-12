@@ -18,7 +18,15 @@ public sealed partial class ArcpClient
         {
             await foreach (var env in _transport.ReceiveAsync(cancellationToken).ConfigureAwait(false))
             {
-                if (env.EventSeq is { } seq) Interlocked.Exchange(ref _lastReceivedSeq, seq);
+                if (env.EventSeq is { } seq)
+                {
+                    // Spec §8.3: event_seq is strictly monotonic and gap-free. If the new seq skips
+                    // the expected successor, surface a detectable broken-session signal instead of
+                    // silently accepting the gap.
+                    var prev = Interlocked.Read(ref _lastReceivedSeq);
+                    if (prev > 0 && seq > prev + 1) OnEventSeqGap(prev + 1, seq);
+                    if (seq > prev) Interlocked.Exchange(ref _lastReceivedSeq, seq);
+                }
                 await DispatchAsync(env, cancellationToken).ConfigureAwait(false);
             }
         }

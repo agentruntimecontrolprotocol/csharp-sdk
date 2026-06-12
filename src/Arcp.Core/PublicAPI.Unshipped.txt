@@ -651,6 +651,8 @@ Arcp.Core.Wire.Envelope.Extensions.get -> System.Collections.Generic.IDictionary
 Arcp.Core.Wire.Envelope.Extensions.init -> void
 Arcp.Core.Wire.Envelope.Id.get -> string!
 Arcp.Core.Wire.Envelope.Id.init -> void
+Arcp.Core.Wire.Envelope.JobEventIndex.get -> long?
+Arcp.Core.Wire.Envelope.JobEventIndex.init -> void
 Arcp.Core.Wire.Envelope.JobId.get -> string?
 Arcp.Core.Wire.Envelope.JobId.init -> void
 Arcp.Core.Wire.Envelope.ParentSpanId.get -> string?
@@ -730,6 +732,8 @@ const Arcp.Core.Messages.MessageTypeNames.JobSubscribed = "job.subscribed" -> st
 const Arcp.Core.Messages.MessageTypeNames.JobUnsubscribe = "job.unsubscribe" -> string!
 const Arcp.Core.Messages.MessageTypeNames.SessionAck = "session.ack" -> string!
 const Arcp.Core.Messages.MessageTypeNames.SessionBye = "session.bye" -> string!
+const Arcp.Core.Messages.MessageTypeNames.SessionClose = "session.close" -> string!
+const Arcp.Core.Messages.MessageTypeNames.SessionClosed = "session.closed" -> string!
 const Arcp.Core.Messages.MessageTypeNames.SessionError = "session.error" -> string!
 const Arcp.Core.Messages.MessageTypeNames.SessionHello = "session.hello" -> string!
 const Arcp.Core.Messages.MessageTypeNames.SessionJobs = "session.jobs" -> string!
