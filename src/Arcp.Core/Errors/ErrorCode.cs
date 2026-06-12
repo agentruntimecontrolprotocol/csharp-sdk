@@ -48,8 +48,8 @@ public static class ErrorCode
         InvalidRequest, Unauthenticated, InternalError,
     }.ToFrozenSet();
 
-    /// <summary>Retryable codes per spec §12: only <c>AGENT_NOT_AVAILABLE</c>, <c>TIMEOUT</c>,
-    /// <c>HEARTBEAT_LOST</c>, and <c>INTERNAL_ERROR</c> may be retried.</summary>
+    /// <summary>Returns whether the code is in the spec §12 retryable set:
+    /// <c>AGENT_NOT_AVAILABLE</c>, <c>TIMEOUT</c>, <c>HEARTBEAT_LOST</c>, and <c>INTERNAL_ERROR</c>.</summary>
     public static bool IsRetryable(string code) => code is
         AgentNotAvailable or Timeout or HeartbeatLost or InternalError;
 }

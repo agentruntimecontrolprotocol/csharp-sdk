@@ -69,7 +69,7 @@ Status legend: Implemented ✅ · Partial 🚧 · Not implemented ⛔.
 | ---- | ----------- | ------ | ----- |
 | §10  | `delegate` event kind on parent's `job.event` stream | ✅ | `JobContext.DelegateAsync` |
 | §11  | `trace_id` propagation; OTel span attrs | ✅ | `TraceAttributes`, `ArcpTracing.WithTracing` |
-| §11 (v1.1) | Span attrs `arcp.lease.expires_at`, `arcp.budget.remaining` | ✅ | `TraceAttributes` |
+| §11 (v1.1) | Span attrs `arcp.lease.expires_at`, `arcp.budget.remaining` | ❌ | Not emitted by `ArcpTracing` |
 | §12  | 15 canonical error codes with retryable booleans | ✅ | `ErrorCode.All`, `ErrorCode.IsRetryable` |
 
 ## Test cross-reference

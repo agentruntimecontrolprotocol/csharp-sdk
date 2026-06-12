@@ -31,8 +31,14 @@ Write on the send side by populating `Extensions` before calling
 `ITransport.SendAsync`:
 
 ```csharp
-var env = new Envelope { /* ... */ };
-env.Extensions["x-vendor.acme.priority"] = JsonSerializer.SerializeToElement("high");
+var env = new Envelope
+{
+    /* ... */
+    Extensions = new Dictionary<string, JsonElement>
+    {
+        ["x-vendor.acme.priority"] = JsonSerializer.SerializeToElement("high"),
+    },
+};
 await transport.SendAsync(env, ct);
 ```
 

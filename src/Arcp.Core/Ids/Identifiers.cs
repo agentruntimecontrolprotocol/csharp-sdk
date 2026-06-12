@@ -5,7 +5,7 @@ using System.Globalization;
 
 namespace Arcp.Core.Ids;
 
-/// <summary>A ULID-based message identifier (envelope <c>id</c>, spec §5.1).</summary>
+/// <summary>A ULID-based message identifier (envelope <c>id</c>, spec §5).</summary>
 public readonly record struct MessageId(string Value) : IParsable<MessageId>
 {
     /// <summary>New.</summary>

@@ -164,7 +164,8 @@ public class AuditFixesTests
         _ = Task.Run(() => server.AcceptAsync(aliceSrv));
         await using var alice = await ArcpClient.ConnectAsync(aliceT, new ArcpClientOptions
         {
-            Client = new ClientInfo { Name = "alice", Version = "1" }, Token = "alice",
+            Client = new ClientInfo { Name = "alice", Version = "1" },
+            Token = "alice",
         });
         await alice.SubmitAsync("sleeper");
 
@@ -172,7 +173,8 @@ public class AuditFixesTests
         _ = Task.Run(() => server.AcceptAsync(bobSrv));
         await using var bob = await ArcpClient.ConnectAsync(bobT, new ArcpClientOptions
         {
-            Client = new ClientInfo { Name = "bob", Version = "1" }, Token = "bob",
+            Client = new ClientInfo { Name = "bob", Version = "1" },
+            Token = "bob",
         });
 
         // bob listing forces ThrowingPolicy.CanObserve over alice's job → unexpected exception →

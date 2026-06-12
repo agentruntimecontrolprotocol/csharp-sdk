@@ -50,7 +50,7 @@ intentionally drops the WebSocket connection mid-stream and reconnects using
 its `resume_token`. The runtime replays the missed chunks gap-free.
 
 Concepts: `ctx.BeginResultStream`, `ctx.WriteChunkAsync`, `handle.Chunks`,
-`ArcpClientOptions.ResumeToken`, `RESUME_WINDOW_EXPIRED`.
+`ArcpClient.ResumeToken`, `RESUME_WINDOW_EXPIRED`.
 
 → [`recipes/stream-resume/`](../recipes/stream-resume/)
 

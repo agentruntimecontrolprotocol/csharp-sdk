@@ -47,7 +47,7 @@ server.RegisterAgent("file-writer", async (ctx, ct) =>
             ctx.Lease,
             ctx.LeaseConstraints,
             LeaseNamespaces.FsWrite,
-            path: "/workspace/src/output.cs");
+            pattern: "/workspace/src/output.cs");
     }
     catch (PermissionDeniedException ex)
     {

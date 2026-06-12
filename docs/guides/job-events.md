@@ -27,11 +27,11 @@ server.RegisterAgent("researcher", async (ctx, ct) =>
     await ctx.StatusAsync("starting", "Fetching data...", ct);
 
     await ctx.ToolCallAsync("fetch", callId: "c1",
-        args: new { url = "https://api.example.com/data" }, ct);
+        args: new { url = "https://api.example.com/data" }, cancellationToken: ct);
     var data = /* ... */ "";
-    await ctx.ToolResultAsync("c1", result: data, ct);
+    await ctx.ToolResultAsync("c1", result: data, cancellationToken: ct);
 
-    await ctx.ProgressAsync(current: 1, total: 3, message: "fetched", ct);
+    await ctx.ProgressAsync(current: 1, total: 3, message: "fetched", cancellationToken: ct);
 
     await ctx.LogAsync("info", "Processing ...", ct);
     await ctx.MetricAsync("cost.inference", 0.012, unit: "USD", cancellationToken: ct);
@@ -40,7 +40,7 @@ server.RegisterAgent("researcher", async (ctx, ct) =>
         uri: "s3://bucket/report.pdf",
         contentType: "application/pdf",
         byteSize: 42_000,
-        ct: ct);
+        cancellationToken: ct);
 
     return new { status = "done" };
 });

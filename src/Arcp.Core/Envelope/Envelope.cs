@@ -6,7 +6,7 @@ using System.Text.Json.Serialization;
 
 namespace Arcp.Core.Wire;
 
-/// <summary>The ARCP wire envelope (spec §5.1). Carries the message type discriminator, identifiers,
+/// <summary>The ARCP wire envelope (spec §5). Carries the message type discriminator, identifiers,
 /// and a payload object whose shape depends on <see cref="Type"/>.</summary>
 public sealed record Envelope
 {
@@ -56,7 +56,7 @@ public sealed record Envelope
     [JsonPropertyName("payload")]
     public object? Payload { get; init; }
 
-    /// <summary>Unknown top-level envelope fields preserved verbatim per spec §5.1 ("MUST ignore
+    /// <summary>Unknown top-level envelope fields preserved verbatim per spec §5 ("MUST ignore
     /// unknown fields") so they round-trip without loss.</summary>
     [JsonExtensionData]
     public IDictionary<string, JsonElement>? Extensions { get; init; }
