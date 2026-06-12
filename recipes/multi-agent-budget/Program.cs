@@ -108,6 +108,8 @@ await using var client = await ArcpClient.ConnectAsync(clientT, new ArcpClientOp
 var plannerLease = new Lease(new Dictionary<string, IReadOnlyList<string>>
 {
     ["cost.budget"] = new[] { "USD:5.00" },
+    // Spec §9.3 deny-by-default: the planner must hold agent.delegate to delegate to workers.
+    ["agent.delegate"] = new[] { "*" },
 });
 
 var handle = await client.SubmitAsync(

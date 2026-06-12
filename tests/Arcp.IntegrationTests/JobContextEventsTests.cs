@@ -20,6 +20,9 @@ public class JobContextEventsTests
         var server = new ArcpServer(new ArcpServerOptions
         {
             Runtime = new RuntimeInfo { Name = "test-runtime", Version = "1.0.0" },
+            // This test exercises event round-tripping, not lease enforcement; allow uncovered
+            // tool.call / agent.delegate operations (spec §9.3 deny-by-default is covered elsewhere).
+            PermissiveUnleasedOperations = true,
         });
         server.RegisterAgent("emitter", async (ctx, ct) =>
         {
