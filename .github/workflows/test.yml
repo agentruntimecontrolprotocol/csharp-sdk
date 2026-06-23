@@ -39,8 +39,6 @@ jobs:
       matrix:
         tfm: [net10.0]
     env:
-      # Install the .NET SDK into a runner-writable directory.
-      DOTNET_INSTALL_DIR: ${{ runner.temp }}/dotnet
       DOTNET_NOLOGO: "true"
       DOTNET_CLI_TELEMETRY_OPTOUT: "true"
       DOTNET_SKIP_FIRST_TIME_EXPERIENCE: "true"
